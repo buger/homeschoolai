@@ -41,6 +41,18 @@
             @enderror
         </div>
 
+        <!-- Language Preference -->
+        <div class="mt-4">
+            <label for="locale" class="block text-sm font-medium text-gray-700">{{ __('Preferred Language') }}</label>
+            <select id="locale" name="locale" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                <option value="en" {{ old('locale', App::getLocale()) == 'en' ? 'selected' : '' }}>🇬🇧 English</option>
+                <option value="ru" {{ old('locale', App::getLocale()) == 'ru' ? 'selected' : '' }}>🇷🇺 Русский</option>
+            </select>
+            @error('locale')
+                <span class="mt-2 text-sm text-red-600">{{ $message }}</span>
+            @enderror
+        </div>
+
         <div class="flex items-center justify-end mt-4">
             <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
                 {{ __('Already registered?') }}

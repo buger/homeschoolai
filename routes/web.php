@@ -50,6 +50,7 @@ Route::middleware('auth')->group(function () {
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::patch('/profile/preferences', [ProfileController::class, 'updatePreferences'])->name('profile.preferences');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Onboarding routes
@@ -226,7 +227,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/kids-mode/exit', [KidsModeController::class, 'validateExitPin'])->name('kids-mode.exit.validate');
 
     // Locale switching
-    Route::post('/locale', [LocaleController::class, 'update'])->name('locale.update');
+    Route::post('/locale', [LocaleController::class, 'updateLocale'])->name('locale.update');
+    Route::get('/translations/{locale}', [LocaleController::class, 'getTranslations'])->name('locale.translations');
 
     // Translation files for JavaScript
     Route::get('/lang/{locale}.json', function ($locale) {

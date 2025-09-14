@@ -38,6 +38,34 @@ class ProfileController extends Controller
     }
 
     /**
+     * Update user preferences including language, timezone, etc.
+     */
+    public function updatePreferences(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'locale' => ['required', 'string', 'in:en,ru'],
+            'timezone' => ['required', 'string'],
+            'date_format' => ['required', 'string'],
+            'email_notifications' => ['nullable', 'boolean'],
+            'review_reminders' => ['nullable', 'boolean'],
+        ]);
+
+        $user = $request->user();
+        $user->locale = $validated['locale'];
+        $user->timezone = $validated['timezone'];
+        $user->date_format = $validated['date_format'];
+        $user->email_notifications = $request->has('email_notifications');
+        $user->review_reminders = $request->has('review_reminders');
+        $user->save();
+
+        // Update session locale
+        app()->setLocale($user->locale);
+        session(['locale' => $user->locale]);
+
+        return Redirect::route('profile.edit')->with('status', __('Preferences updated successfully'));
+    }
+
+    /**
      * Delete the user's account.
      */
     public function destroy(Request $request): RedirectResponse

@@ -33,12 +33,14 @@ class RegisteredUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'locale' => ['nullable', 'string', 'in:en,ru'],
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'locale' => $request->locale ?? 'en',
         ]);
 
         // Auto-verify email (email verification disabled)
@@ -47,6 +49,10 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
         Auth::login($user);
+
+        // Set the app locale to user's preference
+        app()->setLocale($user->locale);
+        session(['locale' => $user->locale]);
 
         return redirect(route('dashboard', absolute: false));
     }

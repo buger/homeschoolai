@@ -5,10 +5,18 @@ namespace App\Models;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+/**
+ * @property string $locale
+ * @property string $timezone
+ * @property string $date_format
+ * @property bool $email_notifications
+ * @property bool $review_reminders
+ */
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -58,6 +66,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'locale',
         'timezone',
         'date_format',
+        'email_notifications',
+        'review_reminders',
     ];
 
     /**
@@ -80,6 +90,8 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'email_notifications' => 'boolean',
+            'review_reminders' => 'boolean',
         ];
     }
 
@@ -89,6 +101,21 @@ class User extends Authenticatable implements MustVerifyEmail
     public function children(): HasMany
     {
         return $this->hasMany(Child::class);
+    }
+
+    /**
+     * Get all subjects for all of the user's children.
+     */
+    public function subjects(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Subject::class,
+            Child::class,
+            'user_id', // Foreign key on children table
+            'child_id', // Foreign key on subjects table
+            'id', // Local key on users table
+            'id' // Local key on children table
+        );
     }
 
     /**

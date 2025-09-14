@@ -85,9 +85,74 @@
             </div>
         </template>
 
-        <!-- Step 2: Children Setup -->
+        <!-- Step 2: Language Preference -->
         <template x-if="currentStep === 2">
             <div data-testid="step-2">
+            <div class="max-w-xl mx-auto">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ __('Choose Your Language') }}</h2>
+                    <p class="text-lg text-gray-600">
+                        {{ __('Select your preferred language for the application. You can change this later in your profile settings.') }}
+                    </p>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 gap-4">
+                        <label class="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                               :class="userLocale === 'en' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'">
+                            <input type="radio" name="locale" value="en" x-model="userLocale" class="sr-only">
+                            <div class="flex items-center justify-between w-full">
+                                <div class="flex items-center">
+                                    <span class="text-2xl mr-4">🇬🇧</span>
+                                    <div>
+                                        <p class="font-medium text-gray-900">English</p>
+                                        <p class="text-sm text-gray-500">Use HomeLearnAI in English</p>
+                                    </div>
+                                </div>
+                                <div x-show="userLocale === 'en'" class="text-blue-500">
+                                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                               :class="userLocale === 'ru' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'">
+                            <input type="radio" name="locale" value="ru" x-model="userLocale" class="sr-only">
+                            <div class="flex items-center justify-between w-full">
+                                <div class="flex items-center">
+                                    <span class="text-2xl mr-4">🇷🇺</span>
+                                    <div>
+                                        <p class="font-medium text-gray-900">Русский</p>
+                                        <p class="text-sm text-gray-500">Использовать HomeLearnAI на русском языке</p>
+                                    </div>
+                                </div>
+                                <div x-show="userLocale === 'ru'" class="text-blue-500">
+                                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                        <p class="text-sm text-blue-800">
+                            <svg class="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                            </svg>
+                            {{ __('You can change your language preference anytime from your profile settings or using the language switcher in the navigation menu.') }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </template>
+
+        <!-- Step 3: Children Setup -->
+        <template x-if="currentStep === 3">
+            <div data-testid="step-3">
             <div class="max-w-2xl mx-auto">
                 <div class="text-center mb-8">
                     <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ __('Add Your Children') }}</h2>
@@ -220,9 +285,9 @@
             </div>
         </template>
 
-        <!-- Step 3: Subjects Setup -->
-        <template x-if="currentStep === 3">
-            <div data-testid="step-3">
+        <!-- Step 4: Subjects Setup -->
+        <template x-if="currentStep === 4">
+            <div data-testid="step-4">
             <div class="max-w-4xl mx-auto">
                 <div class="text-center mb-8">
                     <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ __('Choose Subjects') }}</h2>
@@ -358,9 +423,9 @@
             </div>
         </template>
 
-        <!-- Step 4: Review and Completion -->
-        <template x-if="currentStep === 4">
-            <div data-testid="step-4">
+        <!-- Step 5: Review and Completion -->
+        <template x-if="currentStep === 5">
+            <div data-testid="step-5">
             <div class="max-w-3xl mx-auto">
                 <div class="text-center mb-8">
                     <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -539,8 +604,8 @@
             
             <div x-show="currentStep < totalSteps">
                 <button @click="nextStep" 
-                        :disabled="(currentStep === 2 && !canProceedFromStep2) || (currentStep === 3 && !canProceedFromStep3)"
-                        :class="((currentStep === 2 && !canProceedFromStep2) || (currentStep === 3 && !canProceedFromStep3)) ? 'bg-gray-300 text-gray-500 px-4 py-2 rounded-lg cursor-not-allowed' : 'bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors'"
+                        :disabled="(currentStep === 3 && !canProceedFromStep3) || (currentStep === 4 && !canProceedFromStep4)"
+                        :class="((currentStep === 3 && !canProceedFromStep3) || (currentStep === 4 && !canProceedFromStep4)) ? 'bg-gray-300 text-gray-500 px-4 py-2 rounded-lg cursor-not-allowed' : 'bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors'"
                         data-testid="next-button">
                     <span x-show="!(((currentStep === 2 || currentStep === 3) && isSubmitting))" class="flex items-center space-x-2">
                         <span>{{ __('Next') }}</span>
@@ -565,7 +630,8 @@
 function onboardingWizard() {
     return {
         currentStep: 1,
-        totalSteps: 4,
+        totalSteps: 5,
+        userLocale: '{{ Auth::user()->locale ?? App::getLocale() }}',
         isSubmitting: false,
         formError: '',
         formSuccess: '',
@@ -634,12 +700,12 @@ function onboardingWizard() {
         },
         
         // Computed properties
-        get canProceedFromStep2() {
+        get canProceedFromStep3() {
             // At least one child must have name and grade
             return this.children.some(child => child.name && child.grade);
         },
         
-        get canProceedFromStep3() {
+        get canProceedFromStep4() {
             // Each child must either have subjects selected or be marked as skip
             return this.savedChildren.every(child => {
                 const childData = this.subjectsData[child.id];
@@ -921,6 +987,41 @@ function onboardingWizard() {
         },
         
         // AJAX submission of children data
+        async saveLanguagePreference() {
+            try {
+                const response = await fetch('{{ route("locale.update") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        locale: this.userLocale
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Update the app locale
+                    window.currentLocale = this.userLocale;
+                    
+                    // Reload to apply language changes
+                    window.location.reload();
+                } else {
+                    throw new Error(data.message || 'Failed to save language preference');
+                }
+            } catch (error) {
+                console.error('Language preference error:', error);
+                this.formError = 'Failed to save language preference. You can continue and change it later.';
+                // Allow to continue even if language save fails
+                setTimeout(() => {
+                    this.formError = '';
+                }, 3000);
+            }
+        },
+        
         async saveChildren() {
             if (!this.validateChildren()) {
                 return;
@@ -979,10 +1080,14 @@ function onboardingWizard() {
         // Navigation methods
         async nextStep() {
             if (this.currentStep === 2) {
-                // For step 2, trigger form submission
-                await this.saveChildren();
+                // Save language preference
+                await this.saveLanguagePreference();
+                this.currentStep++;
             } else if (this.currentStep === 3) {
-                // For step 3, trigger subjects submission and go to review
+                // For step 3, trigger form submission
+                await this.saveChildren();
+            } else if (this.currentStep === 4) {
+                // For step 4, trigger subjects submission and go to review
                 await this.saveSubjects();
             } else if (this.currentStep < this.totalSteps) {
                 // Simple navigation for other steps
