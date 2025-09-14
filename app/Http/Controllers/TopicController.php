@@ -206,7 +206,7 @@ class TopicController extends Controller
     /**
      * Display the specified topic.
      */
-    public function show(Request $request, int $subjectId, int $unitId, int $id)
+    public function show(Request $request, int $unitId, int $id)
     {
         try {
             $userId = auth()->id();
@@ -214,19 +214,19 @@ class TopicController extends Controller
                 return redirect()->route('login');
             }
 
-            $subject = Subject::find($subjectId);
-            if (! $subject || $subject->user_id != $userId) {
-                return redirect()->route('subjects.index')->with('error', 'Subject not found.');
+            $unit = Unit::find($unitId);
+            if (! $unit) {
+                return redirect()->route('subjects.index')->with('error', 'Unit not found.');
             }
 
-            $unit = Unit::find($unitId);
-            if (! $unit || $unit->subject_id !== $subjectId) {
-                return redirect()->route('subjects.show', $subjectId)->with('error', 'Unit not found.');
+            $subject = Subject::find($unit->subject_id);
+            if (! $subject || $subject->user_id != $userId) {
+                return redirect()->route('subjects.index')->with('error', 'Access denied.');
             }
 
             $topic = Topic::find($id);
             if (! $topic || $topic->unit_id !== $unitId) {
-                return redirect()->route('subjects.units.show', [$subjectId, $unitId])->with('error', 'Topic not found.');
+                return redirect()->route('subjects.units.show', [$subject->id, $unitId])->with('error', 'Topic not found.');
             }
 
             if ($request->header('HX-Request')) {
@@ -237,14 +237,14 @@ class TopicController extends Controller
         } catch (\Exception $e) {
             Log::error('Error fetching topic: '.$e->getMessage());
 
-            return redirect()->route('subjects.units.show', [$subjectId, $unitId])->with('error', 'Unable to load topic. Please try again.');
+            return redirect()->route('subjects.index')->with('error', 'Unable to load topic. Please try again.');
         }
     }
 
     /**
      * Show the form for editing the specified topic.
      */
-    public function edit(Request $request, int $subjectId, int $unitId, int $id)
+    public function edit(Request $request, int $id)
     {
         try {
             $userId = auth()->id();
@@ -252,19 +252,19 @@ class TopicController extends Controller
                 return response('Unauthorized', 401);
             }
 
-            $subject = Subject::find($subjectId);
-            if (! $subject || $subject->user_id != $userId) {
-                return response('Subject not found', 404);
+            $topic = Topic::find($id);
+            if (! $topic) {
+                return response('Topic not found', 404);
             }
 
-            $unit = Unit::find($unitId);
-            if (! $unit || $unit->subject_id !== $subjectId) {
+            $unit = Unit::find($topic->unit_id);
+            if (! $unit) {
                 return response('Unit not found', 404);
             }
 
-            $topic = Topic::find($id);
-            if (! $topic || $topic->unit_id !== $unitId) {
-                return response('Topic not found', 404);
+            $subject = Subject::find($unit->subject_id);
+            if (! $subject || $subject->user_id != $userId) {
+                return response('Access denied', 403);
             }
 
             if ($request->header('HX-Request')) {
@@ -282,7 +282,7 @@ class TopicController extends Controller
     /**
      * Update the specified topic in storage.
      */
-    public function update(Request $request, int $subjectId, int $unitId, int $id)
+    public function update(Request $request, int $id)
     {
         try {
             $userId = auth()->id();
@@ -290,19 +290,19 @@ class TopicController extends Controller
                 return response('Unauthorized', 401);
             }
 
-            $subject = Subject::find($subjectId);
-            if (! $subject || $subject->user_id != $userId) {
-                return response('Subject not found', 404);
+            $topic = Topic::find($id);
+            if (! $topic) {
+                return response('Topic not found', 404);
             }
 
-            $unit = Unit::find($unitId);
-            if (! $unit || $unit->subject_id !== $subjectId) {
+            $unit = Unit::find($topic->unit_id);
+            if (! $unit) {
                 return response('Unit not found', 404);
             }
 
-            $topic = Topic::find($id);
-            if (! $topic || $topic->unit_id !== $unitId) {
-                return response('Topic not found', 404);
+            $subject = Subject::find($unit->subject_id);
+            if (! $subject || $subject->user_id != $userId) {
+                return response('Access denied', 403);
             }
 
             $validated = $request->validate([
@@ -321,12 +321,12 @@ class TopicController extends Controller
 
             if ($request->header('HX-Request')) {
                 // Return updated topics list
-                $topics = Topic::forUnit($unitId);
+                $topics = Topic::forUnit($unit->id);
 
                 return view('topics.partials.topics-list', compact('topics', 'unit', 'subject'));
             }
 
-            return redirect()->route('subjects.units.show', [$subjectId, $unitId])->with('success', 'Topic updated successfully.');
+            return redirect()->route('subjects.units.show', [$subject->id, $unit->id])->with('success', 'Topic updated successfully.');
         } catch (\Exception $e) {
             Log::error('Error updating topic: '.$e->getMessage());
 
@@ -341,7 +341,7 @@ class TopicController extends Controller
     /**
      * Remove the specified topic from storage.
      */
-    public function destroy(Request $request, int $subjectId, int $unitId, int $id)
+    public function destroy(Request $request, int $id)
     {
         try {
             $userId = auth()->id();
@@ -349,19 +349,19 @@ class TopicController extends Controller
                 return response('Unauthorized', 401);
             }
 
-            $subject = Subject::find($subjectId);
-            if (! $subject || $subject->user_id != $userId) {
-                return response('Subject not found', 404);
+            $topic = Topic::find($id);
+            if (! $topic) {
+                return response('Topic not found', 404);
             }
 
-            $unit = Unit::find($unitId);
-            if (! $unit || $unit->subject_id !== $subjectId) {
+            $unit = Unit::find($topic->unit_id);
+            if (! $unit) {
                 return response('Unit not found', 404);
             }
 
-            $topic = Topic::find($id);
-            if (! $topic || $topic->unit_id !== $unitId) {
-                return response('Topic not found', 404);
+            $subject = Subject::find($unit->subject_id);
+            if (! $subject || $subject->user_id != $userId) {
+                return response('Access denied', 403);
             }
 
             // TODO: Check if topic has sessions - prevent deletion if it has active sessions
@@ -371,12 +371,12 @@ class TopicController extends Controller
 
             if ($request->header('HX-Request')) {
                 // Return updated topics list
-                $topics = Topic::forUnit($unitId);
+                $topics = Topic::forUnit($unit->id);
 
                 return view('topics.partials.topics-list', compact('topics', 'unit', 'subject'));
             }
 
-            return redirect()->route('subjects.units.show', [$subjectId, $unitId])->with('success', 'Topic deleted successfully.');
+            return redirect()->route('subjects.units.show', [$subject->id, $unit->id])->with('success', 'Topic deleted successfully.');
         } catch (\Exception $e) {
             Log::error('Error deleting topic: '.$e->getMessage());
 
