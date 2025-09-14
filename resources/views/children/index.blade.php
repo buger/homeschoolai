@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 <div class="space-y-6">
     <!-- Header -->
     <div class="bg-white rounded-lg shadow-sm p-6">
@@ -81,7 +80,6 @@
     <div id="children-list" class="space-y-4">
         @include('children.partials.list')
     </div>
-</div>
 </div>
 
 <!-- Modal for Child Form -->

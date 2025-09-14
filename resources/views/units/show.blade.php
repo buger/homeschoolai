@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="bg-white shadow rounded-lg">
         <!-- Header -->
         <div class="p-6 border-b border-gray-200">
@@ -39,7 +38,7 @@
                     </button>
                     <button 
                         type="button"
-                        hx-get="{{ route('units.edit', [$subject->id, $unit->id]) }}"
+                        hx-get="{{ route('units.edit', $unit->id) }}"
                         hx-target="#unit-modal"
                         hx-swap="innerHTML"
                         class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg inline-flex items-center">
@@ -151,7 +150,6 @@
     <div id="topic-modal"></div>
     <div id="unit-modal"></div>
     <div id="flashcard-modal"></div>
-</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

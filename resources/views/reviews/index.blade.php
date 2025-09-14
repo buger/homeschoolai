@@ -3,11 +3,12 @@
 @section('title', __('review_system'))
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="mb-8">
-        <div class="flex items-center justify-between">
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-sm p-6">
+        <div class="flex justify-between items-center">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900">{{ __('review_system') }}</h1>
+                <h2 class="text-2xl font-bold text-gray-900">{{ __('review_system') }}</h2>
                 <p class="text-gray-600 mt-1">{{ __('spaced_repetition_learning_for_mastery') }}</p>
             </div>
             
@@ -37,7 +38,7 @@
     </div>
 
     @if(!$selectedChild)
-    <div class="text-center py-12">
+    <div class="bg-white rounded-lg shadow-sm p-12 text-center">
         <div class="mx-auto h-12 w-12 text-gray-400">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
@@ -52,8 +53,10 @@
         </div>
     </div>
     @else
-    <div id="review-dashboard">
-        @include('reviews.partials.dashboard')
+    <div class="bg-white rounded-lg shadow-sm">
+        <div id="review-dashboard">
+            @include('reviews.partials.dashboard')
+        </div>
     </div>
     @endif
 </div>
