@@ -96,29 +96,29 @@ class TopicController extends Controller
      */
     public function storeForUnit(Request $request, int $unitId)
     {
+        $userId = auth()->id();
+        if (! $userId) {
+            return response('Unauthorized', 401);
+        }
+
+        $unit = Unit::find($unitId);
+        if (! $unit) {
+            return response('Unit not found', 404);
+        }
+
+        $subject = Subject::find($unit->subject_id);
+        if (! $subject || $subject->user_id != $userId) {
+            return response('Access denied', 403);
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'estimated_minutes' => 'required|integer|min:5|max:480',
+            'required' => 'boolean',
+        ]);
+
         try {
-            $userId = auth()->id();
-            if (! $userId) {
-                return response('Unauthorized', 401);
-            }
-
-            $unit = Unit::find($unitId);
-            if (! $unit) {
-                return response('Unit not found', 404);
-            }
-
-            $subject = Subject::find($unit->subject_id);
-            if (! $subject || $subject->user_id != $userId) {
-                return response('Access denied', 403);
-            }
-
-            $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'description' => 'nullable|string',
-                'estimated_minutes' => 'required|integer|min:5|max:480',
-                'required' => 'boolean',
-            ]);
-
             // Use 'name' field but store as 'title' in the model
             $topic = Topic::create([
                 'unit_id' => $unitId,

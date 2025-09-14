@@ -235,7 +235,7 @@ class TopicControllerTest extends TestCase
             'topic' => $this->topic->id,
         ]));
 
-        $response->assertOk();
+        $response->assertRedirect();
         $this->assertDatabaseMissing('topics', ['id' => $this->topic->id]);
     }
 
