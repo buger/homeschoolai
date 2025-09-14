@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7f810971a76d60457cbd686c873b35b0",
+    "content-hash": "a4baace854a91e45dcb566920c249061",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -8511,16 +8511,16 @@
         },
         {
             "name": "larastan/larastan",
-            "version": "v3.6.1",
+            "version": "v3.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/larastan/larastan.git",
-                "reference": "3c223047e374befd1b64959784685d6ecccf66aa"
+                "reference": "6b7d28a2762a4b69f0f064e1e5b7358af11f04e4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/larastan/larastan/zipball/3c223047e374befd1b64959784685d6ecccf66aa",
-                "reference": "3c223047e374befd1b64959784685d6ecccf66aa",
+                "url": "https://api.github.com/repos/larastan/larastan/zipball/6b7d28a2762a4b69f0f064e1e5b7358af11f04e4",
+                "reference": "6b7d28a2762a4b69f0f064e1e5b7358af11f04e4",
                 "shasum": ""
             },
             "require": {
@@ -8588,7 +8588,7 @@
             ],
             "support": {
                 "issues": "https://github.com/larastan/larastan/issues",
-                "source": "https://github.com/larastan/larastan/tree/v3.6.1"
+                "source": "https://github.com/larastan/larastan/tree/v3.7.0"
             },
             "funding": [
                 {
@@ -8596,7 +8596,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-08-25T07:24:56+00:00"
+            "time": "2025-09-09T15:17:27+00:00"
         },
         {
             "name": "laravel/breeze",
@@ -8869,6 +8869,82 @@
                 "source": "https://github.com/laravel/sail"
             },
             "time": "2025-08-25T19:28:31+00:00"
+        },
+        {
+            "name": "livewire/livewire",
+            "version": "v3.6.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/livewire/livewire.git",
+                "reference": "ef04be759da41b14d2d129e670533180a44987dc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/livewire/livewire/zipball/ef04be759da41b14d2d129e670533180a44987dc",
+                "reference": "ef04be759da41b14d2d129e670533180a44987dc",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/database": "^10.0|^11.0|^12.0",
+                "illuminate/routing": "^10.0|^11.0|^12.0",
+                "illuminate/support": "^10.0|^11.0|^12.0",
+                "illuminate/validation": "^10.0|^11.0|^12.0",
+                "laravel/prompts": "^0.1.24|^0.2|^0.3",
+                "league/mime-type-detection": "^1.9",
+                "php": "^8.1",
+                "symfony/console": "^6.0|^7.0",
+                "symfony/http-kernel": "^6.2|^7.0"
+            },
+            "require-dev": {
+                "calebporzio/sushi": "^2.1",
+                "laravel/framework": "^10.15.0|^11.0|^12.0",
+                "mockery/mockery": "^1.3.1",
+                "orchestra/testbench": "^8.21.0|^9.0|^10.0",
+                "orchestra/testbench-dusk": "^8.24|^9.1|^10.0",
+                "phpunit/phpunit": "^10.4|^11.5",
+                "psy/psysh": "^0.11.22|^0.12"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "Livewire": "Livewire\\Livewire"
+                    },
+                    "providers": [
+                        "Livewire\\LivewireServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "files": [
+                    "src/helpers.php"
+                ],
+                "psr-4": {
+                    "Livewire\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Caleb Porzio",
+                    "email": "calebporzio@gmail.com"
+                }
+            ],
+            "description": "A front-end framework for Laravel.",
+            "support": {
+                "issues": "https://github.com/livewire/livewire/issues",
+                "source": "https://github.com/livewire/livewire/tree/v3.6.4"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/livewire",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-07-17T05:12:15+00:00"
         },
         {
             "name": "mockery/mockery",
@@ -9605,54 +9681,6 @@
                 "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.10.0"
             },
             "time": "2024-11-09T15:12:26+00:00"
-        },
-        {
-            "name": "phpstan/extension-installer",
-            "version": "1.4.3",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/phpstan/extension-installer.git",
-                "reference": "85e90b3942d06b2326fba0403ec24fe912372936"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/extension-installer/zipball/85e90b3942d06b2326fba0403ec24fe912372936",
-                "reference": "85e90b3942d06b2326fba0403ec24fe912372936",
-                "shasum": ""
-            },
-            "require": {
-                "composer-plugin-api": "^2.0",
-                "php": "^7.2 || ^8.0",
-                "phpstan/phpstan": "^1.9.0 || ^2.0"
-            },
-            "require-dev": {
-                "composer/composer": "^2.0",
-                "php-parallel-lint/php-parallel-lint": "^1.2.0",
-                "phpstan/phpstan-strict-rules": "^0.11 || ^0.12 || ^1.0"
-            },
-            "type": "composer-plugin",
-            "extra": {
-                "class": "PHPStan\\ExtensionInstaller\\Plugin"
-            },
-            "autoload": {
-                "psr-4": {
-                    "PHPStan\\ExtensionInstaller\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "Composer plugin for automatic installation of PHPStan extensions",
-            "keywords": [
-                "dev",
-                "static analysis"
-            ],
-            "support": {
-                "issues": "https://github.com/phpstan/extension-installer/issues",
-                "source": "https://github.com/phpstan/extension-installer/tree/1.4.3"
-            },
-            "time": "2024-09-04T20:21:43+00:00"
         },
         {
             "name": "phpstan/phpdoc-parser",
@@ -11642,6 +11670,76 @@
                 }
             ],
             "time": "2024-03-03T12:36:25+00:00"
+        },
+        {
+            "name": "tomasvotruba/bladestan",
+            "version": "0.11.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/bladestan/bladestan.git",
+                "reference": "f1dedaeb283718cf78ac02ba4d013d3a3b86eda1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/bladestan/bladestan/zipball/f1dedaeb283718cf78ac02ba4d013d3a3b86eda1",
+                "reference": "f1dedaeb283718cf78ac02ba4d013d3a3b86eda1",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/contracts": "^11.15|^12.0",
+                "illuminate/filesystem": "^11.15|^12.0",
+                "illuminate/mail": "^11.15|^12.0",
+                "illuminate/notifications": "^11.15|^12.0",
+                "illuminate/view": "^11.15|^12.0",
+                "larastan/larastan": "^3.0",
+                "livewire/livewire": "^3.3.5",
+                "php": "^8.2",
+                "phpstan/phpstan": "^2.0.1"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^9.9|^10.0",
+                "phpunit/phpunit": "^11.3.6",
+                "rector/rector": "^2.0",
+                "symplify/easy-coding-standard": "^12.1.1",
+                "tomasvotruba/class-leak": "^2.0"
+            },
+            "type": "phpstan-extension",
+            "extra": {
+                "phpstan": {
+                    "includes": [
+                        "config/extension.neon"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Bladestan\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHPStan rule for static analysis of Blade templates",
+            "keywords": [
+                "phpstan-extension",
+                "static analysis"
+            ],
+            "support": {
+                "issues": "https://github.com/bladestan/bladestan/issues",
+                "source": "https://github.com/bladestan/bladestan/tree/0.11.3"
+            },
+            "funding": [
+                {
+                    "url": "https://www.paypal.me/rectorphp",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/tomasvotruba",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-04-30T12:55:55+00:00"
         },
         {
             "name": "vimeo/psalm",

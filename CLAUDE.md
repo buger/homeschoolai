@@ -104,6 +104,10 @@ npm run lint:fix             # Auto-fix ESLint issues
 npm run format               # Format code with Prettier
 npm run type-check           # TypeScript type checking
 ./vendor/bin/pint            # Format PHP code
+
+# PHP Static Analysis
+composer phpstan             # Run PHPStan with optimized defaults (1G memory, no progress)
+./vendor/bin/phpstan analyse # Run PHPStan with basic config (needs --memory-limit manually)
 ```
 
 ### Build & Deploy
