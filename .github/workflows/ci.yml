@@ -177,7 +177,9 @@ jobs:
     - name: Run E2E tests
       env:
         BASE_URL: http://localhost:8000
-      run: npx playwright test
+        CI: true
+      run: npx playwright test --max-failures=3
+      timeout-minutes: 10
       continue-on-error: true
 
     - name: Upload Playwright report
