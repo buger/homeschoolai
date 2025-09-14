@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class KidsModePinUITest extends TestCase
@@ -40,7 +41,7 @@ class KidsModePinUITest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function it_displays_pin_settings_page_correctly_when_no_pin_is_set()
     {
         // Ensure user preferences have no PIN setup (default state)
@@ -61,7 +62,7 @@ class KidsModePinUITest extends TestCase
         $response->assertDontSee(__('reset_pin'));
     }
 
-    /** @test */
+    #[Test]
     public function it_displays_pin_settings_page_correctly_when_pin_is_set()
     {
         // Set up user preferences with PIN using UserPreferences model
@@ -82,7 +83,7 @@ class KidsModePinUITest extends TestCase
         $response->assertSee(__('reset_pin'));
     }
 
-    /** @test */
+    #[Test]
     public function it_can_set_new_pin_with_valid_data()
     {
         // Test without mocking - uses real database via RefreshDatabase
@@ -101,7 +102,7 @@ class KidsModePinUITest extends TestCase
         $this->assertNotNull($preferences->kids_mode_pin);
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_pin_format_correctly()
     {
         $response = $this->post(route('kids-mode.pin.update'), [
@@ -113,7 +114,7 @@ class KidsModePinUITest extends TestCase
         $response->assertSessionHasErrors('pin');
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_pin_confirmation_match()
     {
         $response = $this->post(route('kids-mode.pin.update'), [
@@ -125,7 +126,7 @@ class KidsModePinUITest extends TestCase
         $response->assertSessionHasErrors('pin_confirmation');
     }
 
-    /** @test */
+    #[Test]
     public function it_can_reset_existing_pin()
     {
         // First set a PIN
@@ -145,7 +146,7 @@ class KidsModePinUITest extends TestCase
         $this->assertNull($preferences->kids_mode_pin);
     }
 
-    /** @test */
+    #[Test]
     public function it_displays_exit_screen_correctly_when_no_pin_is_set()
     {
         // Set kids mode active
@@ -202,7 +203,7 @@ class KidsModePinUITest extends TestCase
         $this->assertStringNotContainsString('<div id="error-message"', $content, 'Should not contain PIN entry error message div');
     }
 
-    /** @test */
+    #[Test]
     public function it_displays_exit_screen_with_pin_entry_when_pin_is_set()
     {
         // Set up user preferences with PIN using real model
@@ -226,7 +227,7 @@ class KidsModePinUITest extends TestCase
         $response->assertSee(__('back_to_learning'));
     }
 
-    /** @test */
+    #[Test]
     public function it_displays_lockout_message_when_account_is_locked()
     {
         // Set kids mode active
@@ -257,7 +258,7 @@ class KidsModePinUITest extends TestCase
         }
     }
 
-    /** @test */
+    #[Test]
     public function it_shows_attempts_remaining_when_there_are_failed_attempts()
     {
         // Set kids mode active
@@ -282,7 +283,7 @@ class KidsModePinUITest extends TestCase
         $response->assertSee('2'); // 5 - 3 = 2 attempts remaining
     }
 
-    /** @test */
+    #[Test]
     public function it_redirects_when_kids_mode_is_not_active_on_exit_screen()
     {
         // Don't set kids_mode_active in session
@@ -294,7 +295,7 @@ class KidsModePinUITest extends TestCase
         $response->assertSessionHas('error', __('Kids mode is not active'));
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_pin_submission_format()
     {
         // Set kids mode active
@@ -309,7 +310,7 @@ class KidsModePinUITest extends TestCase
         $response->assertJsonValidationErrors('pin');
     }
 
-    /** @test */
+    #[Test]
     public function it_requires_authentication_for_pin_operations()
     {
         // Clear authentication to simulate unauthenticated user
@@ -329,7 +330,7 @@ class KidsModePinUITest extends TestCase
         $response->assertRedirect(route('login')); // Unauthenticated users redirected to login
     }
 
-    /** @test */
+    #[Test]
     public function it_blocks_pin_settings_access_when_in_kids_mode()
     {
         // Set kids mode active
@@ -343,7 +344,7 @@ class KidsModePinUITest extends TestCase
         $response->assertRedirect(route('dashboard.child-today', ['child_id' => $this->child->id]));
     }
 
-    /** @test */
+    #[Test]
     public function pin_settings_form_includes_required_elements()
     {
         // Mock no PIN setup
@@ -380,7 +381,7 @@ class KidsModePinUITest extends TestCase
         $response->assertSee(__('After 5 failed attempts, PIN entry is locked for 5 minutes'));
     }
 
-    /** @test */
+    #[Test]
     public function exit_screen_includes_required_elements_when_pin_is_set()
     {
         // Set kids mode active

@@ -8,6 +8,7 @@ use App\Models\Subject;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class FlashcardPreviewTest extends TestCase
@@ -37,7 +38,7 @@ class FlashcardPreviewTest extends TestCase
         $this->actingAs($this->user);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_start_a_preview_session()
     {
         $response = $this->get(route('units.flashcards.preview.start', $this->unit));
@@ -49,7 +50,7 @@ class FlashcardPreviewTest extends TestCase
         $response->assertViewHas('isPreview', true);
     }
 
-    /** @test */
+    #[Test]
     public function it_prevents_access_in_kids_mode()
     {
         session(['kids_mode' => true]);
@@ -59,7 +60,7 @@ class FlashcardPreviewTest extends TestCase
         $response->assertForbidden();
     }
 
-    /** @test */
+    #[Test]
     public function it_prevents_access_to_other_users_units()
     {
         $otherUser = User::factory()->create();
@@ -71,7 +72,7 @@ class FlashcardPreviewTest extends TestCase
         $response->assertForbidden();
     }
 
-    /** @test */
+    #[Test]
     public function it_redirects_when_unit_has_no_flashcards()
     {
         $emptyUnit = Unit::factory()->create(['subject_id' => $this->subject->id]);
@@ -82,7 +83,7 @@ class FlashcardPreviewTest extends TestCase
         $response->assertSessionHas('error');
     }
 
-    /** @test */
+    #[Test]
     public function preview_session_stores_data_in_session_only()
     {
         // Start preview session
@@ -110,7 +111,7 @@ class FlashcardPreviewTest extends TestCase
         $this->assertTrue($sessionData['is_preview']);
     }
 
-    /** @test */
+    #[Test]
     public function preview_answers_do_not_create_review_records()
     {
         // Start preview session
@@ -140,7 +141,7 @@ class FlashcardPreviewTest extends TestCase
         $response->assertJson(['message' => 'Preview answer recorded (not saved to learning progress)']);
     }
 
-    /** @test */
+    #[Test]
     public function preview_session_can_be_ended()
     {
         // Start preview session
@@ -170,7 +171,7 @@ class FlashcardPreviewTest extends TestCase
         $this->assertFalse(session()->has("flashcard_preview.{$sessionId}"));
     }
 
-    /** @test */
+    #[Test]
     public function preview_session_status_returns_correct_data()
     {
         // Start preview session
@@ -193,7 +194,7 @@ class FlashcardPreviewTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function preview_prevents_access_to_other_users_sessions()
     {
         $otherUser = User::factory()->create();
@@ -213,7 +214,7 @@ class FlashcardPreviewTest extends TestCase
         $response->assertStatus(403); // Session belongs to different user
     }
 
-    /** @test */
+    #[Test]
     public function preview_validates_session_ownership()
     {
         // Start preview session
@@ -236,7 +237,7 @@ class FlashcardPreviewTest extends TestCase
         $response->assertForbidden();
     }
 
-    /** @test */
+    #[Test]
     public function preview_rejects_non_preview_sessions()
     {
         // Manually create session data without is_preview flag

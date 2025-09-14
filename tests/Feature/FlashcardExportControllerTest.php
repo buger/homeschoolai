@@ -8,6 +8,7 @@ use App\Models\Unit;
 use App\Models\User;
 use App\Services\FlashcardExportService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class FlashcardExportControllerTest extends TestCase
@@ -41,7 +42,7 @@ class FlashcardExportControllerTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function it_shows_export_options_modal_for_authenticated_user()
     {
         $this->actingAs($this->user);
@@ -56,7 +57,7 @@ class FlashcardExportControllerTest extends TestCase
         $response->assertViewHas('maxExportSize', FlashcardExportService::MAX_EXPORT_SIZE);
     }
 
-    /** @test */
+    #[Test]
     public function it_denies_access_to_export_options_for_unauthenticated_user()
     {
         $response = $this->get(route('flashcards.export.options', $this->unit->id));
@@ -64,7 +65,7 @@ class FlashcardExportControllerTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 
-    /** @test */
+    #[Test]
     public function it_denies_access_to_export_options_for_unauthorized_user()
     {
         $otherUser = User::factory()->create();
@@ -75,7 +76,7 @@ class FlashcardExportControllerTest extends TestCase
         $response->assertForbidden();
     }
 
-    /** @test */
+    #[Test]
     public function it_shows_no_flashcards_message_when_unit_is_empty()
     {
         $emptyUnit = Unit::factory()->create(['subject_id' => $this->subject->id]);
@@ -87,7 +88,7 @@ class FlashcardExportControllerTest extends TestCase
         $response->assertSee('No flashcards available to export');
     }
 
-    /** @test */
+    #[Test]
     public function it_generates_export_preview_with_valid_data()
     {
         $this->actingAs($this->user);
@@ -106,7 +107,7 @@ class FlashcardExportControllerTest extends TestCase
         $response->assertViewHas('canExport', true);
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_export_format_in_preview()
     {
         $this->actingAs($this->user);
@@ -119,7 +120,7 @@ class FlashcardExportControllerTest extends TestCase
         $response->assertSee('The selected export format is invalid.');
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_selected_cards_in_preview()
     {
         $this->actingAs($this->user);
@@ -134,7 +135,7 @@ class FlashcardExportControllerTest extends TestCase
         $response->assertViewHas('totalCards', 3);
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_anki_deck_name_in_preview()
     {
         $this->actingAs($this->user);
@@ -148,7 +149,7 @@ class FlashcardExportControllerTest extends TestCase
         $response->assertSee('Deck name cannot be empty');
     }
 
-    /** @test */
+    #[Test]
     public function it_downloads_json_export_successfully()
     {
         $this->actingAs($this->user);
@@ -168,7 +169,7 @@ class FlashcardExportControllerTest extends TestCase
         $this->assertEquals(10, $content['total_cards']);
     }
 
-    /** @test */
+    #[Test]
     public function it_downloads_csv_export_successfully()
     {
         $this->actingAs($this->user);
@@ -193,7 +194,7 @@ class FlashcardExportControllerTest extends TestCase
         $this->assertContains('Answer', $header);
     }
 
-    /** @test */
+    #[Test]
     public function it_downloads_quizlet_tsv_export_successfully()
     {
         $this->actingAs($this->user);
@@ -216,7 +217,7 @@ class FlashcardExportControllerTest extends TestCase
         }
     }
 
-    /** @test */
+    #[Test]
     public function it_downloads_anki_export_with_deck_name()
     {
         $this->actingAs($this->user);
@@ -233,7 +234,7 @@ class FlashcardExportControllerTest extends TestCase
         $this->assertStringContainsString('.apkg', $filename);
     }
 
-    /** @test */
+    #[Test]
     public function it_downloads_mnemosyne_xml_export()
     {
         $this->actingAs($this->user);
@@ -251,7 +252,7 @@ class FlashcardExportControllerTest extends TestCase
         $this->assertStringContainsString('<card>', $content);
     }
 
-    /** @test */
+    #[Test]
     public function it_downloads_supermemo_txt_export()
     {
         $this->actingAs($this->user);
@@ -268,7 +269,7 @@ class FlashcardExportControllerTest extends TestCase
         $this->assertStringContainsString('A:', $content);
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_export_with_selected_cards_only()
     {
         $this->actingAs($this->user);
@@ -286,7 +287,7 @@ class FlashcardExportControllerTest extends TestCase
         $this->assertCount(3, $content['flashcards']);
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_error_when_no_flashcards_selected_for_export()
     {
         $this->actingAs($this->user);
@@ -300,7 +301,7 @@ class FlashcardExportControllerTest extends TestCase
         $response->assertJson(['error' => 'No flashcards available to export']);
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_export_download_parameters()
     {
         $this->actingAs($this->user);
@@ -323,7 +324,7 @@ class FlashcardExportControllerTest extends TestCase
         $response->assertStatus(422);
     }
 
-    /** @test */
+    #[Test]
     public function it_shows_bulk_export_selection_interface()
     {
         $this->actingAs($this->user);
@@ -338,7 +339,7 @@ class FlashcardExportControllerTest extends TestCase
         $response->assertViewHas('totalCards', 10);
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_export_statistics()
     {
         // Create flashcards with different types and difficulties
@@ -391,7 +392,7 @@ class FlashcardExportControllerTest extends TestCase
         $this->assertEquals(1, $stats['with_tags']);
     }
 
-    /** @test */
+    #[Test]
     public function it_denies_unauthorized_access_to_export_endpoints()
     {
         $otherUser = User::factory()->create();
@@ -422,7 +423,7 @@ class FlashcardExportControllerTest extends TestCase
         $response->assertForbidden();
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_large_exports_with_warning()
     {
         // Create many flashcards to exceed the limit
@@ -440,7 +441,7 @@ class FlashcardExportControllerTest extends TestCase
         $response->assertViewHas('totalCards', FlashcardExportService::MAX_EXPORT_SIZE + 20); // 10 original + new ones
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_export_service_errors_gracefully()
     {
         $this->actingAs($this->user);
@@ -455,7 +456,7 @@ class FlashcardExportControllerTest extends TestCase
         $response->assertJsonFragment(['error' => 'Validation failed']);
     }
 
-    /** @test */
+    #[Test]
     public function it_includes_correct_export_options_in_preview()
     {
         $this->actingAs($this->user);
@@ -477,7 +478,7 @@ class FlashcardExportControllerTest extends TestCase
         $response->assertViewHas('options', ['include_metadata' => false]);
     }
 
-    /** @test */
+    #[Test]
     public function it_filters_inactive_flashcards_from_export()
     {
         // Create some inactive flashcards

@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\SupabaseClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Session;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class KidsModeIntegrationTest extends TestCase
@@ -33,9 +34,7 @@ class KidsModeIntegrationTest extends TestCase
         $this->actingAs($this->user);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_can_complete_full_kids_mode_workflow()
     {
         // 1. Start with PIN setup
@@ -63,9 +62,7 @@ class KidsModeIntegrationTest extends TestCase
         }
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_enforces_rate_limiting_on_pin_attempts()
     {
         // Set up PIN first
@@ -94,9 +91,7 @@ class KidsModeIntegrationTest extends TestCase
         }
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_validates_session_fingerprinting()
     {
         Session::put('kids_mode_active', true);
@@ -113,9 +108,7 @@ class KidsModeIntegrationTest extends TestCase
         $response->assertStatus(200);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_applies_security_headers_in_kids_mode()
     {
         Session::put('kids_mode_active', true);
@@ -136,9 +129,7 @@ class KidsModeIntegrationTest extends TestCase
         $this->assertTrue($response->headers->has('Permissions-Policy'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_blocks_unauthorized_routes_in_kids_mode()
     {
         Session::put('kids_mode_active', true);
@@ -162,9 +153,7 @@ class KidsModeIntegrationTest extends TestCase
         }
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_allows_safe_routes_in_kids_mode()
     {
         Session::put('kids_mode_active', true);
@@ -182,9 +171,7 @@ class KidsModeIntegrationTest extends TestCase
         }
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_logs_security_events_properly()
     {
         // Create a child for the test
@@ -205,9 +192,7 @@ class KidsModeIntegrationTest extends TestCase
         $this->assertTrue(true);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_handles_pin_reset_correctly()
     {
         // Set PIN first
@@ -223,9 +208,7 @@ class KidsModeIntegrationTest extends TestCase
         $response->assertJson(['message' => __('Kids mode PIN has been reset successfully')]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_validates_pin_format_correctly()
     {
         // Test invalid PIN formats
@@ -249,9 +232,7 @@ class KidsModeIntegrationTest extends TestCase
         $response->assertStatus(200);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_handles_session_state_transitions_correctly()
     {
         // Start in normal mode
@@ -274,9 +255,7 @@ class KidsModeIntegrationTest extends TestCase
         $response->assertStatus(200);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_provides_proper_error_messages()
     {
         // Test PIN validation errors

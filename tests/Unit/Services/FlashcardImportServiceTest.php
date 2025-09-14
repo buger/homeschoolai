@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\FlashcardImportService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class FlashcardImportServiceTest extends TestCase
@@ -36,7 +37,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->unit = Unit::factory()->for($this->subject)->create();
     }
 
-    /** @test */
+    #[Test]
     public function it_detects_basic_card_type()
     {
         $content = "What is 2+2?\t4\tSimple math";
@@ -47,7 +48,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertEquals('basic', $result['cards'][0]['card_type']);
     }
 
-    /** @test */
+    #[Test]
     public function it_detects_cloze_card_type_from_question()
     {
         $content = "The {{capital}} of France is Paris.\tCapital city\t";
@@ -58,7 +59,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertEquals('cloze', $result['cards'][0]['card_type']);
     }
 
-    /** @test */
+    #[Test]
     public function it_detects_cloze_card_type_with_anki_syntax()
     {
         $content = "The {{c1::mitochondria}} is the {{c2::powerhouse}} of the cell.\tOrganelles\t";
@@ -68,7 +69,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertEquals('cloze', $result['cards'][0]['card_type']);
     }
 
-    /** @test */
+    #[Test]
     public function it_detects_true_false_card_type()
     {
         $content = "The Earth is round.\ttrue\tGeography";
@@ -78,7 +79,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertEquals('true_false', $result['cards'][0]['card_type']);
     }
 
-    /** @test */
+    #[Test]
     public function it_detects_multiple_choice_from_semicolon_separated_answers()
     {
         $content = "Pick the even numbers.\t2;4;6;8\tNumbers\t";
@@ -88,7 +89,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertEquals('multiple_choice', $result['cards'][0]['card_type']);
     }
 
-    /** @test */
+    #[Test]
     public function it_detects_image_occlusion_from_image_url()
     {
         $content = "https://example.com/anatomy.jpg\tHeart location\tAnatomy";
@@ -98,7 +99,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertEquals('image_occlusion', $result['cards'][0]['card_type']);
     }
 
-    /** @test */
+    #[Test]
     public function it_processes_extended_csv_format()
     {
         $content = 'multiple_choice,Pick even numbers,Correct answer,2;3;4;5,0;2,Numbers are fun,math;basic';
@@ -114,7 +115,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertEquals(['math', 'basic'], $card['tags']);
     }
 
-    /** @test */
+    #[Test]
     public function it_processes_multiple_choice_cards_correctly()
     {
         $content = "Pick colors.\tred;blue;green;yellow\t\t";
@@ -128,7 +129,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertEquals([0], $card['correct_choices']); // First choice marked as correct by default
     }
 
-    /** @test */
+    #[Test]
     public function it_processes_true_false_cards_correctly()
     {
         $testCases = [
@@ -153,7 +154,7 @@ class FlashcardImportServiceTest extends TestCase
         }
     }
 
-    /** @test */
+    #[Test]
     public function it_processes_cloze_cards_correctly()
     {
         $content = "The {{capital}} of {{country}} is {{Paris}}.\tGeography fact\t";
@@ -168,7 +169,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertStringContainsString('[...]', $card['question']);
     }
 
-    /** @test */
+    #[Test]
     public function it_imports_cards_successfully()
     {
         $cards = [
@@ -210,7 +211,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertEquals([0, 2], $mcCard->correct_choices);
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_import_data()
     {
         $invalidCards = [
@@ -225,7 +226,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertStringContainsString('Answer', $errors[1]);
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_mixed_card_types_import()
     {
         $content = "What is 2+2?\t4\tMath\n".
@@ -241,7 +242,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertEquals(['basic', 'true_false', 'cloze'], $cardTypes);
     }
 
-    /** @test */
+    #[Test]
     public function it_detects_csv_delimiter_correctly()
     {
         $csvContent = "What is 2+2?,4,Math\nWhat is 3+3?,6,More math";
@@ -252,7 +253,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertCount(2, $result['cards']);
     }
 
-    /** @test */
+    #[Test]
     public function it_detects_tab_delimiter_correctly()
     {
         $tsvContent = "What is 2+2?\t4\tMath\nWhat is 3+3?\t6\tMore math";
@@ -263,7 +264,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertCount(2, $result['cards']);
     }
 
-    /** @test */
+    #[Test]
     public function it_extracts_tags_from_hashtags()
     {
         $content = "What is 2+2? #math #basic\t4\tSimple";
@@ -275,7 +276,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertContains('basic', $card['tags']);
     }
 
-    /** @test */
+    #[Test]
     public function it_rejects_oversized_imports()
     {
         $largeContent = str_repeat("Question?\tAnswer\n", FlashcardImportService::MAX_IMPORT_SIZE + 1);
@@ -285,7 +286,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertStringContainsString('maximum allowed', $result['error']);
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_empty_content()
     {
         $result = $this->importService->parseText('');
@@ -294,7 +295,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertEquals('No content provided', $result['error']);
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_malformed_lines()
     {
         $content = "Valid question\tValid answer\nInvalid line without separator\nAnother question\tAnother answer";
@@ -305,7 +306,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertCount(1, $result['errors']); // One error for malformed line
     }
 
-    /** @test */
+    #[Test]
     public function it_processes_file_upload()
     {
         $content = "What is 2+2?\t4\nWhat is 3+3?\t6";
@@ -318,7 +319,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertEquals("\t", $result['delimiter']);
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_empty_file()
     {
         $file = UploadedFile::fake()->create('empty.csv', 0);

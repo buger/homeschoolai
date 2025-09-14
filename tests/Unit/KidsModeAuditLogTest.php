@@ -6,6 +6,7 @@ use App\Models\KidsModeAuditLog;
 use App\Services\SupabaseClient;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class KidsModeAuditLogTest extends TestCase
@@ -28,7 +29,7 @@ class KidsModeAuditLogTest extends TestCase
         $this->userAgent = 'Mozilla/5.0 (Test Browser)';
     }
 
-    /** @test */
+    #[Test]
     public function it_can_log_security_events()
     {
         $insertedData = null;
@@ -71,7 +72,7 @@ class KidsModeAuditLogTest extends TestCase
         $this->assertNotNull($insertedData['updated_at']);
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_null_values_gracefully()
     {
         $insertedData = null;
@@ -104,7 +105,7 @@ class KidsModeAuditLogTest extends TestCase
         $this->assertNull($insertedData['metadata']);
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_database_errors_without_failing()
     {
         // Mock SupabaseClient to throw an exception
@@ -132,7 +133,7 @@ class KidsModeAuditLogTest extends TestCase
         $this->assertTrue(true);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_retrieve_user_audit_logs()
     {
         $mockLogs = [
@@ -174,7 +175,7 @@ class KidsModeAuditLogTest extends TestCase
         $this->assertEquals('exit_success', $logs[1]['action']);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_count_recent_failed_attempts()
     {
         $mockFailedLogs = [
@@ -195,7 +196,7 @@ class KidsModeAuditLogTest extends TestCase
         $this->assertEquals(3, $count);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_count_failed_attempts_by_ip()
     {
         $mockIpLogs = [
@@ -216,7 +217,7 @@ class KidsModeAuditLogTest extends TestCase
         $this->assertEquals(2, $count);
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_query_errors_gracefully()
     {
         // Mock SupabaseClient to throw an exception on query
@@ -240,7 +241,7 @@ class KidsModeAuditLogTest extends TestCase
         $this->assertEquals([], $logs);
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_time_ranges_for_failed_attempts()
     {
         $this->mock(SupabaseClient::class, function ($mock) {
@@ -263,7 +264,7 @@ class KidsModeAuditLogTest extends TestCase
         KidsModeAuditLog::getRecentFailedAttempts($this->userId, 30);
     }
 
-    /** @test */
+    #[Test]
     public function it_properly_encodes_metadata()
     {
         $insertedData = null;

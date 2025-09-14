@@ -6,6 +6,7 @@ use App\Services\FlashcardImportService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class FlashcardImportServiceTest extends TestCase
@@ -21,7 +22,7 @@ class FlashcardImportServiceTest extends TestCase
         Storage::fake('local');
     }
 
-    /** @test */
+    #[Test]
     public function test_parses_quizlet_tab_format()
     {
         $content = "What is the capital of France?\tParis\nWhat is 2+2?\t4\tBasic math";
@@ -37,7 +38,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertEquals('Basic math', $result['cards'][1]['hint']);
     }
 
-    /** @test */
+    #[Test]
     public function test_parses_csv_format()
     {
         $content = "What is the capital of France?,Paris\n\"What is 2+2?\",4,\"Basic math\"";
@@ -53,7 +54,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertEquals('Basic math', $result['cards'][1]['hint']);
     }
 
-    /** @test */
+    #[Test]
     public function test_parses_dash_format()
     {
         $content = "What is the capital of France? - Paris\nWhat is 2+2? - 4 - Basic math";
@@ -69,7 +70,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertEquals('Basic math', $result['cards'][1]['hint']);
     }
 
-    /** @test */
+    #[Test]
     public function test_auto_detects_delimiter()
     {
         // Tab-separated should be detected
@@ -88,7 +89,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertTrue($dashResult['success']);
     }
 
-    /** @test */
+    #[Test]
     public function test_validates_required_fields()
     {
         $cards = [
@@ -104,7 +105,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertStringContainsString('Row 2:', $errors[1]);
     }
 
-    /** @test */
+    #[Test]
     public function test_handles_empty_content()
     {
         $result = $this->service->parseText('');
@@ -113,7 +114,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertStringContainsString('No content provided', $result['error']);
     }
 
-    /** @test */
+    #[Test]
     public function test_handles_unsupported_delimiter()
     {
         $content = 'Question|Answer'; // Pipe is not primary supported delimiter
@@ -124,7 +125,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertTrue($result['success']);
     }
 
-    /** @test */
+    #[Test]
     public function test_enforces_max_import_size()
     {
         // Create content with more than max allowed cards
@@ -140,7 +141,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertStringContainsString('maximum allowed', $result['error']);
     }
 
-    /** @test */
+    #[Test]
     public function test_parses_file_upload()
     {
         $content = "What is the capital of France?\tParis\nWhat is 2+2?\t4";
@@ -152,7 +153,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertCount(2, $result['cards']);
     }
 
-    /** @test */
+    #[Test]
     public function test_extracts_tags_from_hashtags()
     {
         $content = "What is the capital of France? #geography\tParis #cities";
@@ -165,7 +166,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertContains('cities', $result['cards'][0]['tags']);
     }
 
-    /** @test */
+    #[Test]
     public function test_normalizes_line_endings()
     {
         $contentWithCrLf = "Question 1\tAnswer 1\r\nQuestion 2\tAnswer 2";
@@ -180,7 +181,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertCount(2, $resultCr['cards']);
     }
 
-    /** @test */
+    #[Test]
     public function test_skips_empty_lines()
     {
         $content = "Question 1\tAnswer 1\n\n\nQuestion 2\tAnswer 2\n\n";
@@ -191,7 +192,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertCount(2, $result['cards']);
     }
 
-    /** @test */
+    #[Test]
     public function test_handles_long_content()
     {
         $longQuestion = str_repeat('This is a very long question. ', 100);
@@ -206,7 +207,7 @@ class FlashcardImportServiceTest extends TestCase
         $this->assertEquals(trim($longAnswer), $result['cards'][0]['answer']);
     }
 
-    /** @test */
+    #[Test]
     public function test_validates_card_data_length()
     {
         $cards = [

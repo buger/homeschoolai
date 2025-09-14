@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class FlashcardImportFeatureTest extends TestCase
@@ -37,7 +38,7 @@ class FlashcardImportFeatureTest extends TestCase
         Storage::fake('local');
     }
 
-    /** @test */
+    #[Test]
     public function test_shows_import_modal()
     {
         $response = $this->actingAs($this->user)
@@ -50,7 +51,7 @@ class FlashcardImportFeatureTest extends TestCase
         $response->assertViewHas('maxImportSize');
     }
 
-    /** @test */
+    #[Test]
     public function test_unauthorized_user_cannot_access_import()
     {
         $response = $this->get(route('flashcards.import', $this->unit->id));
@@ -59,7 +60,7 @@ class FlashcardImportFeatureTest extends TestCase
         $response->assertStatus(302);
     }
 
-    /** @test */
+    #[Test]
     public function test_user_cannot_import_to_other_users_unit()
     {
         $otherUser = User::factory()->create();
@@ -72,7 +73,7 @@ class FlashcardImportFeatureTest extends TestCase
         $response->assertStatus(403);
     }
 
-    /** @test */
+    #[Test]
     public function test_import_via_copy_paste()
     {
         $content = "What is the capital of France?\tParis\nWhat is 2+2?\t4\tBasic math";
@@ -95,7 +96,7 @@ class FlashcardImportFeatureTest extends TestCase
         $this->assertEquals('Paris', $cards[0]['answer']);
     }
 
-    /** @test */
+    #[Test]
     public function test_import_csv_file()
     {
         $content = "What is the capital of France?,Paris\nWhat is 2+2?,4,Basic math";
@@ -113,7 +114,7 @@ class FlashcardImportFeatureTest extends TestCase
         $response->assertViewHas('canImport', true);
     }
 
-    /** @test */
+    #[Test]
     public function test_import_validation_errors()
     {
         $content = "\tEmpty question\nValid question\t"; // Tab-separated but missing answers
@@ -129,7 +130,7 @@ class FlashcardImportFeatureTest extends TestCase
         $response->assertSee('text-red-500');
     }
 
-    /** @test */
+    #[Test]
     public function test_execute_import()
     {
         $content = "What is the capital of France?\tParis\nWhat is 2+2?\t4\tBasic math";
@@ -165,7 +166,7 @@ class FlashcardImportFeatureTest extends TestCase
         $this->assertEquals('Basic math', $secondCard->hint);
     }
 
-    /** @test */
+    #[Test]
     public function test_execute_import_with_invalid_base64()
     {
         $response = $this->actingAs($this->user)
@@ -179,7 +180,7 @@ class FlashcardImportFeatureTest extends TestCase
         $response->assertSeeText('Invalid import data');
     }
 
-    /** @test */
+    #[Test]
     public function test_import_requires_confirmation()
     {
         $content = "What is the capital of France?\tParis";
@@ -195,7 +196,7 @@ class FlashcardImportFeatureTest extends TestCase
         $response->assertStatus(422);
     }
 
-    /** @test */
+    #[Test]
     public function test_import_file_validation()
     {
         // Test file too large
@@ -216,7 +217,7 @@ class FlashcardImportFeatureTest extends TestCase
         $response->assertStatus(422);
     }
 
-    /** @test */
+    #[Test]
     public function test_import_text_validation()
     {
         // Test missing text
@@ -238,7 +239,7 @@ class FlashcardImportFeatureTest extends TestCase
         $response->assertStatus(422);
     }
 
-    /** @test */
+    #[Test]
     public function test_import_empty_file_content()
     {
         $file = UploadedFile::fake()->createWithContent('empty.csv', '');
@@ -253,7 +254,7 @@ class FlashcardImportFeatureTest extends TestCase
         $response->assertSeeText('File is empty');
     }
 
-    /** @test */
+    #[Test]
     public function test_import_unsupported_format()
     {
         $content = 'Unsupported format without proper delimiters';
@@ -268,7 +269,7 @@ class FlashcardImportFeatureTest extends TestCase
         $response->assertSeeText('Could not detect delimiter');
     }
 
-    /** @test */
+    #[Test]
     public function test_import_with_tags()
     {
         $content = "What is the capital of France? #geography\tParis #cities";
@@ -289,7 +290,7 @@ class FlashcardImportFeatureTest extends TestCase
         $this->assertContains('cities', $flashcard->tags);
     }
 
-    /** @test */
+    #[Test]
     public function test_import_partial_failure()
     {
         // Mix of valid and invalid cards (missing answer should fail)
@@ -318,7 +319,7 @@ class FlashcardImportFeatureTest extends TestCase
         $this->assertContains('Valid question 2', $questions);
     }
 
-    /** @test */
+    #[Test]
     public function test_kids_mode_blocks_import()
     {
         // Set up kids mode in session
@@ -331,7 +332,7 @@ class FlashcardImportFeatureTest extends TestCase
         $this->assertEquals(200, $response->status());
     }
 
-    /** @test */
+    #[Test]
     public function test_import_large_valid_dataset()
     {
         // Create content with multiple cards (but under limit)

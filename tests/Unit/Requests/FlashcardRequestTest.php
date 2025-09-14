@@ -5,6 +5,7 @@ namespace Tests\Unit\Requests;
 use App\Http\Requests\FlashcardRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Validator;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class FlashcardRequestTest extends TestCase
@@ -26,7 +27,7 @@ class FlashcardRequestTest extends TestCase
         return $request;
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_basic_card_type()
     {
         $request = $this->makeRequest([
@@ -41,7 +42,7 @@ class FlashcardRequestTest extends TestCase
         $this->assertFalse($validator->fails());
     }
 
-    /** @test */
+    #[Test]
     public function it_requires_question_for_basic_cards()
     {
         $request = $this->makeRequest([
@@ -56,7 +57,7 @@ class FlashcardRequestTest extends TestCase
         $this->assertTrue($validator->errors()->has('question'));
     }
 
-    /** @test */
+    #[Test]
     public function it_requires_answer_for_basic_cards()
     {
         $request = $this->makeRequest([
@@ -71,7 +72,7 @@ class FlashcardRequestTest extends TestCase
         $this->assertTrue($validator->errors()->has('answer'));
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_multiple_choice_card_type()
     {
         $request = $this->makeRequest([
@@ -88,7 +89,7 @@ class FlashcardRequestTest extends TestCase
         $this->assertFalse($validator->fails());
     }
 
-    /** @test */
+    #[Test]
     public function it_requires_minimum_choices_for_multiple_choice()
     {
         $request = $this->makeRequest([
@@ -106,7 +107,7 @@ class FlashcardRequestTest extends TestCase
         $this->assertTrue($validator->errors()->has('choices'));
     }
 
-    /** @test */
+    #[Test]
     public function it_requires_correct_choices_for_multiple_choice()
     {
         $request = $this->makeRequest([
@@ -124,7 +125,7 @@ class FlashcardRequestTest extends TestCase
         $this->assertTrue($validator->errors()->has('correct_choices'));
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_true_false_card_type()
     {
         $request = $this->makeRequest([
@@ -140,7 +141,7 @@ class FlashcardRequestTest extends TestCase
         $this->assertFalse($validator->fails());
     }
 
-    /** @test */
+    #[Test]
     public function it_requires_true_false_answer()
     {
         $request = $this->makeRequest([
@@ -156,7 +157,7 @@ class FlashcardRequestTest extends TestCase
         $this->assertTrue($validator->errors()->has('true_false_answer'));
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_cloze_card_type()
     {
         $request = $this->makeRequest([
@@ -170,7 +171,7 @@ class FlashcardRequestTest extends TestCase
         $this->assertFalse($validator->fails());
     }
 
-    /** @test */
+    #[Test]
     public function it_requires_cloze_text_for_cloze_cards()
     {
         $request = $this->makeRequest([
@@ -184,7 +185,7 @@ class FlashcardRequestTest extends TestCase
         $this->assertTrue($validator->errors()->has('cloze_text'));
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_image_occlusion_card_type()
     {
         $request = $this->makeRequest([
@@ -203,7 +204,7 @@ class FlashcardRequestTest extends TestCase
         $this->assertFalse($validator->fails());
     }
 
-    /** @test */
+    #[Test]
     public function it_requires_image_url_for_image_occlusion()
     {
         $request = $this->makeRequest([
@@ -219,7 +220,7 @@ class FlashcardRequestTest extends TestCase
         $this->assertTrue($validator->errors()->has('question_image_url'));
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_card_type_enum()
     {
         $request = $this->makeRequest([
@@ -235,7 +236,7 @@ class FlashcardRequestTest extends TestCase
         $this->assertTrue($validator->errors()->has('card_type'));
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_difficulty_level_enum()
     {
         $request = $this->makeRequest([
@@ -251,7 +252,7 @@ class FlashcardRequestTest extends TestCase
         $this->assertTrue($validator->errors()->has('difficulty_level'));
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_choices_maximum_count()
     {
         $request = $this->makeRequest([
@@ -269,7 +270,7 @@ class FlashcardRequestTest extends TestCase
         $this->assertTrue($validator->errors()->has('choices'));
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_image_url_format()
     {
         $request = $this->makeRequest([
@@ -286,7 +287,7 @@ class FlashcardRequestTest extends TestCase
         $this->assertTrue($validator->errors()->has('question_image_url'));
     }
 
-    /** @test */
+    #[Test]
     public function it_prepares_true_false_data()
     {
         $request = $this->makeRequest([
@@ -302,7 +303,7 @@ class FlashcardRequestTest extends TestCase
         $this->assertEquals('True', $request->input('answer'));
     }
 
-    /** @test */
+    #[Test]
     public function it_prepares_true_false_false_answer()
     {
         $request = $this->makeRequest([
@@ -316,7 +317,7 @@ class FlashcardRequestTest extends TestCase
         $this->assertEquals('False', $request->input('answer'));
     }
 
-    /** @test */
+    #[Test]
     public function it_prepares_cloze_data()
     {
         $request = $this->makeRequest([
@@ -330,7 +331,7 @@ class FlashcardRequestTest extends TestCase
         $this->assertEquals(['capital', 'Paris'], $request->input('cloze_answers'));
     }
 
-    /** @test */
+    #[Test]
     public function it_prepares_tags_from_string()
     {
         $request = $this->makeRequest([
@@ -344,7 +345,7 @@ class FlashcardRequestTest extends TestCase
         $this->assertEquals(['math', 'science', 'basic'], $request->input('tags'));
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_empty_tags_string()
     {
         $request = $this->makeRequest([
@@ -358,7 +359,7 @@ class FlashcardRequestTest extends TestCase
         $this->assertEquals([], $request->input('tags'));
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_anki_style_cloze_syntax()
     {
         $request = $this->makeRequest([
@@ -371,7 +372,7 @@ class FlashcardRequestTest extends TestCase
         $this->assertEquals('mitochondria, powerhouse', $request->input('answer'));
     }
 
-    /** @test */
+    #[Test]
     public function it_provides_custom_error_messages()
     {
         $request = $this->makeRequest([

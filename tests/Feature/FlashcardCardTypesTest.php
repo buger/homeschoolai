@@ -7,6 +7,7 @@ use App\Models\Subject;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class FlashcardCardTypesTest extends TestCase
@@ -28,7 +29,7 @@ class FlashcardCardTypesTest extends TestCase
         $this->unit = Unit::factory()->for($this->subject)->create();
     }
 
-    /** @test */
+    #[Test]
     public function it_creates_basic_flashcard()
     {
         $this->actingAs($this->user);
@@ -53,7 +54,7 @@ class FlashcardCardTypesTest extends TestCase
         $this->assertEquals(['geography', 'europe'], $flashcard->tags);
     }
 
-    /** @test */
+    #[Test]
     public function it_creates_multiple_choice_flashcard()
     {
         $this->actingAs($this->user);
@@ -77,7 +78,7 @@ class FlashcardCardTypesTest extends TestCase
         $this->assertEquals([0, 2], $flashcard->correct_choices);
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_multiple_choice_minimum_choices()
     {
         $this->actingAs($this->user);
@@ -97,7 +98,7 @@ class FlashcardCardTypesTest extends TestCase
         $response->assertJsonPath('errors.choices.0', 'Multiple choice cards must have at least 2 choices.');
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_multiple_choice_correct_choices()
     {
         $this->actingAs($this->user);
@@ -117,7 +118,7 @@ class FlashcardCardTypesTest extends TestCase
         $response->assertJsonPath('errors.correct_choices.0', 'Multiple choice cards must have at least 1 correct choice.');
     }
 
-    /** @test */
+    #[Test]
     public function it_creates_true_false_flashcard()
     {
         $this->actingAs($this->user);
@@ -142,7 +143,7 @@ class FlashcardCardTypesTest extends TestCase
         $this->assertEquals('True', $flashcard->answer);
     }
 
-    /** @test */
+    #[Test]
     public function it_creates_false_answer_true_false_flashcard()
     {
         $this->actingAs($this->user);
@@ -164,7 +165,7 @@ class FlashcardCardTypesTest extends TestCase
         $this->assertEquals('False', $flashcard->answer);
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_true_false_answer_required()
     {
         $this->actingAs($this->user);
@@ -183,7 +184,7 @@ class FlashcardCardTypesTest extends TestCase
         $response->assertJsonPath('errors.true_false_answer.0', 'The true false answer field is required.');
     }
 
-    /** @test */
+    #[Test]
     public function it_creates_cloze_deletion_flashcard()
     {
         $this->actingAs($this->user);
@@ -205,7 +206,7 @@ class FlashcardCardTypesTest extends TestCase
         $this->assertEquals('capital, Paris', $flashcard->answer);
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_cloze_text_required()
     {
         $this->actingAs($this->user);
@@ -220,7 +221,7 @@ class FlashcardCardTypesTest extends TestCase
         $response->assertJsonPath('errors.cloze_text.0', 'Cloze deletion cards must have cloze text with {{}} syntax.');
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_cloze_syntax()
     {
         $this->actingAs($this->user);
@@ -235,7 +236,7 @@ class FlashcardCardTypesTest extends TestCase
         $response->assertJsonValidationErrors(['cloze_text']);
     }
 
-    /** @test */
+    #[Test]
     public function it_creates_typed_answer_flashcard()
     {
         $this->actingAs($this->user);
@@ -255,7 +256,7 @@ class FlashcardCardTypesTest extends TestCase
         $this->assertEquals('Tokyo', $flashcard->answer);
     }
 
-    /** @test */
+    #[Test]
     public function it_creates_image_occlusion_flashcard()
     {
         $this->actingAs($this->user);
@@ -280,7 +281,7 @@ class FlashcardCardTypesTest extends TestCase
         $this->assertEquals('https://example.com/heart-highlighted.jpg', $flashcard->answer_image_url);
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_image_occlusion_image_url_required()
     {
         $this->actingAs($this->user);
@@ -297,7 +298,7 @@ class FlashcardCardTypesTest extends TestCase
         $response->assertJsonPath('errors.question_image_url.0', 'Image occlusion cards must have a question image URL.');
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_image_url_format()
     {
         $this->actingAs($this->user);
@@ -314,7 +315,7 @@ class FlashcardCardTypesTest extends TestCase
         $response->assertJsonPath('errors.question_image_url.0', 'Question image URL must be a valid URL.');
     }
 
-    /** @test */
+    #[Test]
     public function it_updates_flashcard_with_card_type_change()
     {
         $this->actingAs($this->user);
@@ -340,7 +341,7 @@ class FlashcardCardTypesTest extends TestCase
         $this->assertEquals([0], $flashcard->correct_choices);
     }
 
-    /** @test */
+    #[Test]
     public function it_rejects_invalid_card_type()
     {
         $this->actingAs($this->user);
@@ -356,7 +357,7 @@ class FlashcardCardTypesTest extends TestCase
         $response->assertJsonValidationErrors(['card_type']);
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_unique_choices_in_multiple_choice()
     {
         $this->actingAs($this->user);
@@ -374,7 +375,7 @@ class FlashcardCardTypesTest extends TestCase
         $response->assertJsonValidationErrors(['choices']);
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_correct_choice_indices_in_multiple_choice()
     {
         $this->actingAs($this->user);
@@ -392,7 +393,7 @@ class FlashcardCardTypesTest extends TestCase
         $response->assertJsonValidationErrors(['correct_choices']);
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_empty_cloze_deletions()
     {
         $this->actingAs($this->user);
@@ -407,7 +408,7 @@ class FlashcardCardTypesTest extends TestCase
         $response->assertJsonValidationErrors(['cloze_text']);
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_nested_cloze_syntax()
     {
         $this->actingAs($this->user);
@@ -422,7 +423,7 @@ class FlashcardCardTypesTest extends TestCase
         $response->assertJsonValidationErrors(['cloze_text']);
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_image_file_extension()
     {
         $this->actingAs($this->user);
@@ -439,7 +440,7 @@ class FlashcardCardTypesTest extends TestCase
         $response->assertJsonValidationErrors(['question_image_url']);
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_anki_style_cloze_syntax()
     {
         $this->actingAs($this->user);
@@ -457,7 +458,7 @@ class FlashcardCardTypesTest extends TestCase
         $this->assertEquals('mitochondria, powerhouse', $flashcard->answer);
     }
 
-    /** @test */
+    #[Test]
     public function it_prevents_unauthorized_access()
     {
         $otherUser = User::factory()->create();
