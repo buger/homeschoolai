@@ -48,24 +48,32 @@ supabase start
 supabase status  # Should show PostgreSQL on port 54322
 ```
 
-#### **PHP Unit Tests (100% Working)**
+#### **🚨 CRITICAL: PHP Unit Tests - Database Protection Required**
 
-⚠️ **WARNING**: PHP tests use `RefreshDatabase` trait which **WIPES THE DATABASE**! 
-Always use `APP_ENV=testing` to protect your development data.
+**DANGER**: PHP tests use `RefreshDatabase` trait which **COMPLETELY WIPES THE DATABASE**!
+**NEVER run tests without proper database isolation or you will lose all development data!**
 
 ```bash
-# SAFE: Use the safe test runner (RECOMMENDED)
-./scripts/safe-test.sh                    # Automatically uses test database
+# ✅ ALWAYS USE THIS METHOD (SAFE):
+./scripts/safe-test.sh                    # Run all tests safely
 ./scripts/safe-test.sh --filter TestName  # Run specific test safely
+./scripts/safe-test.sh --coverage         # Run with coverage
 
-# OR manually specify environment (REQUIRED FORMAT)
-APP_ENV=testing DB_CONNECTION=pgsql SESSION_DRIVER=file CACHE_STORE=array php artisan test
+# Or use Makefile commands (also safe):
+make test-unit                            # Runs safe-test.sh internally
+make test-unit-coverage                   # Safe coverage testing
 
-# Run specific test
-APP_ENV=testing DB_CONNECTION=pgsql SESSION_DRIVER=file CACHE_STORE=array php artisan test --filter TestName
+# ❌ NEVER RUN THESE (WILL WIPE YOUR DATABASE):
+php artisan test                          # DANGEROUS - might use wrong database
+artisan test                               # DANGEROUS
+vendor/bin/phpunit                        # DANGEROUS
 ```
 
-**Note**: Environment variables MUST be explicitly set to use the test database (`learning_app_test`) instead of your development database (`learning_app`).
+**Safety Features**:
+- `safe-test.sh` forces use of `learning_app_test` database
+- `TestCase.php` throws exception if wrong database detected
+- `phpunit.xml` has forced test database configuration
+- Development database (`learning_app`) is protected from accidental wipes
 
 #### **E2E Tests (Infrastructure Working)**
 ```bash

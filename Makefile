@@ -95,14 +95,15 @@ test: ## Run all tests (PHPUnit + E2E)
 	@$(MAKE) test-e2e
 
 .PHONY: test-unit
-test-unit: ## Run PHPUnit tests
-	@echo "$(GREEN)Running PHPUnit tests...$(NC)"
-	APP_ENV=testing DB_CONNECTION=pgsql SESSION_DRIVER=file CACHE_STORE=array $(ARTISAN) test
+test-unit: ## Run PHPUnit tests (SAFE - uses test database)
+	@echo "$(GREEN)Running PHPUnit tests on TEST database...$(NC)"
+	@echo "$(YELLOW)⚠️  Using safe test runner to protect development database$(NC)"
+	@./scripts/safe-test.sh
 
 .PHONY: test-unit-coverage
-test-unit-coverage: ## Run PHPUnit tests with coverage
-	@echo "$(GREEN)Running PHPUnit tests with coverage...$(NC)"
-	APP_ENV=testing DB_CONNECTION=pgsql SESSION_DRIVER=file CACHE_STORE=array $(ARTISAN) test --coverage
+test-unit-coverage: ## Run PHPUnit tests with coverage (SAFE - uses test database)
+	@echo "$(GREEN)Running PHPUnit tests with coverage on TEST database...$(NC)"
+	@./scripts/safe-test.sh --coverage
 
 .PHONY: test-e2e
 test-e2e: ## Run E2E tests with Playwright

@@ -20,16 +20,18 @@
         </include>
     </source>
     <php>
-        <env name="APP_ENV" value="testing"/>
+        <!-- CRITICAL: Test Environment Configuration -->
+        <!-- NEVER change DB_DATABASE - tests use RefreshDatabase which WIPES the database -->
+        <env name="APP_ENV" value="testing" force="true"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="CACHE_STORE" value="array"/>
-        <env name="DB_CONNECTION" value="pgsql"/>
-        <env name="DB_HOST" value="127.0.0.1"/>
-        <env name="DB_PORT" value="5432"/>
-        <env name="DB_DATABASE" value="learning_app_test"/>
-        <env name="DB_USERNAME" value="laravel"/>
-        <env name="DB_PASSWORD" value="12345"/>
+        <env name="DB_CONNECTION" value="pgsql" force="true"/>
+        <env name="DB_HOST" value="127.0.0.1" force="true"/>
+        <env name="DB_PORT" value="5432" force="true"/>
+        <env name="DB_DATABASE" value="learning_app_test" force="true"/> <!-- NEVER CHANGE THIS -->
+        <env name="DB_USERNAME" value="laravel" force="true"/>
+        <env name="DB_PASSWORD" value="12345" force="true"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>

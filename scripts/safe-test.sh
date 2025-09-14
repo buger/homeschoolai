@@ -1,28 +1,60 @@
 #!/bin/bash
 
-# Safe PHP Test Runner - Prevents accidental dev database wipes
-# This script ensures tests ALWAYS use the test database
+# Safe PHPUnit Test Runner
+# This script ensures tests NEVER run on the development database
+# Always uses the test database explicitly to prevent data loss
 
-set -e
+set -e  # Exit on any error
 
-echo "🛡️  Safe Test Runner - Protecting your development database"
-echo "==========================================================="
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
 
-# Force testing environment to prevent accidental data loss
-export APP_ENV=testing
-export DB_CONNECTION=pgsql
-export DB_DATABASE=learning_app_test
-export SESSION_DRIVER=file
-export CACHE_STORE=array
+echo -e "${GREEN}🛡️  Safe Test Runner - Database Protection Active${NC}"
+echo ""
 
-# Verify we're using the test database
-if [ "$DB_DATABASE" != "learning_app_test" ]; then
-    echo "❌ ERROR: Not using test database! Aborting to protect your data."
+# Check if we're about to use the wrong database
+if [ "$DB_DATABASE" == "learning_app" ]; then
+    echo -e "${RED}❌ CRITICAL ERROR: Attempting to run tests on development database!${NC}"
+    echo -e "${RED}   Tests would wipe the 'learning_app' database.${NC}"
+    echo -e "${YELLOW}   Use this script or explicitly set DB_DATABASE=learning_app_test${NC}"
     exit 1
 fi
 
-echo "✅ Using test database: $DB_DATABASE"
+# Force the test environment and database
+export APP_ENV=testing
+export DB_CONNECTION=pgsql
+export DB_HOST=127.0.0.1
+export DB_PORT=5432
+export DB_DATABASE=learning_app_test
+export DB_USERNAME=laravel
+export DB_PASSWORD=12345
+export CACHE_STORE=array
+export SESSION_DRIVER=file
+
+echo -e "${YELLOW}📋 Test Configuration:${NC}"
+echo "   Environment: $APP_ENV"
+echo "   Database: $DB_DATABASE (SAFE)"
+echo "   Cache: $CACHE_STORE"
+echo "   Session: $SESSION_DRIVER"
 echo ""
 
+# Verify the test database exists
+echo -e "${GREEN}✓ Verifying test database exists...${NC}"
+PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USERNAME -lqt 2>/dev/null | cut -d \| -f 1 | grep -qw $DB_DATABASE
+if [ $? -ne 0 ]; then
+    echo -e "${YELLOW}⚠️  Test database '$DB_DATABASE' does not exist. Creating it...${NC}"
+    PGPASSWORD=$DB_PASSWORD createdb -h $DB_HOST -p $DB_PORT -U $DB_USERNAME $DB_DATABASE 2>/dev/null || true
+    echo -e "${GREEN}✓ Test database created${NC}"
+fi
+
 # Run the tests with all arguments passed through
+echo -e "${GREEN}🧪 Running tests on SAFE test database...${NC}"
+echo ""
+
 php artisan test "$@"
+
+echo ""
+echo -e "${GREEN}✅ Tests completed safely on test database${NC}"
