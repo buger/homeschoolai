@@ -18,12 +18,18 @@ abstract class TestCase extends BaseTestCase
         // CRITICAL: Prevent running tests on non-test database
         // This prevents accidentally wiping the development database
         $database = config('database.connections.pgsql.database');
-        $expectedTestDb = 'learning_app_test';
 
-        if ($database !== $expectedTestDb) {
+        // List of allowed test database names (local and CI)
+        $allowedTestDatabases = [
+            'learning_app_test',    // Local development
+            'homeschoolai_test',    // GitHub Actions CI
+            'homeschoolai_e2e',     // GitHub Actions E2E
+        ];
+
+        if (! in_array($database, $allowedTestDatabases)) {
             throw new \Exception(
                 "🚨 CRITICAL ERROR: Tests attempting to run on non-test database!\n".
-                "   Expected: {$expectedTestDb}\n".
+                '   Expected one of: '.implode(', ', $allowedTestDatabases)."\n".
                 "   Actual: {$database}\n".
                 "   \n".
                 "   This would WIPE YOUR DATABASE!\n".
