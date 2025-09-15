@@ -16,6 +16,6 @@ parameters:
 
     # Ignore common Laravel/Eloquent false positives
     ignoreErrors:
-        - '#Call to an undefined static method App\\Models\\.*::(create|find|findOrFail|where|whereHas|forUser|insert)#'
+        - '#Call to an undefined static method App\\Models\\.*::(create|find|findOrFail|where|whereHas|forUser|insert|first|limit|exists|factory)#'
         - '#Access to an undefined property App\\Models\\.*::\$.*#'
         - '#Call to static method .* on an unknown class (Log|Hash)#'
