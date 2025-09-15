@@ -2,11 +2,14 @@
 
 namespace App\Services;
 
+use App\Services\Markdown\Extensions\InteractiveExtension;
+use App\Services\Markdown\Extensions\UnifiedLinkRenderer;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use League\CommonMark\Environment\Environment;
 use League\CommonMark\Extension\Autolink\AutolinkExtension;
+use League\CommonMark\Extension\CommonMark\Node\Inline\Link as CommonMarkLink;
 use League\CommonMark\Extension\FrontMatter\FrontMatterExtension;
 use League\CommonMark\Extension\SmartPunct\SmartPunctExtension;
 use League\CommonMark\Extension\Strikethrough\StrikethroughExtension;
@@ -48,6 +51,10 @@ class RichContentService
         $environment->addExtension(new AutolinkExtension);
         $environment->addExtension(new SmartPunctExtension);
         $environment->addExtension(new FrontMatterExtension);
+
+        // Add our custom extensions for enhanced learning content
+        $environment->addRenderer(CommonMarkLink::class, new UnifiedLinkRenderer, 100);
+        $environment->addExtension(new InteractiveExtension);
 
         $this->markdownConverter = new MarkdownConverter($environment);
     }
@@ -353,5 +360,179 @@ class RichContentService
 > {$content}
 
 MARKDOWN;
+    }
+
+    /**
+     * Process unified learning content with enhanced rendering
+     */
+    public function processUnifiedContent(string $content): array
+    {
+        // Process the content with enhanced markdown parsing
+        $html = $this->markdownToHtml($content);
+        $metadata = $this->generateContentMetadata($content, 'markdown');
+
+        // Extract additional metadata from enhanced content
+        $enhancedMetadata = $this->extractEnhancedMetadata($content);
+        $metadata = array_merge($metadata, $enhancedMetadata);
+
+        return [
+            'html' => $html,
+            'metadata' => $metadata,
+        ];
+    }
+
+    /**
+     * Extract enhanced metadata from content (videos, files, interactive elements)
+     */
+    private function extractEnhancedMetadata(string $content): array
+    {
+        $metadata = [
+            'has_videos' => false,
+            'has_files' => false,
+            'has_interactive_elements' => false,
+            'video_count' => 0,
+            'file_count' => 0,
+            'estimated_video_time' => 0,
+            'complexity_score' => 'basic',
+        ];
+
+        // Detect video embeds
+        $videoPatterns = [
+            '/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/',
+            '/vimeo\.com\/(?:video\/)?(\d+)/',
+            '/khanacademy\.org\/.*\/([a-zA-Z0-9_-]+)/',
+            '/coursera\.org\/learn\/([^\/]+)/',
+            '/edx\.org\/course\/([^\/]+)/',
+        ];
+
+        foreach ($videoPatterns as $pattern) {
+            if (preg_match_all($pattern, $content, $matches)) {
+                $metadata['has_videos'] = true;
+                $metadata['video_count'] += count($matches[0]);
+            }
+        }
+
+        // Detect file links
+        $filePattern = '/\[([^\]]+)\]\(([^)]+\.(?:pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar|mp3|mp4|avi|mov|jpg|jpeg|png|gif))\)/i';
+        if (preg_match_all($filePattern, $content, $matches)) {
+            $metadata['has_files'] = true;
+            $metadata['file_count'] = count($matches[0]);
+        }
+
+        // Detect interactive elements
+        $interactivePatterns = [
+            '/!!!\s+(collapse|collapse-open)/',
+            '/<details/',
+            '/\|.*\|.*\|/', // Simple table detection
+        ];
+
+        foreach ($interactivePatterns as $pattern) {
+            if (preg_match($pattern, $content)) {
+                $metadata['has_interactive_elements'] = true;
+                break;
+            }
+        }
+
+        // Estimate video time (rough calculation)
+        if ($metadata['has_videos']) {
+            $metadata['estimated_video_time'] = $metadata['video_count'] * 10; // 10 minutes average per video
+        }
+
+        // Calculate complexity score
+        $complexityFactors = 0;
+        if ($metadata['has_videos']) {
+            $complexityFactors++;
+        }
+        if ($metadata['has_files']) {
+            $complexityFactors++;
+        }
+        if ($metadata['has_interactive_elements']) {
+            $complexityFactors++;
+        }
+        if ($metadata['video_count'] > 2) {
+            $complexityFactors++;
+        }
+        if ($metadata['file_count'] > 3) {
+            $complexityFactors++;
+        }
+
+        $metadata['complexity_score'] = match (true) {
+            $complexityFactors >= 4 => 'advanced',
+            $complexityFactors >= 2 => 'intermediate',
+            default => 'basic'
+        };
+
+        return $metadata;
+    }
+
+    /**
+     * Create collapsible section markdown
+     */
+    public function createCollapsibleSection(string $title, string $content, bool $isOpen = false): string
+    {
+        $directive = $isOpen ? 'collapse-open' : 'collapse';
+
+        return <<<MARKDOWN
+!!! {$directive} "{$title}"
+
+{$content}
+
+!!!
+
+MARKDOWN;
+    }
+
+    /**
+     * Validate video URL and return embed information
+     */
+    public function validateVideoUrl(string $url): ?array
+    {
+        // YouTube patterns
+        if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})(?:\S+t=(\d+))?/', $url, $matches)) {
+            return [
+                'valid' => true,
+                'type' => 'youtube',
+                'id' => $matches[1],
+                'start_time' => isset($matches[2]) ? (int) $matches[2] : null,
+                'embed_url' => "https://www.youtube.com/embed/{$matches[1]}",
+                'thumbnail' => "https://img.youtube.com/vi/{$matches[1]}/maxresdefault.jpg",
+            ];
+        }
+
+        // Vimeo patterns
+        if (preg_match('/vimeo\.com\/(?:video\/)?(\d+)/', $url, $matches)) {
+            return [
+                'valid' => true,
+                'type' => 'vimeo',
+                'id' => $matches[1],
+                'embed_url' => "https://player.vimeo.com/video/{$matches[1]}",
+                'thumbnail' => null,
+            ];
+        }
+
+        // Educational platforms
+        $educationalPatterns = [
+            'khan_academy' => '/khanacademy\.org\/.*\/([a-zA-Z0-9_-]+)/',
+            'coursera' => '/coursera\.org\/learn\/([^\/]+)/',
+            'edx' => '/edx\.org\/course\/([^\/]+)/',
+        ];
+
+        foreach ($educationalPatterns as $platform => $pattern) {
+            if (preg_match($pattern, $url, $matches)) {
+                return [
+                    'valid' => true,
+                    'type' => $platform,
+                    'id' => $matches[1],
+                    'embed_url' => null, // These platforms don't typically support embedding
+                    'original_url' => $url,
+                    'platform_name' => ucfirst(str_replace('_', ' ', $platform)),
+                ];
+            }
+        }
+
+        return [
+            'valid' => false,
+            'error' => 'Unsupported video platform or invalid URL format',
+        ];
     }
 }

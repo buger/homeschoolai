@@ -8,6 +8,7 @@ use App\Models\Unit;
 use App\Services\RichContentService;
 use App\Services\TopicMaterialService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -835,7 +836,7 @@ class TopicController extends Controller
     }
 
     /**
-     * Preview rich content rendering
+     * Preview rich content rendering with enhanced features
      */
     public function previewContent(Request $request)
     {
@@ -845,10 +846,15 @@ class TopicController extends Controller
                 'format' => 'required|in:plain,markdown,html',
             ]);
 
-            $result = $this->richContentService->processRichContent(
-                $validated['content'],
-                $validated['format']
-            );
+            // Use enhanced processing for markdown content
+            if ($validated['format'] === 'markdown') {
+                $result = $this->richContentService->processUnifiedContent($validated['content']);
+            } else {
+                $result = $this->richContentService->processRichContent(
+                    $validated['content'],
+                    $validated['format']
+                );
+            }
 
             if ($request->header('HX-Request')) {
                 return view('topics.partials.content-preview', [
@@ -872,6 +878,135 @@ class TopicController extends Controller
 
             return response()->json(['error' => 'Unable to preview content.'], 500);
         }
+    }
+
+    /**
+     * Enhanced real-time preview for unified markdown editor
+     */
+    public function previewUnifiedContent(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'content' => 'required|string',
+                'cache_key' => 'sometimes|string|max:50',
+                'performance_mode' => 'sometimes|in:fast,auto,quality',
+            ]);
+
+            // Set performance optimizations based on content length and mode
+            $contentLength = strlen($validated['content']);
+            $performanceMode = $validated['performance_mode'] ?? $this->detectPerformanceMode($contentLength);
+
+            // Generate cache key if not provided
+            $cacheKey = $validated['cache_key'] ?? md5($validated['content']);
+
+            // Try cache first for performance
+            if ($performanceMode === 'fast' && Cache::has("preview_cache_{$cacheKey}")) {
+                $result = Cache::get("preview_cache_{$cacheKey}");
+            } else {
+                // Process with enhanced markdown rendering
+                $result = $this->richContentService->processUnifiedContent($validated['content']);
+
+                // Cache result for performance (shorter TTL for fast mode)
+                $ttl = $performanceMode === 'fast' ? 300 : 60; // 5 minutes for fast mode, 1 minute otherwise
+                Cache::put("preview_cache_{$cacheKey}", $result, $ttl);
+            }
+
+            // Add performance metadata
+            $result['metadata']['performance_mode'] = $performanceMode;
+            $result['metadata']['content_length'] = $contentLength;
+            $result['metadata']['cache_hit'] = isset($validated['cache_key']) && Cache::has("preview_cache_{$cacheKey}");
+            $result['metadata']['cache_key'] = $cacheKey;
+
+            // Return HTML directly for unified editor
+            return response($result['html'])
+                ->header('X-Performance-Mode', $performanceMode)
+                ->header('X-Cache-Key', $cacheKey)
+                ->header('X-Content-Length', $contentLength)
+                ->header('Content-Type', 'text/html; charset=utf-8');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response('<div class="text-red-500">Invalid content format</div>', 422);
+        } catch (\Exception $e) {
+            Log::error('Error previewing unified content: '.$e->getMessage());
+
+            return response('<div class="text-red-500">Preview temporarily unavailable</div>', 500);
+        }
+    }
+
+    /**
+     * Export content in different formats
+     */
+    public function exportContent(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'content' => 'required|string',
+                'from_format' => 'required|in:plain,markdown,html',
+                'to_format' => 'required|in:plain,markdown,html',
+            ]);
+
+            $result = $this->richContentService->convertContentFormat(
+                $validated['content'],
+                $validated['from_format'],
+                $validated['to_format']
+            );
+
+            return response($result)
+                ->header('Content-Type', $this->getContentTypeForFormat($validated['to_format']));
+
+        } catch (\Exception $e) {
+            Log::error('Error exporting content: '.$e->getMessage());
+
+            return response()->json(['error' => 'Export failed'], 500);
+        }
+    }
+
+    /**
+     * Get video metadata for enhanced preview
+     */
+    public function getVideoMetadata(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'url' => 'required|url',
+            ]);
+
+            $metadata = $this->richContentService->validateVideoUrl($validated['url']);
+
+            return response()->json($metadata);
+
+        } catch (\Exception $e) {
+            Log::error('Error getting video metadata: '.$e->getMessage());
+
+            return response()->json(['valid' => false, 'error' => 'Could not fetch video metadata'], 500);
+        }
+    }
+
+    /**
+     * Detect optimal performance mode based on content length
+     */
+    private function detectPerformanceMode(int $contentLength): string
+    {
+        if ($contentLength > 10000) {
+            return 'fast';
+        } elseif ($contentLength > 5000) {
+            return 'auto';
+        } else {
+            return 'quality';
+        }
+    }
+
+    /**
+     * Get content type for export format
+     */
+    private function getContentTypeForFormat(string $format): string
+    {
+        return match ($format) {
+            'html' => 'text/html; charset=utf-8',
+            'markdown' => 'text/markdown; charset=utf-8',
+            'plain' => 'text/plain; charset=utf-8',
+            default => 'text/plain; charset=utf-8',
+        };
     }
 
     /**

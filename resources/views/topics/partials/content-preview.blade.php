@@ -1,9 +1,9 @@
-{{-- Rich Content Preview Partial --}}
+{{-- Enhanced Rich Content Preview Partial --}}
 <div class="rich-content-preview bg-white border border-gray-200 rounded-lg p-6">
-    {{-- Content Metadata --}}
+    {{-- Enhanced Content Metadata --}}
     @if(!empty($metadata))
     <div class="mb-4 flex items-center justify-between text-sm text-gray-500 border-b border-gray-100 pb-3">
-        <div class="flex items-center space-x-4">
+        <div class="flex items-center space-x-4 flex-wrap gap-y-2">
             @if(isset($metadata['word_count']) && $metadata['word_count'] > 0)
             <span class="flex items-center">
                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -27,12 +27,48 @@
                 {{ ucfirst($metadata['format']) }}
             </span>
             @endif
+
+            {{-- Enhanced metadata indicators --}}
+            @if(isset($metadata['has_videos']) && $metadata['has_videos'])
+            <span class="flex items-center px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
+                🎥 {{ $metadata['video_count'] }} video{{ $metadata['video_count'] > 1 ? 's' : '' }}
+                @if(isset($metadata['estimated_video_time']) && $metadata['estimated_video_time'] > 0)
+                    (~{{ $metadata['estimated_video_time'] }}min)
+                @endif
+            </span>
+            @endif
+
+            @if(isset($metadata['has_files']) && $metadata['has_files'])
+            <span class="flex items-center px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                📎 {{ $metadata['file_count'] }} file{{ $metadata['file_count'] > 1 ? 's' : '' }}
+            </span>
+            @endif
+
+            @if(isset($metadata['has_interactive_elements']) && $metadata['has_interactive_elements'])
+            <span class="flex items-center px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
+                ⚙️ Interactive
+            </span>
+            @endif
+
+            @if(isset($metadata['complexity_score']))
+            @php
+                $complexityColors = [
+                    'basic' => 'bg-gray-100 text-gray-800',
+                    'intermediate' => 'bg-yellow-100 text-yellow-800',
+                    'advanced' => 'bg-orange-100 text-orange-800'
+                ];
+                $complexityColor = $complexityColors[$metadata['complexity_score']] ?? 'bg-gray-100 text-gray-800';
+            @endphp
+            <span class="px-2 py-1 {{ $complexityColor }} rounded-full text-xs font-medium">
+                {{ ucfirst($metadata['complexity_score']) }}
+            </span>
+            @endif
         </div>
     </div>
     @endif
 
-    {{-- Rendered Content --}}
-    <div class="prose prose-sm sm:prose lg:prose-lg xl:prose-xl max-w-none">
+    {{-- Enhanced Rendered Content --}}
+    <div class="enhanced-content prose prose-sm sm:prose lg:prose-lg xl:prose-xl max-w-none">
         {!! $html !!}
     </div>
 </div>

@@ -147,8 +147,8 @@
         <!-- Enhanced Markdown Content Tab -->
         <div x-show="activeTab === 'content'" class="space-y-6">
             @if($topic->isUnified())
-                <!-- GitHub-style Unified Markdown Editor -->
-                @include('topics.partials.github-markdown-editor', ['topic' => $topic])
+                <!-- Enhanced Unified Markdown Editor with Real-time Preview -->
+                @include('topics.partials.unified-markdown-editor', ['topic' => $topic])
             @else
                 <!-- Legacy Rich Content Editor -->
                 <div x-data="richContentEditor()"

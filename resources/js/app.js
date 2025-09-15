@@ -3,6 +3,7 @@ import 'htmx.org';
 import { initRegionalFormatting } from './regional-formatting';
 import './rich-content-editor';
 import './github-markdown-editor';
+import './unified-markdown-editor';
 
 import Alpine from 'alpinejs';
 

@@ -104,6 +104,11 @@ Route::middleware('auth')->group(function () {
     Route::delete('/topics/{topic}/content/images/{index}', [TopicController::class, 'deleteContentImage'])->name('topics.content.images.delete');
     Route::post('/topics/content/preview', [TopicController::class, 'previewContent'])->name('topics.content.preview');
 
+    // Unified markdown editor enhanced endpoints
+    Route::post('/topics/content/preview-unified', [TopicController::class, 'previewUnifiedContent'])->name('topics.content.preview.unified');
+    Route::post('/topics/content/export', [TopicController::class, 'exportContent'])->name('topics.content.export');
+    Route::post('/topics/content/video-metadata', [TopicController::class, 'getVideoMetadata'])->name('topics.content.video.metadata');
+
     // Enhanced markdown editor file uploads
     Route::post('/topics/{topic}/markdown-upload', [TopicController::class, 'markdownFileUpload'])->name('topics.markdown.upload');
 

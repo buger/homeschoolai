@@ -1,0 +1,473 @@
+/* Enhanced Markdown Learning Content Styles */
+/* This file provides rich styling for enhanced markdown content with video embeds, file previews, and interactive elements */
+
+/* ============================================================================
+   VIDEO EMBEDS
+   ============================================================================ */
+
+.video-embed-container {
+    @apply mb-8 bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm;
+}
+
+.video-embed-responsive {
+    @apply relative;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    height: 0;
+    overflow: hidden;
+}
+
+.video-embed-responsive iframe {
+    @apply absolute top-0 left-0 w-full h-full border-0;
+}
+
+.video-embed-metadata {
+    @apply p-4 bg-gray-50 border-t border-gray-200;
+}
+
+.video-embed-title {
+    @apply text-lg font-semibold text-gray-900 mb-2;
+}
+
+.video-embed-link {
+    @apply text-blue-600 hover:text-blue-800 text-sm font-medium underline;
+}
+
+/* YouTube specific styling */
+.youtube-embed {
+    @apply border-red-200;
+}
+
+.youtube-embed .video-embed-metadata {
+    @apply bg-red-50;
+}
+
+/* Vimeo specific styling */
+.vimeo-embed {
+    @apply border-blue-200;
+}
+
+.vimeo-embed .video-embed-metadata {
+    @apply bg-blue-50;
+}
+
+/* Educational platform embeds */
+.educational-embed {
+    @apply flex items-center p-4 mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg;
+}
+
+.educational-embed-icon {
+    @apply text-4xl mr-4 flex-shrink-0;
+}
+
+.educational-embed-content {
+    @apply flex-1;
+}
+
+.educational-embed-title {
+    @apply text-lg font-semibold text-gray-900 mb-1;
+}
+
+.educational-embed-platform {
+    @apply text-sm text-blue-600 font-medium mb-2 block;
+}
+
+.educational-embed-link {
+    @apply inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors;
+}
+
+.khan-academy-embed {
+    @apply from-green-50 to-emerald-50 border-green-200;
+}
+
+.khan-academy-embed .educational-embed-platform {
+    @apply text-green-600;
+}
+
+.khan-academy-embed .educational-embed-link {
+    @apply bg-green-600 hover:bg-green-700;
+}
+
+.coursera-embed {
+    @apply from-purple-50 to-violet-50 border-purple-200;
+}
+
+.coursera-embed .educational-embed-platform {
+    @apply text-purple-600;
+}
+
+.coursera-embed .educational-embed-link {
+    @apply bg-purple-600 hover:bg-purple-700;
+}
+
+.edx-embed {
+    @apply from-orange-50 to-amber-50 border-orange-200;
+}
+
+.edx-embed .educational-embed-platform {
+    @apply text-orange-600;
+}
+
+.edx-embed .educational-embed-link {
+    @apply bg-orange-600 hover:bg-orange-700;
+}
+
+/* ============================================================================
+   FILE EMBEDS
+   ============================================================================ */
+
+.file-embed {
+    @apply mb-6 bg-white border border-gray-200 rounded-lg overflow-hidden;
+}
+
+.file-metadata {
+    @apply p-4;
+}
+
+.file-info {
+    @apply mb-3;
+}
+
+.file-title {
+    @apply text-lg font-semibold text-gray-900 mb-1;
+}
+
+.file-type {
+    @apply text-sm text-gray-600 font-medium px-2 py-1 bg-gray-100 rounded;
+}
+
+.file-actions {
+    @apply flex gap-2;
+}
+
+.btn {
+    @apply inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors;
+}
+
+.btn-primary {
+    @apply bg-blue-600 hover:bg-blue-700 text-white;
+}
+
+.btn-secondary {
+    @apply bg-gray-200 hover:bg-gray-300 text-gray-800;
+}
+
+.btn-sm {
+    @apply px-2 py-1 text-xs;
+}
+
+/* Generic file embed */
+.generic-file-embed {
+    @apply flex items-center p-4;
+}
+
+.file-icon {
+    @apply text-3xl mr-4 flex-shrink-0;
+}
+
+/* Image embeds */
+.image-embed-wrapper {
+    @apply relative group;
+}
+
+.image-embed-preview {
+    @apply w-full h-auto max-h-96 object-contain;
+}
+
+.image-embed-overlay {
+    @apply absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center;
+}
+
+.image-zoom-button {
+    @apply bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-800 p-2 rounded-full shadow-lg transform scale-0 group-hover:scale-100 transition-transform duration-200;
+}
+
+/* Audio embeds */
+.audio-embed .audio-player {
+    @apply w-full mb-4;
+}
+
+/* Video file embeds */
+.video-embed .video-player {
+    @apply w-full h-auto max-h-96;
+}
+
+/* PDF embeds */
+.pdf-embed {
+    @apply border-red-200;
+}
+
+.pdf-controls {
+    @apply flex gap-2 p-4 bg-gray-50 border-t border-gray-200;
+}
+
+.pdf-preview-wrapper {
+    @apply border-t border-gray-200;
+}
+
+.pdf-preview {
+    @apply w-full border-0;
+}
+
+.pdf-preview-toggle {
+    @apply bg-indigo-600 hover:bg-indigo-700 text-white;
+}
+
+/* ============================================================================
+   INTERACTIVE ELEMENTS
+   ============================================================================ */
+
+/* Collapsible sections */
+.collapsible-section {
+    @apply mb-6 border border-gray-200 rounded-lg overflow-hidden;
+}
+
+.collapsible-section-title {
+    @apply p-4 bg-gray-50 hover:bg-gray-100 cursor-pointer font-medium text-gray-900 transition-colors;
+    list-style: none;
+}
+
+.collapsible-section-title::-webkit-details-marker {
+    display: none;
+}
+
+.collapsible-section-title::before {
+    content: '▶';
+    @apply inline-block mr-2 transition-transform duration-200;
+}
+
+.collapsible-section[open] .collapsible-section-title::before {
+    transform: rotate(90deg);
+}
+
+.collapsible-section-content {
+    @apply p-4 border-t border-gray-200;
+}
+
+/* Enhanced tables */
+.enhanced-table-container {
+    @apply mb-6;
+}
+
+.table-controls {
+    @apply flex justify-between items-center mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg;
+}
+
+.table-search-wrapper {
+    @apply relative flex-1 max-w-sm;
+}
+
+.table-search {
+    @apply w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+}
+
+.table-search-icon {
+    @apply absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400;
+}
+
+.table-actions {
+    @apply flex gap-2;
+}
+
+.table-reset-sort {
+    @apply px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium rounded-lg transition-colors;
+}
+
+.table-responsive {
+    @apply overflow-x-auto;
+}
+
+.enhanced-table {
+    @apply w-full border-collapse border border-gray-200 rounded-lg overflow-hidden;
+}
+
+.table-header-row {
+    @apply bg-gray-50;
+}
+
+.table-header-cell {
+    @apply px-4 py-3 text-left font-semibold text-gray-900 border-b border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors;
+}
+
+.table-header-content {
+    @apply flex items-center justify-between;
+}
+
+.table-header-text {
+    @apply flex-1;
+}
+
+.table-sort-icon {
+    @apply ml-2 text-gray-400;
+}
+
+.table-header-cell[data-sort="asc"] .table-sort-icon::before {
+    content: '▲';
+}
+
+.table-header-cell[data-sort="desc"] .table-sort-icon::before {
+    content: '▼';
+}
+
+.table-body-cell {
+    @apply px-4 py-3 border-b border-gray-200;
+}
+
+.enhanced-table tbody tr:hover {
+    @apply bg-gray-50;
+}
+
+/* ============================================================================
+   LIGHTBOX FUNCTIONALITY
+   ============================================================================ */
+
+.lightbox-overlay {
+    @apply fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4 z-50;
+    display: none;
+}
+
+.lightbox-overlay.active {
+    display: flex;
+}
+
+.lightbox-content {
+    @apply relative max-w-5xl max-h-full;
+}
+
+.lightbox-image {
+    @apply max-w-full max-h-full object-contain;
+}
+
+.lightbox-close {
+    @apply absolute top-4 right-4 text-white hover:text-gray-300 text-2xl cursor-pointer z-10;
+}
+
+/* ============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================ */
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+    .video-embed-container {
+        @apply mx-0;
+    }
+
+    .educational-embed {
+        @apply flex-col text-center;
+    }
+
+    .educational-embed-icon {
+        @apply mr-0 mb-2;
+    }
+
+    .file-embed {
+        @apply mx-0;
+    }
+
+    .generic-file-embed {
+        @apply flex-col text-center;
+    }
+
+    .file-icon {
+        @apply mr-0 mb-2;
+    }
+
+    .table-controls {
+        @apply flex-col gap-3;
+    }
+
+    .table-search-wrapper {
+        @apply max-w-none;
+    }
+
+    .enhanced-table {
+        @apply text-sm;
+    }
+
+    .table-header-cell,
+    .table-body-cell {
+        @apply px-2 py-2;
+    }
+}
+
+/* Print styles */
+@media print {
+    .video-embed-container,
+    .educational-embed {
+        @apply border border-gray-400;
+        page-break-inside: avoid;
+    }
+
+    .video-embed-responsive {
+        @apply hidden;
+    }
+
+    .video-embed-metadata::after {
+        content: " (Video available online)";
+        @apply text-gray-600;
+    }
+
+    .file-embed {
+        @apply border border-gray-400;
+        page-break-inside: avoid;
+    }
+
+    .image-embed-overlay,
+    .lightbox-overlay {
+        @apply hidden;
+    }
+
+    .collapsible-section {
+        @apply border border-gray-400;
+        page-break-inside: avoid;
+    }
+
+    .collapsible-section-content {
+        display: block !important;
+    }
+}
+
+/* ============================================================================
+   ACCESSIBILITY IMPROVEMENTS
+   ============================================================================ */
+
+/* Focus styles for keyboard navigation */
+.video-embed-link:focus,
+.educational-embed-link:focus,
+.btn:focus,
+.image-zoom-button:focus,
+.collapsible-section-title:focus,
+.table-header-cell:focus {
+    @apply outline-none ring-2 ring-blue-500 ring-offset-2;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .video-embed-container,
+    .educational-embed,
+    .file-embed,
+    .collapsible-section,
+    .enhanced-table {
+        @apply border-2 border-black;
+    }
+
+    .btn-primary {
+        @apply bg-black text-white;
+    }
+
+    .btn-secondary {
+        @apply bg-white text-black border-2 border-black;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .image-embed-overlay,
+    .image-zoom-button,
+    .collapsible-section-title::before,
+    .video-embed-link,
+    .educational-embed-link,
+    .btn,
+    .table-header-cell {
+        transition: none;
+    }
+}

@@ -60,13 +60,22 @@
                 </div>
 
                 @if($topic->hasRichContent())
-                    {{-- Render rich content --}}
+                    {{-- Render enhanced rich content --}}
                     <div class="bg-white border border-gray-200 rounded-lg">
                         @php
-                            $richContent = app(App\Services\RichContentService::class)->processRichContent(
-                                $topic->description,
-                                $topic->content_format
-                            );
+                            // Use enhanced processing for unified content if available
+                            $richContentService = app(App\Services\RichContentService::class);
+
+                            if ($topic->migrated_to_unified && !empty($topic->learning_content)) {
+                                // Use unified content with enhanced processing
+                                $richContent = $richContentService->processUnifiedContent($topic->learning_content);
+                            } else {
+                                // Fallback to regular processing
+                                $richContent = $richContentService->processRichContent(
+                                    $topic->description,
+                                    $topic->content_format
+                                );
+                            }
                         @endphp
                         @include('topics.partials.content-preview', [
                             'html' => $richContent['html'],

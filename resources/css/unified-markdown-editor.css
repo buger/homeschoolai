@@ -1,0 +1,523 @@
+/* Unified Markdown Editor Styles - Phase 4 Enhancements */
+
+/* Enhanced Editor Container */
+.unified-markdown-editor {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Editor Textarea Enhancements */
+.unified-markdown-editor textarea {
+    font-family: 'JetBrains Mono', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    tab-size: 2;
+    -moz-tab-size: 2;
+}
+
+/* Syntax Highlighting Base */
+.syntax-highlight {
+    position: relative;
+}
+
+.syntax-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    padding: inherit;
+    margin: inherit;
+    border: inherit;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow: hidden;
+    background: transparent;
+    color: transparent;
+    z-index: 1;
+}
+
+/* Markdown Syntax Highlighting */
+.syntax-overlay .md-header {
+    color: #d73a49;
+    font-weight: bold;
+}
+
+.syntax-overlay .md-bold {
+    color: #032f62;
+    font-weight: bold;
+}
+
+.syntax-overlay .md-italic {
+    color: #032f62;
+    font-style: italic;
+}
+
+.syntax-overlay .md-code {
+    color: #e36209;
+    background-color: rgba(255, 0, 0, 0.1);
+    border-radius: 3px;
+    padding: 0 2px;
+}
+
+.syntax-overlay .md-link {
+    color: #0366d6;
+}
+
+.syntax-overlay .md-list {
+    color: #6f42c1;
+}
+
+.syntax-overlay .md-quote {
+    color: #6a737d;
+    font-style: italic;
+}
+
+/* Enhanced Toolbar */
+.unified-toolbar {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 1px solid #dee2e6;
+    padding: 8px 12px;
+}
+
+.toolbar-group {
+    display: inline-flex;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 2px;
+    margin-right: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.toolbar-button {
+    padding: 6px 8px;
+    border: none;
+    background: transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #495057;
+}
+
+.toolbar-button:hover {
+    background-color: #f8f9fa;
+    color: #212529;
+}
+
+.toolbar-button:active {
+    background-color: #e9ecef;
+    transform: translateY(1px);
+}
+
+.toolbar-button.active {
+    background-color: #007bff;
+    color: white;
+}
+
+/* Enhanced Preview Panel */
+.preview-panel {
+    background: #ffffff;
+    border-left: 1px solid #dee2e6;
+}
+
+.preview-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 1px solid #dee2e6;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: between;
+}
+
+.preview-content {
+    padding: 20px;
+    max-height: 600px;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+}
+
+/* Scroll Sync Indicators */
+.scroll-sync-indicator {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 20px;
+    background: #007bff;
+    border-radius: 2px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.scroll-sync-active .scroll-sync-indicator {
+    opacity: 1;
+}
+
+/* Performance Mode Indicators */
+.performance-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.performance-badge.fast {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.performance-badge.auto {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.performance-badge.quality {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+/* Upload Progress Enhancements */
+.upload-progress-container {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    max-width: 300px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+}
+
+.upload-progress-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid #dee2e6;
+    font-size: 12px;
+    font-weight: 600;
+    color: #495057;
+}
+
+.upload-progress-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.upload-progress-item:last-child {
+    border-bottom: none;
+}
+
+.upload-filename {
+    font-size: 13px;
+    font-weight: 500;
+    color: #212529;
+    margin-bottom: 4px;
+    word-break: break-word;
+}
+
+.upload-progress-bar {
+    width: 100%;
+    height: 4px;
+    background-color: #f8f9fa;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.upload-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #007bff, #0056b3);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+/* Enhanced Notifications */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    min-width: 300px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 16px;
+    z-index: 1050;
+    animation: slideInRight 0.3s ease-out;
+}
+
+.notification.success {
+    border-left: 4px solid #28a745;
+}
+
+.notification.error {
+    border-left: 4px solid #dc3545;
+}
+
+.notification.warning {
+    border-left: 4px solid #ffc107;
+}
+
+.notification.info {
+    border-left: 4px solid #17a2b8;
+}
+
+/* Content Statistics */
+.content-stats {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.content-stats .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.content-stats .stat-icon {
+    width: 16px;
+    height: 16px;
+    opacity: 0.7;
+}
+
+/* Split View Resizer */
+.split-resizer {
+    position: absolute;
+    left: -2px;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: transparent;
+    cursor: col-resize;
+    user-select: none;
+    z-index: 10;
+}
+
+.split-resizer:hover {
+    background: rgba(0, 123, 255, 0.3);
+}
+
+.split-resizer.resizing {
+    background: rgba(0, 123, 255, 0.5);
+}
+
+/* Enhanced Drag and Drop */
+.drag-over-enhanced {
+    position: relative;
+}
+
+.drag-over-enhanced::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 123, 255, 0.1);
+    border: 2px dashed #007bff;
+    border-radius: 8px;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.drag-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 1001;
+    pointer-events: none;
+}
+
+.drag-indicator-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+    color: #007bff;
+}
+
+.drag-indicator-text {
+    font-size: 18px;
+    font-weight: 600;
+    color: #007bff;
+    margin-bottom: 8px;
+}
+
+.drag-indicator-subtext {
+    font-size: 14px;
+    color: #6c757d;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .unified-markdown-editor {
+        flex-direction: column;
+    }
+
+    .toolbar-group {
+        margin-bottom: 8px;
+        margin-right: 4px;
+    }
+
+    .toolbar-button {
+        padding: 8px 6px;
+        font-size: 12px;
+    }
+
+    .upload-progress-container {
+        left: 16px;
+        right: 16px;
+        max-width: none;
+    }
+
+    .notification {
+        left: 16px;
+        right: 16px;
+        min-width: auto;
+    }
+
+    .content-stats {
+        flex-wrap: wrap;
+        gap: 8px;
+        font-size: 12px;
+    }
+
+    .preview-content {
+        padding: 16px;
+    }
+
+    /* Hide complex toolbar items on mobile */
+    .toolbar-advanced {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .unified-toolbar {
+        padding: 6px 8px;
+    }
+
+    .toolbar-button {
+        padding: 6px 4px;
+    }
+
+    .preview-content {
+        padding: 12px;
+    }
+
+    .content-stats {
+        font-size: 11px;
+    }
+}
+
+/* High DPI / Retina Display Optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .toolbar-button {
+        border-width: 0.5px;
+    }
+
+    .upload-progress-bar {
+        height: 3px;
+    }
+}
+
+/* Dark Mode Support (Future Enhancement) */
+@media (prefers-color-scheme: dark) {
+    .unified-markdown-editor textarea {
+        background-color: #1e1e1e;
+        color: #d4d4d4;
+        border-color: #404040;
+    }
+
+    .preview-panel {
+        background-color: #1e1e1e;
+        color: #d4d4d4;
+    }
+
+    .unified-toolbar {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1e1e1e 100%);
+        border-color: #404040;
+    }
+
+    .toolbar-group {
+        background-color: #2d2d2d;
+        border-color: #404040;
+    }
+
+    .toolbar-button {
+        color: #d4d4d4;
+    }
+
+    .toolbar-button:hover {
+        background-color: #404040;
+    }
+}
+
+/* Animation Keyframes */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Loading States */
+.loading-pulse {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Focus States for Accessibility */
+.unified-markdown-editor *:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+.toolbar-button:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 1px;
+}
+
+/* Print Styles */
+@media print {
+    .unified-toolbar,
+    .upload-progress-container,
+    .notification {
+        display: none !important;
+    }
+
+    .preview-content {
+        overflow: visible !important;
+        max-height: none !important;
+    }
+}
