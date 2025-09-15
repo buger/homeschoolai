@@ -26,7 +26,12 @@ class DateTimeFormatterService
         }
 
         $user = $user ?? $this->getCurrentUser();
-        $carbon = $date instanceof Carbon ? $date : Carbon::parse($date);
+
+        try {
+            $carbon = $date instanceof Carbon ? $date : Carbon::parse($date);
+        } catch (\Exception $e) {
+            return ''; // Return empty string for invalid dates
+        }
 
         if ($user) {
             return $carbon->format($user->getDateFormatString());
@@ -46,7 +51,12 @@ class DateTimeFormatterService
         }
 
         $user = $user ?? $this->getCurrentUser();
-        $carbon = $time instanceof Carbon ? $time : Carbon::parse($time);
+
+        try {
+            $carbon = $time instanceof Carbon ? $time : Carbon::parse($time);
+        } catch (\Exception $e) {
+            return ''; // Return empty string for invalid times
+        }
 
         if ($user) {
             return $carbon->format($user->getTimeFormatString());
@@ -66,7 +76,12 @@ class DateTimeFormatterService
         }
 
         $user = $user ?? $this->getCurrentUser();
-        $carbon = $datetime instanceof Carbon ? $datetime : Carbon::parse($datetime);
+
+        try {
+            $carbon = $datetime instanceof Carbon ? $datetime : Carbon::parse($datetime);
+        } catch (\Exception $e) {
+            return ''; // Return empty string for invalid datetimes
+        }
 
         if ($user) {
             return $carbon->format($user->getDateTimeFormatString());
@@ -150,7 +165,8 @@ class DateTimeFormatterService
         $carbon = $date ? Carbon::parse($date) : Carbon::now();
         $weekStartDay = $this->getWeekStartDay($user);
 
-        return $carbon->endOfWeek($weekStartDay);
+        // Get week start and add 6 days to get the proper week end
+        return $carbon->startOfWeek($weekStartDay)->addDays(6);
     }
 
     /**

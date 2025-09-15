@@ -62,15 +62,16 @@ class ProfileController extends Controller
         $user->timezone = $validated['timezone'];
         $user->date_format = $validated['date_format'];
         $user->region_format = $validated['region_format'];
-        $user->email_notifications = $request->has('email_notifications');
-        $user->review_reminders = $request->has('review_reminders');
+        // Handle boolean checkboxes - missing checkbox means false
+        $user->email_notifications = $validated['email_notifications'] ?? false;
+        $user->review_reminders = $validated['review_reminders'] ?? false;
 
         // Handle regional format preferences
         if ($validated['region_format'] === 'custom') {
-            // Use custom values provided by user
-            $user->time_format = $validated['time_format'] ?? $user->time_format ?? '12h';
-            $user->week_start = $validated['week_start'] ?? $user->week_start ?? 'sunday';
-            $user->date_format_type = $validated['date_format_type'] ?? $user->date_format_type ?? 'us';
+            // Use custom values provided by user, with proper defaults
+            $user->time_format = $validated['time_format'] ?? ($user->time_format ?: '12h');
+            $user->week_start = $validated['week_start'] ?? ($user->week_start ?: 'sunday');
+            $user->date_format_type = $validated['date_format_type'] ?? ($user->date_format_type ?: 'us');
         } else {
             // Apply preset defaults for the selected region format
             $defaults = \App\Models\User::getRegionalDefaults($user->locale);

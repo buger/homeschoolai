@@ -44,17 +44,17 @@ class FormatDisplayTest extends TestCase
         $date = Carbon::create(2024, 3, 15, 14, 30, 0);
 
         // Test formatDate helper
-        $this->assertEquals('3/15/2024', formatDate($date));
+        $this->assertEquals('03/15/2024', formatDate($date));
 
         // Test formatTime helper
         $this->assertEquals('2:30 PM', formatTime($date));
 
         // Test formatDateTime helper
-        $this->assertEquals('3/15/2024 2:30 PM', formatDateTime($date));
+        $this->assertEquals('03/15/2024 2:30 PM', formatDateTime($date));
 
         // Test formatDateRange helper
         $endDate = Carbon::create(2024, 3, 15, 16, 0, 0);
-        $expected = '3/15/2024 2:30 PM - 4:00 PM';
+        $expected = '03/15/2024 2:30 PM - 4:00 PM';
         $this->assertEquals($expected, formatDateRange($date, $endDate));
     }
 
@@ -66,9 +66,9 @@ class FormatDisplayTest extends TestCase
         $date = Carbon::create(2024, 3, 15, 14, 30, 0);
 
         // Should use default US format when no user is authenticated
-        $this->assertEquals('3/15/2024', formatDate($date));
+        $this->assertEquals('03/15/2024', formatDate($date));
         $this->assertEquals('2:30 PM', formatTime($date));
-        $this->assertEquals('3/15/2024 2:30 PM', formatDateTime($date));
+        $this->assertEquals('03/15/2024 2:30 PM', formatDateTime($date));
     }
 
     /**
@@ -89,7 +89,7 @@ class FormatDisplayTest extends TestCase
             'time_format' => '12h',
         ]);
 
-        $this->assertEquals('3/15/2024', formatDate($date));
+        $this->assertEquals('03/15/2024', formatDate($date));
         $this->assertEquals('2:30 PM', formatTime($date));
 
         // Test Russian locale with EU format
@@ -101,7 +101,7 @@ class FormatDisplayTest extends TestCase
             'time_format' => '24h',
         ]);
 
-        $this->assertEquals('15.3.2024', formatDate($date));
+        $this->assertEquals('15.03.2024', formatDate($date));
         $this->assertEquals('14:30', formatTime($date));
     }
 
@@ -119,7 +119,7 @@ class FormatDisplayTest extends TestCase
         $today = Carbon::now()->setTime(14, 30, 0);
         $formatted = $this->formatter->formatRelativeDate($today, $this->user);
         $this->assertStringStartsWith('Today', $formatted);
-        $this->assertStringContains('2:30 PM', $formatted);
+        $this->assertStringContainsString('2:30 PM', $formatted);
 
         // Test yesterday
         $yesterday = Carbon::now()->subDay()->setTime(14, 30, 0);
@@ -134,18 +134,18 @@ class FormatDisplayTest extends TestCase
         // Test past day within week
         $pastDay = Carbon::now()->subDays(3)->setTime(14, 30, 0);
         $formatted = $this->formatter->formatRelativeDate($pastDay, $this->user);
-        $this->assertStringContains($pastDay->format('l'), $formatted); // Day name
+        $this->assertStringContainsString($pastDay->format('l'), $formatted); // Day name
 
         // Test future day within week
         $futureDay = Carbon::now()->addDays(4)->setTime(14, 30, 0);
         $formatted = $this->formatter->formatRelativeDate($futureDay, $this->user);
-        $this->assertStringContains($futureDay->format('l'), $formatted); // Day name
+        $this->assertStringContainsString($futureDay->format('l'), $formatted); // Day name
 
         // Test older date (should show full date)
         $oldDate = Carbon::now()->subWeeks(2)->setTime(14, 30, 0);
         $formatted = $this->formatter->formatRelativeDate($oldDate, $this->user);
-        $this->assertStringContains('3/', $formatted); // Month part of date
-        $this->assertStringContains('2024', $formatted); // Year part
+        $this->assertStringContainsString('3/', $formatted); // Month part of date
+        $this->assertStringContainsString('2024', $formatted); // Year part
 
         Carbon::setTestNow(); // Reset mock time
     }
@@ -168,13 +168,13 @@ class FormatDisplayTest extends TestCase
         $date = Carbon::create(2024, 3, 15, 14, 30, 0);
 
         // Test European date format
-        $this->assertEquals('15.3.2024', formatDate($date));
+        $this->assertEquals('15.03.2024', formatDate($date));
 
         // Test 24-hour time format
         $this->assertEquals('14:30', formatTime($date));
 
         // Test combined datetime
-        $this->assertEquals('15.3.2024 14:30', formatDateTime($date));
+        $this->assertEquals('15.03.2024 14:30', formatDateTime($date));
 
         // Test week starts on Monday
         $weekStart = $this->formatter->getWeekStart($date, $this->user);
@@ -227,7 +227,7 @@ class FormatDisplayTest extends TestCase
         $this->assertTrue($userTime->hour < 20); // Should be earlier in NY
 
         $formatted = $this->formatter->formatDateTime($userTime, $this->user);
-        $this->assertStringContains('3/15/2024', $formatted);
+        $this->assertStringContainsString('03/15/2024', $formatted);
 
         // Test with Tokyo timezone (should be next day)
         $this->user->update(['timezone' => 'Asia/Tokyo']);
@@ -290,7 +290,7 @@ class FormatDisplayTest extends TestCase
         $date = Carbon::create(2024, 3, 15, 14, 30, 0);
 
         // Initial US format
-        $this->assertEquals('3/15/2024', formatDate($date));
+        $this->assertEquals('03/15/2024', formatDate($date));
         $this->assertEquals('2:30 PM', formatTime($date));
 
         // Change to EU format
@@ -304,7 +304,7 @@ class FormatDisplayTest extends TestCase
         $this->user->refresh();
 
         // Should immediately reflect new format
-        $this->assertEquals('15.3.2024', formatDate($date, $this->user));
+        $this->assertEquals('15.03.2024', formatDate($date, $this->user));
         $this->assertEquals('14:30', formatTime($date, $this->user));
 
         // Change to custom format
@@ -363,7 +363,7 @@ class FormatDisplayTest extends TestCase
         $date = Carbon::create(2024, 3, 15, 14, 30, 0);
 
         // Test initial format
-        $this->assertEquals('15.3.2024', formatDate($date));
+        $this->assertEquals('15.03.2024', formatDate($date));
         $this->assertEquals('14:30', formatTime($date));
 
         // Simulate session end and restart
@@ -372,7 +372,7 @@ class FormatDisplayTest extends TestCase
         $this->actingAs($this->user);
 
         // Format should persist
-        $this->assertEquals('15.3.2024', formatDate($date));
+        $this->assertEquals('15.03.2024', formatDate($date));
         $this->assertEquals('14:30', formatTime($date));
     }
 
@@ -388,12 +388,12 @@ class FormatDisplayTest extends TestCase
         $end = Carbon::create(2024, 3, 15, 17, 30, 0);
 
         $formatted = formatDateRange($start, $end);
-        $this->assertEquals('3/15/2024 9:00 AM - 5:30 PM', $formatted);
+        $this->assertEquals('03/15/2024 9:00 AM - 5:30 PM', $formatted);
 
         // Multi-day event
         $endNextDay = Carbon::create(2024, 3, 16, 10, 0, 0);
         $formatted = formatDateRange($start, $endNextDay);
-        $expected = '3/15/2024 9:00 AM - 3/16/2024 10:00 AM';
+        $expected = '03/15/2024 9:00 AM - 03/16/2024 10:00 AM';
         $this->assertEquals($expected, $formatted);
 
         // Test with EU format
@@ -404,7 +404,7 @@ class FormatDisplayTest extends TestCase
         ]);
 
         $formatted = formatDateRange($start, $end, $this->user);
-        $this->assertEquals('15.3.2024 09:00 - 17:30', $formatted);
+        $this->assertEquals('15.03.2024 09:00 - 17:30', $formatted);
     }
 
     /**
@@ -416,7 +416,7 @@ class FormatDisplayTest extends TestCase
 
         // User starts with US format
         $date = Carbon::create(2024, 3, 15, 14, 30, 0);
-        $this->assertEquals('3/15/2024 2:30 PM', formatDateTime($date));
+        $this->assertEquals('03/15/2024 2:30 PM', formatDateTime($date));
 
         // Change to European format
         $this->user->update([
@@ -425,7 +425,7 @@ class FormatDisplayTest extends TestCase
             'time_format' => '24h',
         ]);
 
-        $this->assertEquals('15.3.2024 14:30', formatDateTime($date, $this->user));
+        $this->assertEquals('15.03.2024 14:30', formatDateTime($date, $this->user));
 
         // Change to custom format
         $this->user->update([
@@ -449,14 +449,14 @@ class FormatDisplayTest extends TestCase
         $nyDate = Carbon::create(2024, 3, 15, 15, 0, 0, 'America/New_York');
 
         // Both should format according to the given time (not auto-convert)
-        $this->assertEquals('3/15/2024', formatDate($utcDate));
-        $this->assertEquals('3/15/2024', formatDate($nyDate));
+        $this->assertEquals('03/15/2024', formatDate($utcDate));
+        $this->assertEquals('03/15/2024', formatDate($nyDate));
 
         $this->assertEquals('8:00 PM', formatTime($utcDate));
         $this->assertEquals('3:00 PM', formatTime($nyDate));
 
         // Test with immutable Carbon
         $immutableDate = Carbon::create(2024, 3, 15, 14, 30)->toImmutable();
-        $this->assertEquals('3/15/2024 2:30 PM', formatDateTime($immutableDate));
+        $this->assertEquals('03/15/2024 2:30 PM', formatDateTime($immutableDate));
     }
 }

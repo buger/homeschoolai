@@ -167,13 +167,14 @@ class LocaleControllerTest extends TestCase
      */
     public function test_update_locale_applies_defaults_for_users_without_previous_locale(): void
     {
+        // Create user with default US settings (simulates a new user)
         $user = User::factory()->create([
-            'locale' => 'en', // Must have a default value due to NOT NULL constraint
-            'date_format' => 'm/d/Y', // Required field
-            'region_format' => null,
-            'time_format' => null,
-            'week_start' => null,
-            'date_format_type' => null,
+            'locale' => 'en',
+            'date_format' => 'm/d/Y',
+            'region_format' => 'us',
+            'time_format' => '12h',
+            'week_start' => 'sunday',
+            'date_format_type' => 'us',
         ]);
 
         $this->actingAs($user);

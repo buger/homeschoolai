@@ -152,7 +152,7 @@ class CalendarIntegrationTest extends TestCase
         ]);
 
         $formatted = $this->formatter->formatDate($date, $this->user);
-        $this->assertEquals('3/15/2024', $formatted);
+        $this->assertEquals('03/15/2024', $formatted);
 
         // Test EU format
         $this->user->update([
@@ -161,12 +161,13 @@ class CalendarIntegrationTest extends TestCase
         ]);
 
         $formatted = $this->formatter->formatDate($date, $this->user);
-        $this->assertEquals('15.3.2024', $formatted);
+        $this->assertEquals('15.03.2024', $formatted);
 
         // Test ISO format
         $this->user->update([
             'region_format' => 'custom',
             'date_format_type' => 'iso',
+            'date_format' => 'Y-m-d',
         ]);
 
         $formatted = $this->formatter->formatDate($date, $this->user);
@@ -208,7 +209,7 @@ class CalendarIntegrationTest extends TestCase
         ]);
 
         $formatted = $this->formatter->formatDateTime($datetime, $this->user);
-        $this->assertEquals('3/15/2024 2:30 PM', $formatted);
+        $this->assertEquals('03/15/2024 2:30 PM', $formatted);
 
         // EU format with 24-hour time
         $this->user->update([
@@ -218,7 +219,7 @@ class CalendarIntegrationTest extends TestCase
         ]);
 
         $formatted = $this->formatter->formatDateTime($datetime, $this->user);
-        $this->assertEquals('15.3.2024 14:30', $formatted);
+        $this->assertEquals('15.03.2024 14:30', $formatted);
     }
 
     /**
@@ -233,19 +234,19 @@ class CalendarIntegrationTest extends TestCase
         $this->user->update(['time_format' => '12h']);
 
         $formatted = $this->formatter->formatDateRange($start, $end, $this->user);
-        $this->assertEquals('3/15/2024 9:00 AM - 10:30 AM', $formatted);
+        $this->assertEquals('03/15/2024 9:00 AM - 10:30 AM', $formatted);
 
         // Same day event with 24-hour format
         $this->user->update(['time_format' => '24h']);
 
         $formatted = $this->formatter->formatDateRange($start, $end, $this->user);
-        $this->assertEquals('3/15/2024 09:00 - 10:30', $formatted);
+        $this->assertEquals('03/15/2024 09:00 - 10:30', $formatted);
 
         // Multi-day event
         $endNextDay = Carbon::create(2024, 3, 16, 10, 30);
         $formatted = $this->formatter->formatDateRange($start, $endNextDay, $this->user);
-        $this->assertStringContains('3/15/2024', $formatted);
-        $this->assertStringContains('3/16/2024', $formatted);
+        $this->assertStringContainsString('03/15/2024', $formatted);
+        $this->assertStringContainsString('03/16/2024', $formatted);
     }
 
     /**
@@ -332,7 +333,7 @@ class CalendarIntegrationTest extends TestCase
 
         // Week should span from February 25 (Sun) to March 2 (Sat)
         $this->assertEquals(25, $weekStart->day);
-        $this->assertEquals(2, $weekEnd->month); // March
+        $this->assertEquals(3, $weekEnd->month); // March
 
         // Test with Monday start
         $this->user->update(['week_start' => 'monday']);

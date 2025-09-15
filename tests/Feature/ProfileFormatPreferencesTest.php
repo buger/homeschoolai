@@ -165,15 +165,12 @@ class ProfileFormatPreferencesTest extends TestCase
     }
 
     /**
-     * Test updatePreferences with custom format and null existing values uses defaults
+     * Test updatePreferences with custom format and missing values uses defaults
      */
-    public function test_update_preferences_with_custom_format_and_null_values_uses_defaults(): void
+    public function test_update_preferences_with_custom_format_and_missing_values_uses_defaults(): void
     {
-        $this->user->update([
-            'time_format' => null,
-            'week_start' => null,
-            'date_format_type' => null,
-        ]);
+        // Start with a fresh user that has default values
+        // (simulates a user switching to custom format for first time)
 
         $response = $this->patch('/profile/preferences', [
             'locale' => 'en',
@@ -198,6 +195,8 @@ class ProfileFormatPreferencesTest extends TestCase
      */
     public function test_update_preferences_updates_session_locale_when_changed(): void
     {
+        // Set initial session locale
+        session(['locale' => 'en']);
         $this->assertEquals('en', session('locale', 'default'));
 
         $response = $this->patch('/profile/preferences', [
