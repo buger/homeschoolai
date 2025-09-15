@@ -92,6 +92,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/units/{unit}/topics', [TopicController::class, 'storeForUnit'])->name('units.topics.store');
     Route::get('/units/{unit}/topics/{topic}', [TopicController::class, 'show'])->name('units.topics.show');
 
+    // Topic materials management
+    Route::post('/topics/{topic}/materials/video', [TopicController::class, 'addVideo'])->name('topics.materials.video');
+    Route::post('/topics/{topic}/materials/link', [TopicController::class, 'addLink'])->name('topics.materials.link');
+    Route::post('/topics/{topic}/materials/file', [TopicController::class, 'uploadFile'])->name('topics.materials.file');
+    Route::delete('/topics/{topic}/materials/{type}/{index}', [TopicController::class, 'removeMaterial'])->name('topics.materials.remove');
+
     // Planning board
     Route::get('/planning', [PlanningController::class, 'index'])->name('planning.index');
     Route::get('/planning/sessions/create', [PlanningController::class, 'createSession'])->name('planning.create-session');
@@ -230,24 +236,26 @@ Route::middleware('auth')->group(function () {
     Route::post('/locale', [LocaleController::class, 'updateLocale'])->name('locale.update');
     Route::get('/translations/{locale}', [LocaleController::class, 'getTranslations'])->name('locale.translations');
 
-    // Translation files for JavaScript
-    Route::get('/lang/{locale}.json', function ($locale) {
-        // Validate locale to prevent directory traversal
-        if (! in_array($locale, ['en', 'ru'])) {
-            abort(404);
-        }
-
-        $path = lang_path("{$locale}.json");
-
-        if (! file_exists($path)) {
-            abort(404);
-        }
-
-        return response()->file($path, [
-            'Content-Type' => 'application/json',
-            'Cache-Control' => 'public, max-age=3600',
-        ]);
-    })->name('translations.json');
 });
+
+// Public routes (no authentication required)
+// Translation files for JavaScript
+Route::get('/lang/{locale}.json', function ($locale) {
+    // Validate locale to prevent directory traversal
+    if (! in_array($locale, ['en', 'ru'])) {
+        abort(404);
+    }
+
+    $path = lang_path("{$locale}.json");
+
+    if (! file_exists($path)) {
+        abort(404);
+    }
+
+    return response()->file($path, [
+        'Content-Type' => 'application/json',
+        'Cache-Control' => 'public, max-age=3600',
+    ]);
+})->name('translations.json');
 
 require __DIR__.'/auth.php';

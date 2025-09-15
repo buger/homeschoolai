@@ -5,7 +5,8 @@
       "Bash(npx -y @probelabs/vow@latest consent:*)",
       "Bash(npx -y @probelabs/vow@latest rules:*)",
       "mcp__code-search__search_code",
-      "WebSearch"
+      "WebSearch",
+      "Bash(php artisan tinker:*)"
     ]
   },
   "hooks": {

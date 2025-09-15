@@ -34,4 +34,7 @@
             @include('topics.partials.topic-details', compact('topic', 'unit', 'subject'))
         </div>
     </div>
+
+    <!-- Modal placeholder for HTMX -->
+    <div id="topic-modal"></div>
 @endsection

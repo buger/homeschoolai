@@ -5,11 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\Subject;
 use App\Models\Topic;
 use App\Models\Unit;
+use App\Services\TopicMaterialService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class TopicController extends Controller
 {
+    protected TopicMaterialService $materialService;
+
+    public function __construct(TopicMaterialService $materialService)
+    {
+        $this->materialService = $materialService;
+    }
+
     /**
      * Display a listing of topics for a unit.
      */
@@ -113,7 +121,7 @@ class TopicController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:10000',
             'estimated_minutes' => 'required|integer|min:5|max:480',
             'required' => 'boolean',
         ]);
@@ -123,9 +131,11 @@ class TopicController extends Controller
             $topic = Topic::create([
                 'unit_id' => $unitId,
                 'title' => $validated['name'], // Store name as title
+                'description' => $validated['description'],
                 'estimated_minutes' => $validated['estimated_minutes'],
                 'required' => $validated['required'] ?? true,
                 'prerequisites' => [], // Empty for now
+                'learning_materials' => null,
             ]);
 
             if ($request->header('HX-Request')) {
@@ -170,7 +180,7 @@ class TopicController extends Controller
 
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'description' => 'nullable|string',
+                'description' => 'nullable|string|max:10000',
                 'estimated_minutes' => 'required|integer|min:5|max:480',
                 'required' => 'boolean',
             ]);
@@ -179,9 +189,11 @@ class TopicController extends Controller
             $topic = Topic::create([
                 'unit_id' => $unitId,
                 'title' => $validated['name'], // Store name as title
+                'description' => $validated['description'],
                 'estimated_minutes' => $validated['estimated_minutes'],
                 'required' => $validated['required'] ?? true,
                 'prerequisites' => [], // Empty for now
+                'learning_materials' => null,
             ]);
 
             if ($request->header('HX-Request')) {
@@ -307,7 +319,7 @@ class TopicController extends Controller
 
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'description' => 'nullable|string',
+                'description' => 'nullable|string|max:10000',
                 'estimated_minutes' => 'required|integer|min:5|max:480',
                 'required' => 'boolean',
             ]);
@@ -315,6 +327,7 @@ class TopicController extends Controller
             // Use 'name' field but store as 'title' in the model
             $topic->update([
                 'title' => $validated['name'], // Store name as title
+                'description' => $validated['description'],
                 'estimated_minutes' => $validated['estimated_minutes'],
                 'required' => $validated['required'] ?? true,
             ]);
@@ -367,6 +380,11 @@ class TopicController extends Controller
             // TODO: Check if topic has sessions - prevent deletion if it has active sessions
             // For now, allow deletion
 
+            // Clean up any uploaded files
+            if ($topic->hasLearningMaterials()) {
+                $this->materialService->cleanupTopicFiles($topic);
+            }
+
             $topic->delete();
 
             if ($request->header('HX-Request')) {
@@ -385,6 +403,238 @@ class TopicController extends Controller
             }
 
             return back()->withErrors(['error' => 'Unable to delete topic. Please try again.']);
+        }
+    }
+
+    /**
+     * Add a video to a topic
+     */
+    public function addVideo(Request $request, int $id)
+    {
+        try {
+            $userId = auth()->id();
+            if (! $userId) {
+                return response('Unauthorized', 401);
+            }
+
+            $topic = Topic::find($id);
+            if (! $topic) {
+                return response('Topic not found', 404);
+            }
+
+            // Verify ownership
+            $unit = Unit::find($topic->unit_id);
+            $subject = Subject::find($unit->subject_id);
+            if (! $subject || $subject->user_id != $userId) {
+                return response('Access denied', 403);
+            }
+
+            $validated = $request->validate([
+                'video_url' => 'required|url',
+                'video_title' => 'nullable|string|max:255',
+                'video_description' => 'nullable|string|max:1000',
+            ]);
+
+            $videoData = $this->materialService->processVideoUrl(
+                $validated['video_url'],
+                $validated['video_title'],
+                $validated['video_description']
+            );
+
+            $topic->addMaterial('videos', $videoData);
+
+            if ($request->header('HX-Request')) {
+                return view('topics.partials.materials-section', compact('topic'));
+            }
+
+            return back()->with('success', 'Video added successfully.');
+
+        } catch (\InvalidArgumentException $e) {
+            if ($request->header('HX-Request')) {
+                return response('<div class="text-red-500">'.$e->getMessage().'</div>', 400);
+            }
+
+            return back()->withErrors(['error' => $e->getMessage()]);
+
+        } catch (\Exception $e) {
+            Log::error('Error adding video to topic: '.$e->getMessage());
+
+            if ($request->header('HX-Request')) {
+                return response('<div class="text-red-500">Error adding video. Please try again.</div>', 500);
+            }
+
+            return back()->withErrors(['error' => 'Unable to add video. Please try again.']);
+        }
+    }
+
+    /**
+     * Add a link to a topic
+     */
+    public function addLink(Request $request, int $id)
+    {
+        try {
+            $userId = auth()->id();
+            if (! $userId) {
+                return response('Unauthorized', 401);
+            }
+
+            $topic = Topic::find($id);
+            if (! $topic) {
+                return response('Topic not found', 404);
+            }
+
+            // Verify ownership
+            $unit = Unit::find($topic->unit_id);
+            $subject = Subject::find($unit->subject_id);
+            if (! $subject || $subject->user_id != $userId) {
+                return response('Access denied', 403);
+            }
+
+            $validated = $request->validate([
+                'link_url' => 'required|url',
+                'link_title' => 'nullable|string|max:255',
+                'link_description' => 'nullable|string|max:1000',
+            ]);
+
+            $linkData = $this->materialService->processLink(
+                $validated['link_url'],
+                $validated['link_title'],
+                $validated['link_description']
+            );
+
+            $topic->addMaterial('links', $linkData);
+
+            if ($request->header('HX-Request')) {
+                return view('topics.partials.materials-section', compact('topic'));
+            }
+
+            return back()->with('success', 'Link added successfully.');
+
+        } catch (\InvalidArgumentException $e) {
+            if ($request->header('HX-Request')) {
+                return response('<div class="text-red-500">'.$e->getMessage().'</div>', 400);
+            }
+
+            return back()->withErrors(['error' => $e->getMessage()]);
+
+        } catch (\Exception $e) {
+            Log::error('Error adding link to topic: '.$e->getMessage());
+
+            if ($request->header('HX-Request')) {
+                return response('<div class="text-red-500">Error adding link. Please try again.</div>', 500);
+            }
+
+            return back()->withErrors(['error' => 'Unable to add link. Please try again.']);
+        }
+    }
+
+    /**
+     * Upload a file to a topic
+     */
+    public function uploadFile(Request $request, int $id)
+    {
+        try {
+            $userId = auth()->id();
+            if (! $userId) {
+                return response('Unauthorized', 401);
+            }
+
+            $topic = Topic::find($id);
+            if (! $topic) {
+                return response('Topic not found', 404);
+            }
+
+            // Verify ownership
+            $unit = Unit::find($topic->unit_id);
+            $subject = Subject::find($unit->subject_id);
+            if (! $subject || $subject->user_id != $userId) {
+                return response('Access denied', 403);
+            }
+
+            $validated = $request->validate([
+                'file' => 'required|file|max:10240', // 10MB max
+                'file_title' => 'nullable|string|max:255',
+            ]);
+
+            $fileData = $this->materialService->uploadFile(
+                $topic,
+                $validated['file'],
+                $validated['file_title']
+            );
+
+            $topic->addMaterial('files', $fileData);
+
+            if ($request->header('HX-Request')) {
+                return view('topics.partials.materials-section', compact('topic'));
+            }
+
+            return back()->with('success', 'File uploaded successfully.');
+
+        } catch (\InvalidArgumentException $e) {
+            if ($request->header('HX-Request')) {
+                return response('<div class="text-red-500">'.$e->getMessage().'</div>', 400);
+            }
+
+            return back()->withErrors(['error' => $e->getMessage()]);
+
+        } catch (\Exception $e) {
+            Log::error('Error uploading file to topic: '.$e->getMessage());
+
+            if ($request->header('HX-Request')) {
+                return response('<div class="text-red-500">Error uploading file. Please try again.</div>', 500);
+            }
+
+            return back()->withErrors(['error' => 'Unable to upload file. Please try again.']);
+        }
+    }
+
+    /**
+     * Remove a material from a topic
+     */
+    public function removeMaterial(Request $request, int $id, string $type, int $index)
+    {
+        try {
+            $userId = auth()->id();
+            if (! $userId) {
+                return response('Unauthorized', 401);
+            }
+
+            $topic = Topic::find($id);
+            if (! $topic) {
+                return response('Topic not found', 404);
+            }
+
+            // Verify ownership
+            $unit = Unit::find($topic->unit_id);
+            $subject = Subject::find($unit->subject_id);
+            if (! $subject || $subject->user_id != $userId) {
+                return response('Access denied', 403);
+            }
+
+            // If it's a file, delete from storage
+            if ($type === 'files') {
+                $files = $topic->getFiles();
+                if (isset($files[$index])) {
+                    $this->materialService->deleteFile($files[$index]);
+                }
+            }
+
+            $topic->removeMaterial($type, $index);
+
+            if ($request->header('HX-Request')) {
+                return view('topics.partials.materials-section', compact('topic'));
+            }
+
+            return back()->with('success', 'Material removed successfully.');
+
+        } catch (\Exception $e) {
+            Log::error('Error removing material from topic: '.$e->getMessage());
+
+            if ($request->header('HX-Request')) {
+                return response('<div class="text-red-500">Error removing material. Please try again.</div>', 500);
+            }
+
+            return back()->withErrors(['error' => 'Unable to remove material. Please try again.']);
         }
     }
 }

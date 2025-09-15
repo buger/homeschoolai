@@ -34,19 +34,34 @@
                     </div>
                 </div>
                 
-                <!-- Topic Badge -->
-                <div class="mb-3">
+                <!-- Topic Badges -->
+                <div class="mb-3 flex flex-wrap gap-2">
                     @if($topic->required)
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            {{ __('required') }}
+                            Required
                         </span>
-                    @else
+                    @endif
+                    @if($topic->hasLearningMaterials())
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {{ $topic->getLearningMaterialsCount() }} materials
+                        </span>
+                    @endif
+                    @if(!$topic->required && !$topic->hasLearningMaterials())
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            {{ __('optional') }}
+                            Optional
                         </span>
                     @endif
                 </div>
-                
+
+                <!-- Topic Description -->
+                @if($topic->description)
+                    <div class="mb-3">
+                        <p class="text-sm text-gray-600 line-clamp-2">
+                            {{ Str::limit($topic->description, 120) }}
+                        </p>
+                    </div>
+                @endif
+
                 <!-- Topic Stats -->
                 <div class="text-sm text-gray-600 space-y-1 mb-4">
                     <p class="flex items-center">
