@@ -101,10 +101,17 @@ return [
         ],
         'custom_elements' => [
             ['u', 'Inline', 'Inline', 'Common'],
+            ['input', 'Inline', 'Empty', 'Common', [
+                'type' => 'Enum#checkbox,text,hidden',
+                'checked' => 'Bool',
+                'disabled' => 'Bool',
+                'name' => 'Text',
+                'value' => 'Text',
+            ]],
         ],
         'educational' => [
             'HTML.Doctype' => 'HTML 4.01 Transitional',
-            'HTML.Allowed' => 'h1,h2,h3,h4,h5,h6,p,br,strong,b,em,i,u,s,del,ins,mark,sub,sup,ul,ol,li,dl,dt,dd,blockquote,pre,code,table,thead,tbody,tr,th,td,img[src|alt|width|height|title],a[href|title|target],span,div[class],hr',
+            'HTML.Allowed' => 'h1,h2,h3,h4,h5,h6,p,br,strong,b,em,i,u,s,del,ins,mark,sub,sup,ul,ol,li,dl,dt,dd,blockquote,pre,code,table,thead,tbody,tr,th,td,img[src|alt|width|height|title],a[href|title|target],span,div[class],hr,input[type|checked|disabled]',
             'CSS.AllowedProperties' => 'color,background-color,font-family,font-size,font-weight,font-style,text-align,text-decoration,padding,margin,border,width,height',
             'AutoFormat.AutoParagraph' => true,
             'AutoFormat.RemoveEmpty' => true,

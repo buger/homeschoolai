@@ -538,7 +538,7 @@ class SecurityService
         $threats = [];
 
         // Check for base64 encoded content (could hide malicious payloads)
-        if (preg_match('/[A-Za-z0-9+\/]{100,}={0,2}/', $content, $matches)) {
+        if (preg_match('/[A-Za-z0-9+\/]{20,}={0,2}/', $content, $matches)) {
             $decoded = base64_decode($matches[0], true);
             if ($decoded && $this->containsSuspiciousContent($decoded)) {
                 $threats[] = [
@@ -549,12 +549,13 @@ class SecurityService
             }
         }
 
-        // Check for excessive redirects or loops
-        if (preg_match_all('/location\.href|window\.location|document\.location/i', $content) > 5) {
+        // Check for redirects or loops
+        $redirectCount = preg_match_all('/location\.href|window\.location|document\.location/i', $content);
+        if ($redirectCount > 0) {
             $threats[] = [
-                'type' => 'excessive_redirects',
-                'severity' => 'medium',
-                'description' => 'Content contains excessive redirect attempts',
+                'type' => $redirectCount > 5 ? 'excessive_redirects' : 'redirects_detected',
+                'severity' => $redirectCount > 5 ? 'high' : 'medium',
+                'description' => $redirectCount > 5 ? 'Content contains excessive redirect attempts' : 'Content contains redirect attempts',
             ];
         }
 

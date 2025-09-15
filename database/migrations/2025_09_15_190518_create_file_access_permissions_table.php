@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('file_access_permissions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('file_metadata_id')->constrained()->onDelete('cascade');
+            $table->foreignId('file_metadata_id')->constrained('file_metadata')->onDelete('cascade');
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
             $table->string('role', 50)->nullable(); // For role-based permissions
 

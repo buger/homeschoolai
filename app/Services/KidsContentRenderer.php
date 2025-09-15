@@ -705,21 +705,27 @@ class KidsContentRenderer
 
     private function getIndependenceFeatures(Child $child): array
     {
-        $features = ['read_aloud', 'highlighting'];
+        $features = ['read-aloud', 'highlighting', 'emoji-reactions'];
 
         if ($child->independence_level >= 2) {
             $features[] = 'checkboxes';
-            $features[] = 'progress_tracking';
+            $features[] = 'progress-tracking';
         }
 
         if ($child->independence_level >= 3) {
-            $features[] = 'note_taking';
+            $features[] = 'read-aloud';
+            $features[] = 'highlighting';
+            $features[] = 'checkboxes';
+            $features[] = 'note-taking';
             $features[] = 'bookmarks';
         }
 
         if ($child->independence_level >= 4) {
-            $features[] = 'content_creation';
-            $features[] = 'collaboration';
+            $features[] = 'read-aloud';
+            $features[] = 'highlighting';
+            $features[] = 'checkboxes';
+            $features[] = 'note-taking';
+            $features[] = 'content-creation';
         }
 
         return $features;

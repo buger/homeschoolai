@@ -315,7 +315,7 @@ class Topic extends Model
     public static function parseVideoUrl(string $url): ?array
     {
         // YouTube patterns
-        if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/', $url, $matches)) {
+        if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/', $url, $matches)) {
             return [
                 'type' => 'youtube',
                 'id' => $matches[1],

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use League\CommonMark\Environment\Environment;
 use League\CommonMark\Extension\Autolink\AutolinkExtension;
+use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
 use League\CommonMark\Extension\CommonMark\Node\Inline\Link as CommonMarkLink;
 use League\CommonMark\Extension\FrontMatter\FrontMatterExtension;
 use League\CommonMark\Extension\SmartPunct\SmartPunctExtension;
@@ -44,6 +45,9 @@ class RichContentService
 
         $environment = new Environment($config);
 
+        // Add core CommonMark extension first
+        $environment->addExtension(new CommonMarkCoreExtension);
+
         // Add useful extensions
         $environment->addExtension(new TableExtension);
         $environment->addExtension(new TaskListExtension);
@@ -54,7 +58,8 @@ class RichContentService
 
         // Add our custom extensions for enhanced learning content
         $environment->addRenderer(CommonMarkLink::class, new UnifiedLinkRenderer, 100);
-        $environment->addExtension(new InteractiveExtension);
+        // Temporarily disable InteractiveExtension to fix table rendering
+        // $environment->addExtension(new InteractiveExtension);
 
         $this->markdownConverter = new MarkdownConverter($environment);
     }
@@ -398,7 +403,7 @@ MARKDOWN;
 
         // Detect video embeds
         $videoPatterns = [
-            '/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/',
+            '/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/',
             '/vimeo\.com\/(?:video\/)?(\d+)/',
             '/khanacademy\.org\/.*\/([a-zA-Z0-9_-]+)/',
             '/coursera\.org\/learn\/([^\/]+)/',

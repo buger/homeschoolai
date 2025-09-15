@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('file_security_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
-            $table->foreignId('file_metadata_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('file_metadata_id')->nullable()->constrained('file_metadata')->onDelete('cascade');
 
             // Event information
             $table->string('event_type', 50); // upload_attempt, validation, access_attempt, download, etc.

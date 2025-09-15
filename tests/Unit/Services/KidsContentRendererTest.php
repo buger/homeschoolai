@@ -55,7 +55,6 @@ class KidsContentRendererTest extends TestCase
     {
         return Child::factory()->create(array_merge([
             'name' => 'Test Child',
-            'age' => 10,
             'grade' => '5th',
             'independence_level' => 2,
         ], $attributes));
