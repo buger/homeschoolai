@@ -1,0 +1,357 @@
+<?php
+
+namespace App\Services;
+
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use League\CommonMark\Environment\Environment;
+use League\CommonMark\Extension\Autolink\AutolinkExtension;
+use League\CommonMark\Extension\FrontMatter\FrontMatterExtension;
+use League\CommonMark\Extension\SmartPunct\SmartPunctExtension;
+use League\CommonMark\Extension\Strikethrough\StrikethroughExtension;
+use League\CommonMark\Extension\Table\TableExtension;
+use League\CommonMark\Extension\TaskList\TaskListExtension;
+use League\CommonMark\MarkdownConverter;
+use League\HTMLToMarkdown\HtmlConverter;
+use Mews\Purifier\Facades\Purifier;
+
+class RichContentService
+{
+    protected MarkdownConverter $markdownConverter;
+
+    protected HtmlConverter $htmlConverter;
+
+    public function __construct()
+    {
+        $this->initializeMarkdownConverter();
+        $this->initializeHtmlConverter();
+    }
+
+    /**
+     * Initialize the markdown converter with extensions
+     */
+    private function initializeMarkdownConverter(): void
+    {
+        $config = [
+            'html_input' => 'escape',
+            'allow_unsafe_links' => false,
+            'max_nesting_level' => 50,
+        ];
+
+        $environment = new Environment($config);
+
+        // Add useful extensions
+        $environment->addExtension(new TableExtension);
+        $environment->addExtension(new TaskListExtension);
+        $environment->addExtension(new StrikethroughExtension);
+        $environment->addExtension(new AutolinkExtension);
+        $environment->addExtension(new SmartPunctExtension);
+        $environment->addExtension(new FrontMatterExtension);
+
+        $this->markdownConverter = new MarkdownConverter($environment);
+    }
+
+    /**
+     * Initialize HTML to Markdown converter
+     */
+    private function initializeHtmlConverter(): void
+    {
+        $this->htmlConverter = new HtmlConverter([
+            'header_style' => 'atx',
+            'bold_style' => '**',
+            'italic_style' => '*',
+            'remove_nodes' => 'script style',
+            'strip_tags' => true,
+            'preserve_comments' => false,
+        ]);
+    }
+
+    /**
+     * Convert markdown to safe HTML
+     */
+    public function markdownToHtml(string $markdown): string
+    {
+        $html = $this->markdownConverter->convert($markdown)->getContent();
+
+        // Sanitize the HTML using HTMLPurifier with educational content profile
+        return Purifier::clean($html, 'educational');
+    }
+
+    /**
+     * Convert HTML to markdown
+     */
+    public function htmlToMarkdown(string $html): string
+    {
+        // First sanitize the HTML
+        $cleanHtml = Purifier::clean($html, 'educational');
+
+        return $this->htmlConverter->convert($cleanHtml);
+    }
+
+    /**
+     * Process rich content based on format type
+     */
+    public function processRichContent(string $content, string $format): array
+    {
+        switch ($format) {
+            case 'markdown':
+                $html = $this->markdownToHtml($content);
+                $metadata = $this->generateContentMetadata($content, 'markdown');
+                break;
+
+            case 'html':
+                $html = Purifier::clean($content, 'educational');
+                $metadata = $this->generateContentMetadata($content, 'html');
+                break;
+
+            case 'plain':
+            default:
+                $html = nl2br(e($content));
+                $metadata = $this->generateContentMetadata($content, 'plain');
+                break;
+        }
+
+        return [
+            'html' => $html,
+            'metadata' => $metadata,
+        ];
+    }
+
+    /**
+     * Generate content metadata (word count, reading time, etc.)
+     */
+    public function generateContentMetadata(string $content, string $format): array
+    {
+        // Strip markdown/HTML for accurate word count
+        $plainText = match ($format) {
+            'markdown' => strip_tags($this->markdownToHtml($content)),
+            'html' => strip_tags($content),
+            'plain' => $content,
+            default => $content,
+        };
+
+        $wordCount = str_word_count($plainText);
+        $readingTime = max(1, ceil($wordCount / 200)); // 200 words per minute average
+
+        return [
+            'word_count' => $wordCount,
+            'reading_time' => $readingTime,
+            'character_count' => mb_strlen($plainText),
+            'last_updated' => now()->toISOString(),
+            'format' => $format,
+        ];
+    }
+
+    /**
+     * Upload image for rich content and return markdown-ready reference
+     */
+    public function uploadContentImage(int $topicId, UploadedFile $image, ?string $altText = null): array
+    {
+        // Validate image
+        $this->validateContentImage($image);
+
+        // Generate unique filename
+        $filename = $this->generateImageFilename($topicId, $image);
+
+        // Store image
+        $path = $image->storeAs("topic-content/{$topicId}/images", $filename, 'public');
+        $url = Storage::url($path);
+
+        // Generate thumbnail for large images
+        $thumbnailPath = $this->generateThumbnail($path, $topicId);
+
+        $imageData = [
+            'filename' => $filename,
+            'original_name' => $image->getClientOriginalName(),
+            'path' => $path,
+            'url' => $url,
+            'thumbnail_path' => $thumbnailPath,
+            'thumbnail_url' => $thumbnailPath ? Storage::url($thumbnailPath) : null,
+            'alt_text' => $altText ?: pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME),
+            'mime_type' => $image->getMimeType(),
+            'size' => $image->getSize(),
+            'dimensions' => $this->getImageDimensions($image),
+            'uploaded_at' => now()->toISOString(),
+        ];
+
+        return $imageData;
+    }
+
+    /**
+     * Generate markdown reference for uploaded image
+     */
+    public function generateImageMarkdown(array $imageData): string
+    {
+        return "![{$imageData['alt_text']}]({$imageData['url']})";
+    }
+
+    /**
+     * Extract and process embedded images from content
+     */
+    public function extractEmbeddedImages(string $content, string $format): array
+    {
+        $images = [];
+
+        if ($format === 'markdown') {
+            // Extract markdown images: ![alt](url)
+            preg_match_all('/!\[([^\]]*)\]\(([^)]+)\)/', $content, $matches, PREG_SET_ORDER);
+
+            foreach ($matches as $match) {
+                $images[] = [
+                    'alt_text' => $match[1],
+                    'url' => $match[2],
+                    'markdown' => $match[0],
+                ];
+            }
+        } elseif ($format === 'html') {
+            // Extract HTML images
+            preg_match_all('/<img[^>]+src="([^"]+)"[^>]*alt="([^"]*)"[^>]*>/i', $content, $matches, PREG_SET_ORDER);
+
+            foreach ($matches as $match) {
+                $images[] = [
+                    'url' => $match[1],
+                    'alt_text' => $match[2] ?? '',
+                    'html' => $match[0],
+                ];
+            }
+        }
+
+        return $images;
+    }
+
+    /**
+     * Validate content image upload
+     */
+    private function validateContentImage(UploadedFile $image): void
+    {
+        $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+        $maxSize = 5 * 1024 * 1024; // 5MB
+
+        if (! in_array($image->getMimeType(), $allowedMimes)) {
+            throw new \InvalidArgumentException('Invalid image format. Allowed: JPEG, PNG, GIF, WebP, SVG');
+        }
+
+        if ($image->getSize() > $maxSize) {
+            throw new \InvalidArgumentException('Image too large. Maximum size: 5MB');
+        }
+    }
+
+    /**
+     * Generate unique image filename
+     */
+    private function generateImageFilename(int $topicId, UploadedFile $image): string
+    {
+        $extension = $image->getClientOriginalExtension();
+        $basename = pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME);
+
+        // Sanitize filename
+        $basename = Str::slug($basename);
+        $basename = substr($basename, 0, 50);
+
+        // Ensure uniqueness
+        $filename = $basename.'.'.$extension;
+        $counter = 1;
+
+        while (Storage::disk('public')->exists("topic-content/{$topicId}/images/{$filename}")) {
+            $filename = $basename.'-'.$counter.'.'.$extension;
+            $counter++;
+        }
+
+        return $filename;
+    }
+
+    /**
+     * Generate thumbnail for large images
+     */
+    private function generateThumbnail(string $imagePath, int $topicId): ?string
+    {
+        // For now, we'll skip thumbnail generation
+        // In a production app, you'd use intervention/image or similar
+        return null;
+    }
+
+    /**
+     * Get image dimensions
+     */
+    private function getImageDimensions(UploadedFile $image): array
+    {
+        $imagePath = $image->getRealPath();
+        $imageInfo = getimagesize($imagePath);
+
+        return [
+            'width' => $imageInfo[0] ?? null,
+            'height' => $imageInfo[1] ?? null,
+        ];
+    }
+
+    /**
+     * Clean up content images when topic is deleted
+     */
+    public function cleanupContentImages(int $topicId): bool
+    {
+        $directory = "topic-content/{$topicId}/images";
+
+        if (Storage::disk('public')->exists($directory)) {
+            return Storage::disk('public')->deleteDirectory($directory);
+        }
+
+        return true;
+    }
+
+    /**
+     * Convert content between formats
+     */
+    public function convertContentFormat(string $content, string $fromFormat, string $toFormat): string
+    {
+        if ($fromFormat === $toFormat) {
+            return $content;
+        }
+
+        switch ($fromFormat.'_to_'.$toFormat) {
+            case 'plain_to_markdown':
+                return $content; // Plain text is valid markdown
+
+            case 'plain_to_html':
+                return nl2br(e($content));
+
+            case 'markdown_to_html':
+                return $this->markdownToHtml($content);
+
+            case 'markdown_to_plain':
+                return strip_tags($this->markdownToHtml($content));
+
+            case 'html_to_markdown':
+                return $this->htmlToMarkdown($content);
+
+            case 'html_to_plain':
+                return strip_tags($content);
+
+            default:
+                throw new \InvalidArgumentException("Conversion from {$fromFormat} to {$toFormat} not supported");
+        }
+    }
+
+    /**
+     * Create callout box markdown
+     */
+    public function createCallout(string $type, string $title, string $content): string
+    {
+        $icon = match ($type) {
+            'tip' => '💡',
+            'warning' => '⚠️',
+            'note' => '📝',
+            'info' => 'ℹ️',
+            'success' => '✅',
+            'error' => '❌',
+            default => '📌',
+        };
+
+        return <<<MARKDOWN
+> {$icon} **{$title}**
+>
+> {$content}
+
+MARKDOWN;
+    }
+}

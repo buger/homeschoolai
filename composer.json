@@ -14,7 +14,10 @@
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.2",
         "laravel/tinker": "^2.10.1",
-        "league/csv": "^9.24"
+        "league/commonmark": "^2.7",
+        "league/csv": "^9.24",
+        "league/html-to-markdown": "^5.1",
+        "mews/purifier": "^3.4"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

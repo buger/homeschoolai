@@ -14,6 +14,9 @@ use Illuminate\Support\Collection;
  * @property string $title
  * @property string|null $description
  * @property array|null $learning_materials
+ * @property string|null $learning_content
+ * @property array|null $content_assets
+ * @property bool $migrated_to_unified
  * @property int $estimated_minutes
  * @property array|null $prerequisites
  * @property bool $required
@@ -22,6 +25,9 @@ use Illuminate\Support\Collection;
  * @property-read \App\Models\Unit $unit
  * @property-read \App\Models\Subject $subject
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \Illuminate\Database\Eloquent\Model> $sessions
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder notMigrated()
+ * @method static \Illuminate\Database\Eloquent\Builder migrated()
  */
 class Topic extends Model
 {
@@ -34,7 +40,13 @@ class Topic extends Model
         'unit_id',
         'title',
         'description',
+        'content_format',
+        'content_metadata',
+        'embedded_images',
         'learning_materials',
+        'learning_content',
+        'content_assets',
+        'migrated_to_unified',
         'estimated_minutes',
         'prerequisites',
         'required',
@@ -47,8 +59,12 @@ class Topic extends Model
         'unit_id' => 'integer',
         'estimated_minutes' => 'integer',
         'learning_materials' => 'array', // JSON array handling for materials
+        'content_metadata' => 'array', // JSON array for rich content metadata
+        'embedded_images' => 'array', // JSON array for embedded images
+        'content_assets' => 'array', // JSON array for file asset tracking
         'prerequisites' => 'array', // JSON array handling
         'required' => 'boolean',
+        'migrated_to_unified' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -58,7 +74,13 @@ class Topic extends Model
      */
     protected $attributes = [
         'estimated_minutes' => 30,
+        'content_format' => 'plain',
         'learning_materials' => null,
+        'content_metadata' => null,
+        'embedded_images' => null,
+        'learning_content' => null,
+        'content_assets' => null,
+        'migrated_to_unified' => false,
         'prerequisites' => '[]',
         'required' => true,
     ];
@@ -330,6 +352,400 @@ class Topic extends Model
         return $minutes > 0 && $minutes <= 480; // 8 hours max
     }
 
+    /**
+     * Check if this topic has rich content
+     */
+    public function hasRichContent(): bool
+    {
+        return $this->content_format !== 'plain' && ! empty($this->description);
+    }
+
+    /**
+     * Get content metadata with defaults
+     */
+    public function getContentMetadata(): array
+    {
+        return $this->content_metadata ?? [
+            'word_count' => 0,
+            'reading_time' => 0,
+            'character_count' => 0,
+            'format' => $this->content_format ?? 'plain',
+            'last_updated' => $this->updated_at?->toISOString(),
+        ];
+    }
+
+    /**
+     * Get embedded images with defaults
+     */
+    public function getEmbeddedImages(): array
+    {
+        return $this->embedded_images ?? [];
+    }
+
+    /**
+     * Check if topic has embedded images
+     */
+    public function hasEmbeddedImages(): bool
+    {
+        return ! empty($this->embedded_images);
+    }
+
+    /**
+     * Get reading time in human readable format
+     */
+    public function getReadingTime(): string
+    {
+        $metadata = $this->getContentMetadata();
+        $minutes = $metadata['reading_time'] ?? 0;
+
+        if ($minutes < 1) {
+            return 'Less than 1 minute';
+        } elseif ($minutes === 1) {
+            return '1 minute';
+        } else {
+            return "{$minutes} minutes";
+        }
+    }
+
+    /**
+     * Get word count
+     */
+    public function getWordCount(): int
+    {
+        $metadata = $this->getContentMetadata();
+
+        return $metadata['word_count'] ?? 0;
+    }
+
+    /**
+     * Update content metadata
+     */
+    public function updateContentMetadata(array $metadata): bool
+    {
+        $this->content_metadata = array_merge($this->getContentMetadata(), $metadata);
+
+        return $this->save();
+    }
+
+    /**
+     * ==========================================
+     * UNIFIED CONTENT SYSTEM METHODS
+     * ==========================================
+     */
+
+    /**
+     * Convert old format to unified markdown
+     */
+    public function migrateToUnified(): bool
+    {
+        if ($this->migrated_to_unified) {
+            return true; // Already migrated
+        }
+
+        try {
+            $unifiedContent = $this->convertToUnifiedMarkdown();
+            $contentAssets = $this->extractContentAssets();
+
+            $this->learning_content = $unifiedContent;
+            $this->content_assets = $contentAssets;
+            $this->migrated_to_unified = true;
+
+            return $this->save();
+        } catch (\Exception $e) {
+            \Log::error("Failed to migrate topic {$this->id} to unified format: ".$e->getMessage());
+
+            return false;
+        }
+    }
+
+    /**
+     * Convert existing content to unified markdown format
+     */
+    public function convertToUnifiedMarkdown(): string
+    {
+        $content = [];
+
+        // Add description as main content
+        if (! empty($this->description)) {
+            $content[] = trim($this->description);
+        }
+
+        // Process learning materials
+        if (! empty($this->learning_materials)) {
+            $materials = $this->learning_materials;
+
+            // Add videos section
+            if (! empty($materials['videos'])) {
+                $content[] = "\n## Video Resources\n";
+                foreach ($materials['videos'] as $video) {
+                    $title = $video['title'] ?? 'Video';
+                    $url = $video['url'] ?? '';
+
+                    if (! empty($url)) {
+                        // Always use simple link format for better parsing compatibility
+                        $content[] = "[{$title}]({$url})";
+                    }
+                }
+            }
+
+            // Add links section
+            if (! empty($materials['links'])) {
+                $content[] = "\n## Additional Resources\n";
+                foreach ($materials['links'] as $link) {
+                    $title = $link['title'] ?? 'Resource';
+                    $url = $link['url'] ?? '';
+                    $description = $link['description'] ?? '';
+
+                    if (! empty($url)) {
+                        if (! empty($description)) {
+                            $content[] = "- [{$title}]({$url}) - {$description}";
+                        } else {
+                            $content[] = "- [{$title}]({$url})";
+                        }
+                    }
+                }
+            }
+
+            // Add files section
+            if (! empty($materials['files'])) {
+                $content[] = "\n## Downloads\n";
+                foreach ($materials['files'] as $file) {
+                    $title = $file['title'] ?? $file['name'] ?? 'File';
+                    $path = $file['path'] ?? '';
+                    $description = $file['description'] ?? '';
+
+                    if (! empty($path)) {
+                        if (! empty($description)) {
+                            $content[] = "- [{$title}]({$path}) - {$description}";
+                        } else {
+                            $content[] = "- [{$title}]({$path})";
+                        }
+                    }
+                }
+            }
+        }
+
+        return implode("\n", $content);
+    }
+
+    /**
+     * Extract assets from content for tracking
+     */
+    public function extractContentAssets(): array
+    {
+        $assets = [
+            'images' => [],
+            'files' => [],
+        ];
+
+        // Extract from learning_materials if present
+        if (! empty($this->learning_materials) && isset($this->learning_materials['files'])) {
+            foreach ($this->learning_materials['files'] as $file) {
+                if (! empty($file['path'])) {
+                    $assets['files'][] = [
+                        'filename' => basename($file['path']),
+                        'original_name' => $file['name'] ?? basename($file['path']),
+                        'path' => $file['path'],
+                        'size' => $file['size'] ?? null,
+                        'type' => $file['type'] ?? null,
+                        'uploaded_at' => $this->updated_at->toISOString(),
+                        'referenced_in_content' => true,
+                    ];
+                }
+            }
+        }
+
+        // Extract from embedded_images if present
+        if (! empty($this->embedded_images)) {
+            foreach ($this->embedded_images as $image) {
+                if (! empty($image['path'])) {
+                    $assets['images'][] = [
+                        'filename' => basename($image['path']),
+                        'path' => $image['path'],
+                        'size' => $image['size'] ?? null,
+                        'uploaded_at' => $this->updated_at->toISOString(),
+                        'referenced_in_content' => true,
+                    ];
+                }
+            }
+        }
+
+        return $assets;
+    }
+
+    /**
+     * Clean up orphaned files
+     */
+    public function cleanupOrphanedAssets(): void
+    {
+        if (empty($this->content_assets)) {
+            return;
+        }
+
+        $referencedFiles = [];
+
+        // Parse learning_content to find referenced files
+        if (! empty($this->learning_content)) {
+            preg_match_all('/\[([^\]]+)\]\(([^)]+)\)/', $this->learning_content, $matches);
+            if (! empty($matches[2])) {
+                $referencedFiles = array_merge($referencedFiles, $matches[2]);
+            }
+        }
+
+        $updatedAssets = $this->content_assets;
+
+        // Check files
+        if (! empty($updatedAssets['files'])) {
+            foreach ($updatedAssets['files'] as $index => $file) {
+                $isReferenced = in_array($file['path'], $referencedFiles) ||
+                               in_array($file['filename'], $referencedFiles);
+                $updatedAssets['files'][$index]['referenced_in_content'] = $isReferenced;
+
+                // Mark for potential cleanup if not referenced
+                if (! $isReferenced) {
+                    $updatedAssets['files'][$index]['orphaned'] = true;
+                }
+            }
+        }
+
+        // Check images
+        if (! empty($updatedAssets['images'])) {
+            foreach ($updatedAssets['images'] as $index => $image) {
+                $isReferenced = in_array($image['path'], $referencedFiles) ||
+                               in_array($image['filename'], $referencedFiles);
+                $updatedAssets['images'][$index]['referenced_in_content'] = $isReferenced;
+
+                // Mark for potential cleanup if not referenced
+                if (! $isReferenced) {
+                    $updatedAssets['images'][$index]['orphaned'] = true;
+                }
+            }
+        }
+
+        $this->content_assets = $updatedAssets;
+        $this->save();
+    }
+
+    /**
+     * Get content in unified format (with fallback to legacy)
+     */
+    public function getUnifiedContent(): string
+    {
+        if ($this->migrated_to_unified && ! empty($this->learning_content)) {
+            return $this->learning_content;
+        }
+
+        // Fallback to converting on-the-fly without saving
+        return $this->convertToUnifiedMarkdown();
+    }
+
+    /**
+     * Get legacy materials for backward compatibility
+     */
+    public function getLegacyMaterials(): array
+    {
+        if (! $this->migrated_to_unified) {
+            return $this->learning_materials ?? [];
+        }
+
+        // If migrated, try to extract from unified content for compatibility
+        return $this->extractLegacyMaterials();
+    }
+
+    /**
+     * Extract legacy materials format from unified content
+     */
+    protected function extractLegacyMaterials(): array
+    {
+        if (empty($this->learning_content)) {
+            return [];
+        }
+
+        $materials = [
+            'videos' => [],
+            'links' => [],
+            'files' => [],
+        ];
+
+        // Extract links from markdown
+        preg_match_all('/\[([^\]]+)\]\(([^)]+)\)/', $this->learning_content, $matches);
+
+        if (! empty($matches[1]) && ! empty($matches[2])) {
+            for ($i = 0; $i < count($matches[1]); $i++) {
+                $title = $matches[1][$i];
+                $url = $matches[2][$i];
+
+                // Determine type based on URL
+                $videoInfo = self::parseVideoUrl($url);
+                if ($videoInfo) {
+                    $materials['videos'][] = [
+                        'title' => $title,
+                        'url' => $url,
+                        'type' => $videoInfo['type'],
+                    ];
+                } elseif (preg_match('/\.(pdf|doc|docx|xls|xlsx|zip|rar)$/i', $url)) {
+                    $materials['files'][] = [
+                        'title' => $title,
+                        'name' => basename($url),
+                        'path' => $url,
+                    ];
+                } else {
+                    $materials['links'][] = [
+                        'title' => $title,
+                        'url' => $url,
+                    ];
+                }
+            }
+        }
+
+        return $materials;
+    }
+
+    /**
+     * Check if topic is using unified content system
+     */
+    public function isUnified(): bool
+    {
+        return $this->migrated_to_unified;
+    }
+
+    /**
+     * Get content assets with defaults
+     */
+    public function getContentAssets(): array
+    {
+        return $this->content_assets ?? [
+            'images' => [],
+            'files' => [],
+        ];
+    }
+
+    /**
+     * Check if topic has content assets
+     */
+    public function hasContentAssets(): bool
+    {
+        $assets = $this->getContentAssets();
+
+        return ! empty($assets['images']) || ! empty($assets['files']);
+    }
+
+    /**
+     * Scope to get non-migrated topics
+     */
+    public function scopeNotMigrated($query)
+    {
+        return $query->where('migrated_to_unified', false);
+    }
+
+    /**
+     * Scope to get migrated topics
+     */
+    public function scopeMigrated($query)
+    {
+        return $query->where('migrated_to_unified', true);
+    }
+
     public function toArray(): array
     {
         return [
@@ -337,7 +753,14 @@ class Topic extends Model
             'unit_id' => $this->unit_id,
             'title' => $this->title,
             'description' => $this->description,
-            'learning_materials' => $this->learning_materials,
+            'content_format' => $this->content_format,
+            'content_metadata' => $this->getContentMetadata(),
+            'embedded_images' => $this->getEmbeddedImages(),
+            'learning_materials' => $this->getLegacyMaterials(), // Use compatibility method
+            'learning_content' => $this->getUnifiedContent(),
+            'content_assets' => $this->getContentAssets(),
+            'migrated_to_unified' => $this->migrated_to_unified,
+            'is_unified' => $this->isUnified(),
             'estimated_minutes' => $this->estimated_minutes,
             'estimated_duration' => $this->getEstimatedDuration(),
             'prerequisites' => $this->prerequisites,
@@ -347,6 +770,11 @@ class Topic extends Model
             'has_prerequisites_met' => true, // Simplified for now
             'has_learning_materials' => $this->hasLearningMaterials(),
             'learning_materials_count' => $this->getLearningMaterialsCount(),
+            'has_content_assets' => $this->hasContentAssets(),
+            'has_rich_content' => $this->hasRichContent(),
+            'has_embedded_images' => $this->hasEmbeddedImages(),
+            'reading_time' => $this->getReadingTime(),
+            'word_count' => $this->getWordCount(),
         ];
     }
 }

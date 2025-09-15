@@ -44,10 +44,41 @@
 
         @if($topic->description)
             <div class="mb-6">
-                <h3 class="text-sm font-medium text-gray-700 mb-2">Description</h3>
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <p class="text-gray-800 whitespace-pre-line">{{ $topic->description }}</p>
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-medium text-gray-700">Content</h3>
+                    @if($topic->hasRichContent())
+                        <div class="flex items-center space-x-3 text-xs text-gray-500">
+                            <span class="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                                {{ ucfirst($topic->content_format) }}
+                            </span>
+                            @if($topic->getWordCount() > 0)
+                                <span>{{ $topic->getWordCount() }} words</span>
+                                <span>{{ $topic->getReadingTime() }}</span>
+                            @endif
+                        </div>
+                    @endif
                 </div>
+
+                @if($topic->hasRichContent())
+                    {{-- Render rich content --}}
+                    <div class="bg-white border border-gray-200 rounded-lg">
+                        @php
+                            $richContent = app(App\Services\RichContentService::class)->processRichContent(
+                                $topic->description,
+                                $topic->content_format
+                            );
+                        @endphp
+                        @include('topics.partials.content-preview', [
+                            'html' => $richContent['html'],
+                            'metadata' => $richContent['metadata']
+                        ])
+                    </div>
+                @else
+                    {{-- Plain text content --}}
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <p class="text-gray-800 whitespace-pre-line">{{ $topic->description }}</p>
+                    </div>
+                @endif
             </div>
         @endif
 

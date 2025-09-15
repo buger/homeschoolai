@@ -5,17 +5,22 @@ namespace App\Http\Controllers;
 use App\Models\Subject;
 use App\Models\Topic;
 use App\Models\Unit;
+use App\Services\RichContentService;
 use App\Services\TopicMaterialService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class TopicController extends Controller
 {
     protected TopicMaterialService $materialService;
 
-    public function __construct(TopicMaterialService $materialService)
+    protected RichContentService $richContentService;
+
+    public function __construct(TopicMaterialService $materialService, RichContentService $richContentService)
     {
         $this->materialService = $materialService;
+        $this->richContentService = $richContentService;
     }
 
     /**
@@ -127,11 +132,23 @@ class TopicController extends Controller
         ]);
 
         try {
+            // Process rich content if provided
+            $contentFormat = $validated['content_format'] ?? 'plain';
+            $description = $validated['description'];
+            $contentMetadata = null;
+
+            if (! empty($description) && $contentFormat !== 'plain') {
+                $richContent = $this->richContentService->processRichContent($description, $contentFormat);
+                $contentMetadata = $richContent['metadata'];
+            }
+
             // Use 'name' field but store as 'title' in the model
             $topic = Topic::create([
                 'unit_id' => $unitId,
                 'title' => $validated['name'], // Store name as title
-                'description' => $validated['description'],
+                'description' => $description,
+                'content_format' => $contentFormat,
+                'content_metadata' => $contentMetadata,
                 'estimated_minutes' => $validated['estimated_minutes'],
                 'required' => $validated['required'] ?? true,
                 'prerequisites' => [], // Empty for now
@@ -180,16 +197,29 @@ class TopicController extends Controller
 
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'description' => 'nullable|string|max:10000',
+                'description' => 'nullable|string',
+                'content_format' => 'nullable|in:plain,markdown,html',
                 'estimated_minutes' => 'required|integer|min:5|max:480',
                 'required' => 'boolean',
             ]);
+
+            // Process rich content if provided
+            $contentFormat = $validated['content_format'] ?? 'plain';
+            $description = $validated['description'];
+            $contentMetadata = null;
+
+            if (! empty($description) && $contentFormat !== 'plain') {
+                $richContent = $this->richContentService->processRichContent($description, $contentFormat);
+                $contentMetadata = $richContent['metadata'];
+            }
 
             // Use 'name' field but store as 'title' in the model
             $topic = Topic::create([
                 'unit_id' => $unitId,
                 'title' => $validated['name'], // Store name as title
-                'description' => $validated['description'],
+                'description' => $description,
+                'content_format' => $contentFormat,
+                'content_metadata' => $contentMetadata,
                 'estimated_minutes' => $validated['estimated_minutes'],
                 'required' => $validated['required'] ?? true,
                 'prerequisites' => [], // Empty for now
@@ -319,15 +349,28 @@ class TopicController extends Controller
 
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'description' => 'nullable|string|max:10000',
+                'description' => 'nullable|string',
+                'content_format' => 'nullable|in:plain,markdown,html',
                 'estimated_minutes' => 'required|integer|min:5|max:480',
                 'required' => 'boolean',
             ]);
 
+            // Process rich content if provided
+            $contentFormat = $validated['content_format'] ?? $topic->content_format ?? 'plain';
+            $description = $validated['description'];
+            $contentMetadata = $topic->content_metadata;
+
+            if (! empty($description) && $contentFormat !== 'plain') {
+                $richContent = $this->richContentService->processRichContent($description, $contentFormat);
+                $contentMetadata = $richContent['metadata'];
+            }
+
             // Use 'name' field but store as 'title' in the model
             $topic->update([
                 'title' => $validated['name'], // Store name as title
-                'description' => $validated['description'],
+                'description' => $description,
+                'content_format' => $contentFormat,
+                'content_metadata' => $contentMetadata,
                 'estimated_minutes' => $validated['estimated_minutes'],
                 'required' => $validated['required'] ?? true,
             ]);
@@ -635,6 +678,421 @@ class TopicController extends Controller
             }
 
             return back()->withErrors(['error' => 'Unable to remove material. Please try again.']);
+        }
+    }
+
+    /**
+     * Upload image for rich content
+     */
+    public function uploadContentImage(Request $request, int $id)
+    {
+        try {
+            $userId = auth()->id();
+            if (! $userId) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            $topic = Topic::find($id);
+            if (! $topic) {
+                return response()->json(['error' => 'Topic not found'], 404);
+            }
+
+            // Verify ownership
+            $unit = Unit::find($topic->unit_id);
+            $subject = Subject::find($unit->subject_id);
+            if (! $subject || $subject->user_id != $userId) {
+                return response()->json(['error' => 'Access denied'], 403);
+            }
+
+            $validated = $request->validate([
+                'image' => 'required|image|max:5120', // 5MB max
+                'alt_text' => 'nullable|string|max:255',
+            ]);
+
+            $imageData = $this->richContentService->uploadContentImage(
+                $topic->id,
+                $validated['image'],
+                $validated['alt_text']
+            );
+
+            // Add to topic's embedded images
+            $embeddedImages = $topic->embedded_images ?? [];
+            $embeddedImages[] = $imageData;
+
+            $topic->update(['embedded_images' => $embeddedImages]);
+
+            // Generate markdown reference
+            $markdown = $this->richContentService->generateImageMarkdown($imageData);
+
+            return response()->json([
+                'success' => true,
+                'image' => $imageData,
+                'markdown' => $markdown,
+                'message' => 'Image uploaded successfully',
+            ]);
+
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['error' => $e->getMessage()], 400);
+
+        } catch (\Exception $e) {
+            Log::error('Error uploading content image: '.$e->getMessage());
+
+            return response()->json(['error' => 'Unable to upload image. Please try again.'], 500);
+        }
+    }
+
+    /**
+     * Get all content images for a topic
+     */
+    public function getContentImages(Request $request, int $id)
+    {
+        try {
+            $userId = auth()->id();
+            if (! $userId) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            $topic = Topic::find($id);
+            if (! $topic) {
+                return response()->json(['error' => 'Topic not found'], 404);
+            }
+
+            // Verify ownership
+            $unit = Unit::find($topic->unit_id);
+            $subject = Subject::find($unit->subject_id);
+            if (! $subject || $subject->user_id != $userId) {
+                return response()->json(['error' => 'Access denied'], 403);
+            }
+
+            $images = $topic->embedded_images ?? [];
+
+            return response()->json([
+                'success' => true,
+                'images' => $images,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error getting content images: '.$e->getMessage());
+
+            return response()->json(['error' => 'Unable to get images.'], 500);
+        }
+    }
+
+    /**
+     * Delete content image
+     */
+    public function deleteContentImage(Request $request, int $id, int $imageIndex)
+    {
+        try {
+            $userId = auth()->id();
+            if (! $userId) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            $topic = Topic::find($id);
+            if (! $topic) {
+                return response()->json(['error' => 'Topic not found'], 404);
+            }
+
+            // Verify ownership
+            $unit = Unit::find($topic->unit_id);
+            $subject = Subject::find($unit->subject_id);
+            if (! $subject || $subject->user_id != $userId) {
+                return response()->json(['error' => 'Access denied'], 403);
+            }
+
+            $embeddedImages = $topic->embedded_images ?? [];
+
+            if (! isset($embeddedImages[$imageIndex])) {
+                return response()->json(['error' => 'Image not found'], 404);
+            }
+
+            // Delete file from storage
+            $imageData = $embeddedImages[$imageIndex];
+            if (isset($imageData['path'])) {
+                Storage::disk('public')->delete($imageData['path']);
+                if (isset($imageData['thumbnail_path'])) {
+                    Storage::disk('public')->delete($imageData['thumbnail_path']);
+                }
+            }
+
+            // Remove from array
+            unset($embeddedImages[$imageIndex]);
+            $embeddedImages = array_values($embeddedImages); // Reindex
+
+            $topic->update(['embedded_images' => $embeddedImages]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Image deleted successfully',
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error deleting content image: '.$e->getMessage());
+
+            return response()->json(['error' => 'Unable to delete image.'], 500);
+        }
+    }
+
+    /**
+     * Preview rich content rendering
+     */
+    public function previewContent(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'content' => 'required|string',
+                'format' => 'required|in:plain,markdown,html',
+            ]);
+
+            $result = $this->richContentService->processRichContent(
+                $validated['content'],
+                $validated['format']
+            );
+
+            if ($request->header('HX-Request')) {
+                return view('topics.partials.content-preview', [
+                    'html' => $result['html'],
+                    'metadata' => $result['metadata'],
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'html' => $result['html'],
+                'metadata' => $result['metadata'],
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error previewing content: '.$e->getMessage());
+
+            if ($request->header('HX-Request')) {
+                return response('<div class="text-red-500">Error previewing content.</div>', 500);
+            }
+
+            return response()->json(['error' => 'Unable to preview content.'], 500);
+        }
+    }
+
+    /**
+     * Enhanced markdown editor file upload with progress tracking
+     */
+    public function markdownFileUpload(Request $request, int $id)
+    {
+        try {
+            $userId = auth()->id();
+            if (! $userId) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            $topic = Topic::find($id);
+            if (! $topic) {
+                return response()->json(['error' => 'Topic not found'], 404);
+            }
+
+            // Verify ownership
+            $unit = Unit::find($topic->unit_id);
+            $subject = Subject::find($unit->subject_id);
+            if (! $subject || $subject->user_id != $userId) {
+                return response()->json(['error' => 'Access denied'], 403);
+            }
+
+            $validated = $request->validate([
+                'file' => 'required|file|max:10240', // 10MB max
+                'type' => 'required|in:image,document,video,audio',
+            ]);
+
+            $file = $validated['file'];
+            $fileType = $validated['type'];
+
+            // Validate file type based on category
+            $this->validateFileByType($file, $fileType);
+
+            // Generate unique filename for unified content storage
+            $filename = $this->generateUnifiedContentFilename($topic->id, $file);
+
+            // Store file in unified content directory
+            $path = $file->storeAs("topics/{$topic->id}/unified-content", $filename, 'public');
+            $url = Storage::url($path);
+
+            // Update content assets tracking
+            $contentAssets = $topic->getContentAssets();
+
+            $assetData = [
+                'filename' => $filename,
+                'original_name' => $file->getClientOriginalName(),
+                'path' => $path,
+                'url' => $url,
+                'size' => $file->getSize(),
+                'type' => $file->getMimeType(),
+                'category' => $fileType,
+                'uploaded_at' => now()->toISOString(),
+                'referenced_in_content' => false, // Will be updated when content is saved
+            ];
+
+            if ($fileType === 'image') {
+                $contentAssets['images'][] = $assetData;
+            } else {
+                $contentAssets['files'][] = $assetData;
+            }
+
+            $topic->update(['content_assets' => $contentAssets]);
+
+            // Generate markdown based on file type
+            $markdown = $this->generateMarkdownForFile($assetData, $fileType);
+
+            return response()->json([
+                'success' => true,
+                'filename' => $filename,
+                'original_name' => $file->getClientOriginalName(),
+                'url' => $url,
+                'size' => $file->getSize(),
+                'type' => $file->getMimeType(),
+                'category' => $fileType,
+                'markdown' => $markdown,
+                'message' => 'File uploaded successfully',
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'error' => 'Validation failed',
+                'details' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error uploading markdown file: '.$e->getMessage());
+
+            return response()->json([
+                'error' => 'Upload failed: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Validate file type based on category
+     */
+    private function validateFileByType($file, string $type): void
+    {
+        $mimeType = $file->getMimeType();
+
+        switch ($type) {
+            case 'image':
+                if (! in_array($mimeType, ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'])) {
+                    throw new \InvalidArgumentException('Invalid image format. Allowed: JPEG, PNG, GIF, WebP, SVG');
+                }
+                break;
+            case 'document':
+                if (! in_array($mimeType, [
+                    'application/pdf',
+                    'application/msword',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'application/vnd.ms-excel',
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    'application/vnd.ms-powerpoint',
+                    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                    'text/plain',
+                    'text/csv',
+                ])) {
+                    throw new \InvalidArgumentException('Invalid document format. Allowed: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, CSV');
+                }
+                break;
+            case 'video':
+                if (! str_starts_with($mimeType, 'video/')) {
+                    throw new \InvalidArgumentException('Invalid video format');
+                }
+                break;
+            case 'audio':
+                if (! str_starts_with($mimeType, 'audio/')) {
+                    throw new \InvalidArgumentException('Invalid audio format');
+                }
+                break;
+        }
+    }
+
+    /**
+     * Generate unique filename for unified content
+     */
+    private function generateUnifiedContentFilename(int $topicId, $file): string
+    {
+        $extension = $file->getClientOriginalExtension();
+        $timestamp = now()->format('YmdHis');
+        $random = substr(md5(uniqid()), 0, 8);
+
+        return "topic_{$topicId}_{$timestamp}_{$random}.{$extension}";
+    }
+
+    /**
+     * Generate appropriate markdown for uploaded file
+     */
+    private function generateMarkdownForFile(array $assetData, string $fileType): string
+    {
+        $filename = $assetData['original_name'];
+        $url = $assetData['url'];
+
+        switch ($fileType) {
+            case 'image':
+                return "![{$filename}]({$url})";
+            case 'video':
+                return "<video controls>\n  <source src=\"{$url}\" type=\"{$assetData['type']}\">\n  Your browser does not support the video tag.\n</video>";
+            case 'audio':
+                return "<audio controls>\n  <source src=\"{$url}\" type=\"{$assetData['type']}\">\n  Your browser does not support the audio tag.\n</audio>";
+            default:
+                return "[{$filename}]({$url})";
+        }
+    }
+
+    /**
+     * Migrate topic to unified markdown system
+     */
+    public function migrateToUnified(Request $request, int $id)
+    {
+        try {
+            $userId = auth()->id();
+            if (! $userId) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            $topic = Topic::find($id);
+            if (! $topic) {
+                return response()->json(['error' => 'Topic not found'], 404);
+            }
+
+            // Verify ownership
+            $unit = Unit::find($topic->unit_id);
+            $subject = Subject::find($unit->subject_id);
+            if (! $subject || $subject->user_id != $userId) {
+                return response()->json(['error' => 'Access denied'], 403);
+            }
+
+            // Check if already migrated
+            if ($topic->migrated_to_unified) {
+                return back()->with('info', 'Topic is already using the unified system.');
+            }
+
+            // Perform migration
+            $success = $topic->migrateToUnified();
+
+            if ($success) {
+                if ($request->header('HX-Request')) {
+                    return view('topics.partials.edit-form', compact('topic'));
+                }
+
+                return back()->with('success', 'Topic has been successfully upgraded to the enhanced markdown system!');
+            } else {
+                if ($request->header('HX-Request')) {
+                    return response('<div class="text-red-500">Migration failed. Please try again.</div>', 500);
+                }
+
+                return back()->with('error', 'Failed to upgrade topic. Please try again.');
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Error migrating topic to unified system: '.$e->getMessage());
+
+            if ($request->header('HX-Request')) {
+                return response('<div class="text-red-500">Migration error: '.$e->getMessage().'</div>', 500);
+            }
+
+            return back()->with('error', 'Migration failed: '.$e->getMessage());
         }
     }
 }

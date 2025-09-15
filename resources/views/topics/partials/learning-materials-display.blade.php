@@ -2,8 +2,12 @@
     $videos = $topic->getVideos();
     $links = $topic->getLinks();
     $files = $topic->getFiles();
+    $isKidsView = request()->get('view') === 'kids' || auth()->user()->preferred_view === 'kids';
 @endphp
 
+@if($isKidsView)
+    @include('topics.partials.learning-materials-kids-view', ['topic' => $topic])
+@else
 <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
     <!-- Videos -->
     @foreach($videos as $video)
@@ -147,4 +151,5 @@
         <h3 class="text-sm font-medium text-gray-900 mb-1">No learning materials</h3>
         <p class="text-sm text-gray-500">Click "Edit Topic" to add videos, links, or files to help with learning.</p>
     </div>
+@endif
 @endif

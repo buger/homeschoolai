@@ -98,6 +98,18 @@ Route::middleware('auth')->group(function () {
     Route::post('/topics/{topic}/materials/file', [TopicController::class, 'uploadFile'])->name('topics.materials.file');
     Route::delete('/topics/{topic}/materials/{type}/{index}', [TopicController::class, 'removeMaterial'])->name('topics.materials.remove');
 
+    // Rich content management
+    Route::post('/topics/{topic}/content/images', [TopicController::class, 'uploadContentImage'])->name('topics.content.images.upload');
+    Route::get('/topics/{topic}/content/images', [TopicController::class, 'getContentImages'])->name('topics.content.images.list');
+    Route::delete('/topics/{topic}/content/images/{index}', [TopicController::class, 'deleteContentImage'])->name('topics.content.images.delete');
+    Route::post('/topics/content/preview', [TopicController::class, 'previewContent'])->name('topics.content.preview');
+
+    // Enhanced markdown editor file uploads
+    Route::post('/topics/{topic}/markdown-upload', [TopicController::class, 'markdownFileUpload'])->name('topics.markdown.upload');
+
+    // Topic migration to unified system
+    Route::post('/topics/{topic}/migrate', [TopicController::class, 'migrateToUnified'])->name('topics.migrate');
+
     // Planning board
     Route::get('/planning', [PlanningController::class, 'index'])->name('planning.index');
     Route::get('/planning/sessions/create', [PlanningController::class, 'createSession'])->name('planning.create-session');
