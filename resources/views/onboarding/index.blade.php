@@ -2,48 +2,39 @@
 
 @section('content')
 <div class="space-y-6" x-data="onboardingWizard()" x-cloak>
-    <!-- Header -->
+    <!-- Header with Progress -->
     <div class="bg-white rounded-lg shadow-sm p-6">
-        <div class="flex justify-between items-center">
+        <div class="flex justify-between items-center mb-4">
             <div>
                 <h2 class="text-2xl font-bold text-gray-900">{{ __('Welcome to HomeLearnAI!') }}</h2>
                 <p class="text-gray-600 mt-1">{{ __('Let\'s set up your homeschool environment in just a few steps') }}</p>
             </div>
-            <div class="flex items-center space-x-2 text-sm text-gray-500">
-                <span>{{ __('Step') }} <span x-text="currentStep"></span> {{ __('of') }} <span x-text="totalSteps"></span></span>
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2 text-sm text-gray-500">
+                    <span>{{ __('Step') }} <span x-text="currentStep"></span> {{ __('of') }} <span x-text="totalSteps"></span></span>
+                </div>
+                <!-- Skip Setup Link -->
+                <form method="POST" action="{{ route('onboarding.skip') }}" class="inline" @submit="sessionStorage.removeItem('onboarding_step')">
+                    @csrf
+                    <button type="submit"
+                            class="text-sm text-gray-500 hover:text-gray-700 underline transition-colors"
+                            data-testid="skip-button">
+                        {{ __('Skip Setup') }}
+                    </button>
+                </form>
             </div>
         </div>
-    </div>
-
-    <!-- Progress Indicator -->
-    <div class="bg-white rounded-lg shadow-sm p-6" data-testid="wizard-progress">
-        <div class="flex justify-between items-center">
-            <div class="flex items-center space-x-3">
-                <div class="w-full bg-gray-200 rounded-full h-2 flex-1 max-w-md">
-                    <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" :style="'width: ' + ((currentStep / totalSteps) * 100) + '%'"></div>
-                </div>
-                <div class="text-sm text-gray-500 ml-3">
-                    <span x-text="currentStep"></span> / <span x-text="totalSteps"></span>
-                </div>
-            </div>
-            
-            <!-- Skip button -->
-            <form method="POST" action="{{ route('onboarding.skip') }}" class="inline">
-                @csrf
-                <button type="submit" 
-                        class="text-sm text-gray-500 hover:text-gray-700 transition-colors"
-                        data-testid="skip-button">
-                    {{ __('Skip Setup') }}
-                </button>
-            </form>
+        <!-- Progress Bar -->
+        <div class="w-full bg-gray-200 rounded-full h-2">
+            <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" :style="'width: ' + ((currentStep / totalSteps) * 100) + '%'"></div>
         </div>
     </div>
 
     <!-- Wizard Content -->
-    <div class="bg-white rounded-lg shadow-sm p-6">
+    <div class="bg-white rounded-lg shadow-sm">
         <!-- Step 1: Welcome -->
         <template x-if="currentStep === 1">
-            <div data-testid="step-1">
+            <div data-testid="step-1" class="p-6">
             <div class="text-center">
                 <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ __('Welcome to Your Homeschool Hub!') }}</h2>
                 <p class="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
@@ -87,7 +78,7 @@
 
         <!-- Step 2: Language Preference -->
         <template x-if="currentStep === 2">
-            <div data-testid="step-2">
+            <div data-testid="step-2" class="p-6">
             <div class="max-w-xl mx-auto">
                 <div class="text-center mb-8">
                     <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ __('Choose Your Language') }}</h2>
@@ -100,13 +91,13 @@
                     <div class="grid grid-cols-1 gap-4">
                         <label class="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
                                :class="userLocale === 'en' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'">
-                            <input type="radio" name="locale" value="en" x-model="userLocale" class="sr-only">
+                            <input type="radio" name="locale" value="en" x-model="userLocale" @change="if(userLocale !== '{{ App::getLocale() }}') { saveLanguagePreference(true); }" class="sr-only">
                             <div class="flex items-center justify-between w-full">
                                 <div class="flex items-center">
                                     <span class="text-2xl mr-4">🇬🇧</span>
                                     <div>
                                         <p class="font-medium text-gray-900">English</p>
-                                        <p class="text-sm text-gray-500">Use HomeLearnAI in English</p>
+                                        <p class="text-sm text-gray-500">{{ __('Use HomeLearnAI in English') }}</p>
                                     </div>
                                 </div>
                                 <div x-show="userLocale === 'en'" class="text-blue-500">
@@ -119,13 +110,13 @@
 
                         <label class="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
                                :class="userLocale === 'ru' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'">
-                            <input type="radio" name="locale" value="ru" x-model="userLocale" class="sr-only">
+                            <input type="radio" name="locale" value="ru" x-model="userLocale" @change="if(userLocale !== '{{ App::getLocale() }}') { saveLanguagePreference(true); }" class="sr-only">
                             <div class="flex items-center justify-between w-full">
                                 <div class="flex items-center">
                                     <span class="text-2xl mr-4">🇷🇺</span>
                                     <div>
                                         <p class="font-medium text-gray-900">Русский</p>
-                                        <p class="text-sm text-gray-500">Использовать HomeLearnAI на русском языке</p>
+                                        <p class="text-sm text-gray-500">{{ __('Use HomeLearnAI in Russian') }}</p>
                                     </div>
                                 </div>
                                 <div x-show="userLocale === 'ru'" class="text-blue-500">
@@ -152,7 +143,7 @@
 
         <!-- Step 3: Children Setup -->
         <template x-if="currentStep === 3">
-            <div data-testid="step-3">
+            <div data-testid="step-3" class="p-6">
             <div class="max-w-2xl mx-auto">
                 <div class="text-center mb-8">
                     <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ __('Add Your Children') }}</h2>
@@ -287,7 +278,7 @@
 
         <!-- Step 4: Subjects Setup -->
         <template x-if="currentStep === 4">
-            <div data-testid="step-4">
+            <div data-testid="step-4" class="p-6">
             <div class="max-w-4xl mx-auto">
                 <div class="text-center mb-8">
                     <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ __('Choose Subjects') }}</h2>
@@ -425,7 +416,7 @@
 
         <!-- Step 5: Review and Completion -->
         <template x-if="currentStep === 5">
-            <div data-testid="step-5">
+            <div data-testid="step-5" class="p-6">
             <div class="max-w-3xl mx-auto">
                 <div class="text-center mb-8">
                     <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -591,7 +582,7 @@
         </template>
 
         <!-- Navigation -->
-        <div class="flex justify-between items-center pt-6 border-t border-gray-200" data-testid="wizard-navigation">
+        <div class="flex justify-between items-center p-6 pt-6 border-t border-gray-200" data-testid="wizard-navigation">
             <button @click="previousStep" 
                     x-show="currentStep > 1"
                     class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors flex items-center space-x-2"
@@ -629,7 +620,7 @@
 <script>
 function onboardingWizard() {
     return {
-        currentStep: 1,
+        currentStep: parseInt(sessionStorage.getItem('onboarding_step') || '1'),
         totalSteps: 5,
         userLocale: '{{ Auth::user()->locale ?? App::getLocale() }}',
         isSubmitting: false,
@@ -877,7 +868,7 @@ function onboardingWizard() {
                 
                 // Move to review step after short delay
                 setTimeout(() => {
-                    this.currentStep = 4;
+                    this.currentStep = 5;
                     this.subjectsFormSuccess = '';
                 }, 1500);
                 this.isSubmitting = false;
@@ -934,7 +925,7 @@ function onboardingWizard() {
                     
                     // Move to review step after short delay
                     setTimeout(() => {
-                        this.currentStep = 4;
+                        this.currentStep = 5;
                         this.subjectsFormSuccess = '';
                     }, 1500);
                 } else {
@@ -987,7 +978,7 @@ function onboardingWizard() {
         },
         
         // AJAX submission of children data
-        async saveLanguagePreference() {
+        async saveLanguagePreference(stayOnCurrentStep = false) {
             try {
                 const response = await fetch('{{ route("locale.update") }}', {
                     method: 'POST',
@@ -1000,21 +991,28 @@ function onboardingWizard() {
                         locale: this.userLocale
                     })
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (data.success) {
                     // Update the app locale
                     window.currentLocale = this.userLocale;
-                    
-                    // Reload to apply language changes
-                    window.location.reload();
+
+                    if (stayOnCurrentStep) {
+                        // Stay on language step after reload
+                        sessionStorage.setItem('onboarding_step', '2');
+                        // Reload to apply language changes
+                        window.location.reload();
+                    } else {
+                        // Move to next step (called from Next button)
+                        this.currentStep++;
+                    }
                 } else {
-                    throw new Error(data.message || 'Failed to save language preference');
+                    throw new Error(data.message || '{{ __("Failed to save language preference") }}');
                 }
             } catch (error) {
                 console.error('Language preference error:', error);
-                this.formError = 'Failed to save language preference. You can continue and change it later.';
+                this.formError = '{{ __("Failed to save language preference. You can continue and change it later.") }}';
                 // Allow to continue even if language save fails
                 setTimeout(() => {
                     this.formError = '';
@@ -1080,9 +1078,8 @@ function onboardingWizard() {
         // Navigation methods
         async nextStep() {
             if (this.currentStep === 2) {
-                // Save language preference
-                await this.saveLanguagePreference();
-                this.currentStep++;
+                // Save language preference without reload when clicking Next
+                await this.saveLanguagePreference(false);
             } else if (this.currentStep === 3) {
                 // For step 3, trigger form submission
                 await this.saveChildren();
@@ -1106,7 +1103,7 @@ function onboardingWizard() {
         completeWizard() {
             // Legacy method for when we only had 3 steps
             // Now redirects to the new completion flow
-            this.currentStep = 4;
+            this.currentStep = 5;
         },
         
         // New completion method for Phase 5
@@ -1131,7 +1128,10 @@ function onboardingWizard() {
                     successMessage.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-6 py-3 rounded-lg shadow-lg z-50';
                     successMessage.innerHTML = '{{ __("🎉 Setup complete! Welcome to your homeschool hub!") }}';
                     document.body.appendChild(successMessage);
-                    
+
+                    // Clear the stored step since onboarding is complete
+                    sessionStorage.removeItem('onboarding_step');
+
                     // Redirect after short delay
                     setTimeout(() => {
                         window.location.href = data.redirect || '{{ route("dashboard") }}';

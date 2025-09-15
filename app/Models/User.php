@@ -14,6 +14,10 @@ use Illuminate\Notifications\Notifiable;
  * @property string $locale
  * @property string $timezone
  * @property string $date_format
+ * @property string $region_format
+ * @property string $time_format
+ * @property string $week_start
+ * @property string $date_format_type
  * @property bool $email_notifications
  * @property bool $review_reminders
  */
@@ -55,6 +59,40 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     /**
+     * Regional format presets
+     */
+    public const REGION_FORMATS = [
+        'us' => 'US Format',
+        'eu' => 'European Format',
+        'custom' => 'Custom',
+    ];
+
+    /**
+     * Time format options
+     */
+    public const TIME_FORMATS = [
+        '12h' => '12-hour (AM/PM)',
+        '24h' => '24-hour',
+    ];
+
+    /**
+     * Week start options
+     */
+    public const WEEK_START_OPTIONS = [
+        'sunday' => 'Sunday',
+        'monday' => 'Monday',
+    ];
+
+    /**
+     * Date format types
+     */
+    public const DATE_FORMAT_TYPES = [
+        'us' => 'MM/DD/YYYY',
+        'eu' => 'DD.MM.YYYY',
+        'iso' => 'YYYY-MM-DD',
+    ];
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
@@ -66,6 +104,10 @@ class User extends Authenticatable implements MustVerifyEmail
         'locale',
         'timezone',
         'date_format',
+        'region_format',
+        'time_format',
+        'week_start',
+        'date_format_type',
         'email_notifications',
         'review_reminders',
     ];
@@ -137,5 +179,103 @@ class User extends Authenticatable implements MustVerifyEmail
         ]);
 
         return $preferences;
+    }
+
+    /**
+     * Get regional format defaults based on locale
+     */
+    public static function getRegionalDefaults(string $locale): array
+    {
+        return match ($locale) {
+            'ru' => [
+                'region_format' => 'eu',
+                'time_format' => '24h',
+                'week_start' => 'monday',
+                'date_format_type' => 'eu',
+                'date_format' => 'd.m.Y',
+            ],
+            'en' => [
+                'region_format' => 'us',
+                'time_format' => '12h',
+                'week_start' => 'sunday',
+                'date_format_type' => 'us',
+                'date_format' => 'm/d/Y',
+            ],
+            default => [
+                'region_format' => 'us',
+                'time_format' => '12h',
+                'week_start' => 'sunday',
+                'date_format_type' => 'us',
+                'date_format' => 'm/d/Y',
+            ],
+        };
+    }
+
+    /**
+     * Apply regional format defaults to user
+     */
+    public function applyRegionalDefaults(?string $locale = null): void
+    {
+        $locale = $locale ?? $this->locale ?? 'en';
+        $defaults = self::getRegionalDefaults($locale);
+
+        $this->region_format = $defaults['region_format'];
+        $this->time_format = $defaults['time_format'];
+        $this->week_start = $defaults['week_start'];
+        $this->date_format_type = $defaults['date_format_type'];
+        $this->date_format = $defaults['date_format'];
+    }
+
+    /**
+     * Check if user is using custom regional format
+     */
+    public function isCustomFormat(): bool
+    {
+        return $this->region_format === 'custom';
+    }
+
+    /**
+     * Get date format string based on user's preference
+     */
+    public function getDateFormatString(): string
+    {
+        if ($this->isCustomFormat()) {
+            return $this->date_format ?? 'm/d/Y';
+        }
+
+        return match ($this->date_format_type ?? 'us') {
+            'eu' => 'd.m.Y',
+            'iso' => 'Y-m-d',
+            'us' => 'm/d/Y',
+            default => 'm/d/Y',
+        };
+    }
+
+    /**
+     * Get time format string based on user's preference
+     */
+    public function getTimeFormatString(): string
+    {
+        return match ($this->time_format ?? '12h') {
+            '24h' => 'H:i',
+            '12h' => 'g:i A',
+            default => 'g:i A',
+        };
+    }
+
+    /**
+     * Get datetime format string based on user's preferences
+     */
+    public function getDateTimeFormatString(): string
+    {
+        return $this->getDateFormatString().' '.$this->getTimeFormatString();
+    }
+
+    /**
+     * Check if user prefers Monday as week start
+     */
+    public function prefersMondayWeekStart(): bool
+    {
+        return ($this->week_start ?? 'sunday') === 'monday';
     }
 }

@@ -152,20 +152,20 @@ class Child extends Model
     public static function getGradeOptions(): array
     {
         return [
-            'PreK' => 'Pre-Kindergarten',
-            'K' => 'Kindergarten',
-            '1st' => '1st Grade',
-            '2nd' => '2nd Grade',
-            '3rd' => '3rd Grade',
-            '4th' => '4th Grade',
-            '5th' => '5th Grade',
-            '6th' => '6th Grade',
-            '7th' => '7th Grade',
-            '8th' => '8th Grade',
-            '9th' => '9th Grade (Freshman)',
-            '10th' => '10th Grade (Sophomore)',
-            '11th' => '11th Grade (Junior)',
-            '12th' => '12th Grade (Senior)',
+            'PreK' => __('Pre-Kindergarten'),
+            'K' => __('Kindergarten'),
+            '1st' => __('1st Grade'),
+            '2nd' => __('2nd Grade'),
+            '3rd' => __('3rd Grade'),
+            '4th' => __('4th Grade'),
+            '5th' => __('5th Grade'),
+            '6th' => __('6th Grade'),
+            '7th' => __('7th Grade'),
+            '8th' => __('8th Grade'),
+            '9th' => __('9th Grade (Freshman)'),
+            '10th' => __('10th Grade (Sophomore)'),
+            '11th' => __('11th Grade (Junior)'),
+            '12th' => __('12th Grade (Senior)'),
         ];
     }
 

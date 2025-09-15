@@ -1,5 +1,6 @@
 import './bootstrap';
 import 'htmx.org';
+import { initRegionalFormatting } from './regional-formatting';
 
 import Alpine from 'alpinejs';
 
@@ -63,6 +64,12 @@ createTranslationFunction();
 
 // Add HTMX configuration for Laravel CSRF
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize regional formatting if user format options are available
+    if (typeof window.userFormatOptions !== 'undefined') {
+        initRegionalFormatting(window.userFormatOptions);
+        console.log('Regional formatting initialized with options:', window.userFormatOptions);
+    }
+
     // Configure HTMX for Laravel
     document.body.addEventListener('htmx:configRequest', function(evt) {
         evt.detail.headers['X-CSRF-TOKEN'] = document.querySelector('meta[name="csrf-token"]').getAttribute('content');

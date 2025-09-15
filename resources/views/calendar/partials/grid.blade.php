@@ -23,7 +23,20 @@
 
         <!-- Days of Week Header -->
         <div class="grid grid-cols-7 border-b border-gray-200">
-            @foreach(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as $dayKey)
+            @php
+                // Get user's preferred week order
+                $user = auth()->user();
+                $startsMonday = $user && $user->prefersMondayWeekStart();
+
+                $weekDays = $startsMonday
+                    ? ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+                    : ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+                $weekDayNumbers = $startsMonday
+                    ? [1, 2, 3, 4, 5, 6, 7] // Monday = 1
+                    : [7, 1, 2, 3, 4, 5, 6]; // Sunday = 7, Monday = 1
+            @endphp
+            @foreach($weekDays as $dayKey)
                 <div class="p-4 text-center font-medium text-gray-700 bg-gray-50 border-r border-gray-200 last:border-r-0">
                     <div class="hidden md:block">{{ __($dayKey) }}</div>
                     <div class="md:hidden">{{ substr(__($dayKey), 0, 3) }}</div>
@@ -33,9 +46,9 @@
 
         <!-- Calendar Days -->
         <div class="grid grid-cols-7 min-h-96">
-            @foreach(range(1, 7) as $day)
+            @foreach($weekDayNumbers as $day)
                 @include('calendar.partials.day-column', [
-                    'day' => $day, 
+                    'day' => $day,
                     'timeBlocks' => $timeBlocksByDay[$day],
                     'reviewSlots' => $reviewSlotsByDay[$day] ?? collect([])
                 ])

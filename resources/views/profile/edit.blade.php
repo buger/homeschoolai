@@ -9,37 +9,37 @@
             <p class="mt-2 text-sm text-gray-600">{{ __('Manage your account settings and preferences') }}</p>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
             <!-- Sidebar -->
             <div class="lg:col-span-1">
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                     <!-- Profile Picture Section -->
-                    <div class="p-6 text-center border-b border-gray-200">
+                    <div class="p-8 text-center border-b border-gray-200">
                         <div class="inline-block">
-                            <div class="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg">
+                            <div class="w-32 h-32 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-lg">
                                 {{ strtoupper(substr($user->name ?? 'U', 0, 1)) }}
                             </div>
                         </div>
-                        <h2 class="mt-4 text-lg font-semibold text-gray-900">{{ $user->name ?? 'User' }}</h2>
-                        <p class="text-sm text-gray-500">{{ $user->email ?? 'No email' }}</p>
+                        <h2 class="mt-6 text-xl font-semibold text-gray-900">{{ $user->name ?? 'User' }}</h2>
+                        <p class="text-sm text-gray-500 mt-1">{{ $user->email ?? 'No email' }}</p>
                     </div>
                     
                     <!-- Quick Stats -->
-                    <div class="p-4">
-                        <div class="grid grid-cols-2 gap-4 text-center">
-                            <div class="py-2">
-                                <p class="text-xl font-bold text-blue-600">{{ $user->children()->count() ?? 0 }}</p>
-                                <p class="text-xs text-gray-500">{{ __('Children') }}</p>
+                    <div class="p-6">
+                        <div class="grid grid-cols-2 gap-6 text-center">
+                            <div class="py-3">
+                                <p class="text-2xl font-bold text-blue-600">{{ $user->children()->count() ?? 0 }}</p>
+                                <p class="text-sm text-gray-500 mt-1">{{ __('Children') }}</p>
                             </div>
-                            <div class="py-2">
-                                <p class="text-xl font-bold text-green-600">{{ $user->subjects()->count() ?? 0 }}</p>
-                                <p class="text-xs text-gray-500">{{ __('Subjects') }}</p>
+                            <div class="py-3">
+                                <p class="text-2xl font-bold text-green-600">{{ $user->subjects()->count() ?? 0 }}</p>
+                                <p class="text-sm text-gray-500 mt-1">{{ __('Subjects') }}</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Navigation Links -->
-                    <nav class="p-2">
+                    <nav class="p-4">
                         <button @click="activeTab = 'general'"
                                 data-testid="profile-tab-general"
                                 :class="activeTab === 'general' ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-4 border-transparent'"
@@ -75,7 +75,7 @@
             </div>
 
             <!-- Main Content Area -->
-            <div class="lg:col-span-3">
+            <div class="lg:col-span-2">
                 <!-- General Tab -->
                 <div x-show="activeTab === 'general'" x-transition class="bg-white rounded-lg shadow-sm">
                     <div class="p-6 border-b border-gray-200">
@@ -171,10 +171,139 @@
                             </div>
                         </div>
 
+                        <!-- Regional Format Preferences -->
+                        <div x-data="{
+                            regionFormat: '{{ $user->region_format ?? 'us' }}',
+                            showPreview: true,
+                            previewDate: '{{ now()->format('Y-m-d H:i:s') }}',
+                            formatPreview(format, type) {
+                                const date = new Date(this.previewDate);
+                                switch(format) {
+                                    case 'us':
+                                        return type === 'date' ? date.toLocaleDateString('en-US') : date.toLocaleTimeString('en-US');
+                                    case 'eu':
+                                        return type === 'date' ? date.toLocaleDateString('de-DE') : date.toLocaleTimeString('de-DE', {hour12: false});
+                                    case 'iso':
+                                        return type === 'date' ? date.toISOString().split('T')[0] : date.toLocaleTimeString('en-GB', {hour12: false});
+                                    default:
+                                        return type === 'date' ? date.toLocaleDateString('en-US') : date.toLocaleTimeString('en-US');
+                                }
+                            }
+                        }">
+                            <div class="border-t border-gray-200 pt-6">
+                                <h4 class="text-sm font-medium text-gray-900 mb-4">{{ __('Regional Format') }}</h4>
+                                <p class="text-xs text-gray-500 mb-4">{{ __('Choose how dates, times, and calendar are displayed') }}</p>
+
+                                <!-- Format Preset Selection -->
+                                <div class="space-y-3 mb-4">
+                                    @foreach(\App\Models\User::REGION_FORMATS as $value => $label)
+                                        <label class="relative flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                                               :class="regionFormat === '{{ $value }}' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'">
+                                            <input type="radio" name="region_format_preview" value="{{ $value }}"
+                                                   x-model="regionFormat"
+                                                   data-testid="region-format-{{ $value }}"
+                                                   class="sr-only">
+                                            <div class="flex-1">
+                                                <div class="flex items-center justify-between">
+                                                    <p class="font-medium text-gray-900">{{ __($label) }}</p>
+                                                    <div x-show="regionFormat === '{{ $value }}'" class="text-blue-500">
+                                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                                @if($value !== 'custom')
+                                                    <div class="mt-1 text-xs text-gray-500">
+                                                        @if($value === 'us')
+                                                            {{ __('12-hour time, MM/DD/YYYY dates, Sunday week start') }}
+                                                        @elseif($value === 'eu')
+                                                            {{ __('24-hour time, DD.MM.YYYY dates, Monday week start') }}
+                                                        @endif
+                                                    </div>
+                                                @else
+                                                    <div class="mt-1 text-xs text-gray-500">
+                                                        {{ __('Choose individual preferences below') }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </label>
+                                    @endforeach
+                                </div>
+
+                                <!-- Live Preview -->
+                                <div class="bg-gray-50 rounded-lg p-3 mb-4">
+                                    <h5 class="text-xs font-medium text-gray-700 mb-2">{{ __('Preview') }}:</h5>
+                                    <div class="text-sm text-gray-600 space-y-1">
+                                        <div>{{ __('Date') }}:
+                                            <span x-show="regionFormat === 'us'" class="font-mono">{{ now()->format('m/d/Y') }}</span>
+                                            <span x-show="regionFormat === 'eu'" class="font-mono">{{ now()->format('d.m.Y') }}</span>
+                                            <span x-show="regionFormat === 'custom'" class="font-mono">{{ now()->format($user->getDateFormatString()) }}</span>
+                                        </div>
+                                        <div>{{ __('Time') }}:
+                                            <span x-show="regionFormat === 'us'" class="font-mono">{{ now()->format('g:i A') }}</span>
+                                            <span x-show="regionFormat === 'eu'" class="font-mono">{{ now()->format('H:i') }}</span>
+                                            <span x-show="regionFormat === 'custom'" class="font-mono">{{ now()->format($user->getTimeFormatString()) }}</span>
+                                        </div>
+                                        <div>{{ __('Week starts') }}:
+                                            <span x-show="regionFormat === 'us'">{{ __('Sunday') }}</span>
+                                            <span x-show="regionFormat === 'eu'">{{ __('Monday') }}</span>
+                                            <span x-show="regionFormat === 'custom'">{{ $user->prefersMondayWeekStart() ? __('Monday') : __('Sunday') }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Other Preferences -->
                         <form method="POST" action="{{ route('profile.preferences') }}" class="space-y-6">
                             @csrf
                             @method('PATCH')
+
+                            <!-- Hidden field for regional format -->
+                            <input type="hidden" name="region_format" x-bind:value="regionFormat">
+
+                            <!-- Custom Format Options (shown when Custom is selected) -->
+                            <div x-show="regionFormat === 'custom'" x-transition class="border-t border-gray-200 pt-4">
+                                <h5 class="text-sm font-medium text-gray-900 mb-4">{{ __('Custom Format Settings') }}</h5>
+
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                    <div>
+                                        <label for="time_format" class="block text-sm font-medium text-gray-700 mb-1">{{ __('Time Format') }}</label>
+                                        <select name="time_format" id="time_format"
+                                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                                            @foreach(\App\Models\User::TIME_FORMATS as $value => $label)
+                                                <option value="{{ $value }}" {{ ($user->time_format ?? '12h') === $value ? 'selected' : '' }}>
+                                                    {{ __($label) }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label for="date_format_type" class="block text-sm font-medium text-gray-700 mb-1">{{ __('Date Format') }}</label>
+                                        <select name="date_format_type" id="date_format_type"
+                                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                                            @foreach(\App\Models\User::DATE_FORMAT_TYPES as $value => $label)
+                                                <option value="{{ $value }}" {{ ($user->date_format_type ?? 'us') === $value ? 'selected' : '' }}>
+                                                    {{ __($label) }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label for="week_start" class="block text-sm font-medium text-gray-700 mb-1">{{ __('Week Starts') }}</label>
+                                        <select name="week_start" id="week_start"
+                                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                                            @foreach(\App\Models\User::WEEK_START_OPTIONS as $value => $label)
+                                                <option value="{{ $value }}" {{ ($user->week_start ?? 'sunday') === $value ? 'selected' : '' }}>
+                                                    {{ __($label) }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
                             
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>

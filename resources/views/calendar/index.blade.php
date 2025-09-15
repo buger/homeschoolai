@@ -4,66 +4,77 @@
 <div class="space-y-6">
     <!-- Header -->
     <div class="bg-white rounded-lg shadow-sm p-6">
-        <div class="flex justify-between items-center mb-4">
+        <div class="flex justify-between items-center">
             <div>
                 <h2 class="text-2xl font-bold text-gray-900">{{ __('weekly_calendar') }}</h2>
                 <p class="text-gray-600 mt-1">{{ __('manage_time_blocks_and_learning_schedules') }}</p>
             </div>
-            
-            <div class="flex items-center space-x-4">
-                <!-- Child Selector -->
-                @if($children->count() > 1)
-                <div>
-                    <label for="child-select" class="block text-sm font-medium text-gray-700 mb-1">{{ __('select_child_colon') }}</label>
-                    <select 
-                        id="child-select"
-                        hx-get="{{ route('calendar.index') }}"
-                        hx-target="#calendar-content"
-                        hx-include="this"
-                        name="child_id"
-                        class="block w-48 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                        <option value="">{{ __('all_children') }}</option>
-                        @foreach($children as $child)
-                            <option value="{{ $child->id }}" {{ $selectedChild && $selectedChild->id === $child->id ? 'selected' : '' }}>
-                                {{ $child->name }} ({{ $child->grade }})
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                @endif
 
-                <!-- Add Time Block Button -->
-                <button
-                    hx-get="{{ route('calendar.create') }}{{ $selectedChild ? '?child_id=' . $selectedChild->id : '' }}"
-                    hx-target="#time-block-form-modal"
-                    hx-swap="innerHTML"
-                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center space-x-2"
-                >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                    </svg>
-                    <span>{{ __('add_time_block') }}</span>
-                </button>
+            <!-- Child Selector -->
+            <div class="flex items-center space-x-3">
+                <label for="child_id" class="text-sm font-medium text-gray-700">{{ __('child') }}:</label>
+                <select id="child_id"
+                        name="child_id"
+                        hx-get="{{ route('calendar.index') }}"
+                        hx-target="#calendar-container"
+                        hx-swap="innerHTML"
+                        hx-include="[name=child_id]"
+                        class="rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">{{ __('select_a_child') }}</option>
+                    @if($children->count() > 0)
+                        @foreach($children as $child)
+                        <option value="{{ $child->id }}" {{ $selectedChild && $selectedChild->id == $child->id ? 'selected' : '' }}>
+                            {{ $child->name }}
+                        </option>
+                        @endforeach
+                    @else
+                        <option disabled>{{ __('no_children_available_create_a_child_first') }}</option>
+                    @endif
+                </select>
             </div>
         </div>
+    </div>
 
-        @if($selectedChild)
-        <!-- Selected Child Info -->
-        <div class="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold">
-                {{ substr($selectedChild->name, 0, 1) }}
+    <div id="calendar-container">
+        @if(!$selectedChild)
+        <div class="bg-white rounded-lg shadow-sm p-12 text-center">
+            <div class="mx-auto h-12 w-12 text-gray-400">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
             </div>
-            <div>
-                <p class="font-medium text-blue-900">{{ $selectedChild->name }}</p>
-                <p class="text-sm text-blue-600">{{ __('grade_level', ['grade' => $selectedChild->grade]) }} • {{ ucfirst(str_replace('_', ' ', $selectedChild->getGradeGroup())) }}</p>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">{{ __('no_child_selected') }}</h3>
+            <p class="mt-1 text-sm text-gray-500">{{ __('select_a_child_from_the_dropdown_above_to_view_their_calendar') }}</p>
+            <div class="mt-6">
+                <a href="{{ route('children.index') }}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                    {{ __('manage_children') }}
+                </a>
+            </div>
+        </div>
+        @else
+        <div class="bg-white rounded-lg shadow-sm">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-medium text-gray-900">{{ __('calendar_for') }} {{ $selectedChild->name }}</h3>
+                    <button
+                        hx-get="{{ route('calendar.create') }}?child_id={{ $selectedChild->id }}"
+                        hx-target="#time-block-form-modal"
+                        hx-swap="innerHTML"
+                        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center space-x-2"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        <span>{{ __('add_time_block') }}</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Calendar Content -->
+            <div id="calendar-content" class="p-6">
+                @include('calendar.partials.grid')
             </div>
         </div>
         @endif
-    </div>
-
-    <!-- Calendar Content -->
-    <div id="calendar-content">
-        @include('calendar.partials.grid')
     </div>
 </div>
 

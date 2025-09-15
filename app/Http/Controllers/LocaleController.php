@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Services\SupabaseClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -59,7 +60,18 @@ class LocaleController extends Controller
             if ($isAuthenticated) {
                 // Authenticated user - save to User model directly
                 $user = auth()->user();
+                $previousLocale = $user->locale;
                 $user->locale = $locale;
+
+                // Apply regional format defaults if this is the first time setting locale
+                // or if the user is switching from one locale to another
+                if ($previousLocale !== $locale) {
+                    // Only apply defaults if user is not using custom format
+                    if (! $user->isCustomFormat()) {
+                        $user->applyRegionalDefaults($locale);
+                    }
+                }
+
                 $user->save();
 
                 // Also try to save to user_preferences in Supabase for compatibility

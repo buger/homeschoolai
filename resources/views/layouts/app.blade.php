@@ -13,7 +13,15 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
-        
+
+        <!-- User Format Preferences for JavaScript -->
+        @auth
+            <script>
+                window.userFormatOptions = @json(userFormatOptions());
+                window.currentLocale = '{{ app()->getLocale() }}';
+            </script>
+        @endauth
+
         <!-- Page Styles -->
         @stack('styles')
     </head>
