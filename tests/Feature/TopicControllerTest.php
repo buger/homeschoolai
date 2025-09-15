@@ -187,11 +187,7 @@ class TopicControllerTest extends TestCase
     {
         $this->actingAs($this->user);
 
-        $response = $this->get(route('topics.edit', [
-            'subject' => $this->subject->id,
-            'unit' => $this->unit->id,
-            'topic' => $this->topic->id,
-        ]));
+        $response = $this->get(route('topics.edit', $this->topic->id));
 
         $response->assertOk();
         $response->assertViewHas('topic', $this->topic);
@@ -204,11 +200,7 @@ class TopicControllerTest extends TestCase
     {
         $this->actingAs($this->user);
 
-        $response = $this->put(route('topics.update', [
-            'subject' => $this->subject->id,
-            'unit' => $this->unit->id,
-            'topic' => $this->topic->id,
-        ]), [
+        $response = $this->put(route('topics.update', $this->topic->id), [
             'name' => 'Updated Topic Title',
             'estimated_minutes' => 45,
             'required' => false,
@@ -229,11 +221,7 @@ class TopicControllerTest extends TestCase
     {
         $this->actingAs($this->user);
 
-        $response = $this->delete(route('topics.destroy', [
-            'subject' => $this->subject->id,
-            'unit' => $this->unit->id,
-            'topic' => $this->topic->id,
-        ]));
+        $response = $this->delete(route('topics.destroy', $this->topic->id));
 
         $response->assertRedirect();
         $this->assertDatabaseMissing('topics', ['id' => $this->topic->id]);
@@ -245,11 +233,7 @@ class TopicControllerTest extends TestCase
         $this->actingAs($this->user);
 
         $response = $this->delete(
-            route('topics.destroy', [
-                'subject' => $this->subject->id,
-                'unit' => $this->unit->id,
-                'topic' => $this->topic->id,
-            ]),
+            route('topics.destroy', $this->topic->id),
             [],
             ['HX-Request' => 'true']
         );

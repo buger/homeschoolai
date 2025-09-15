@@ -166,7 +166,7 @@
 
 /* Image embeds */
 .image-embed-wrapper {
-    @apply relative group;
+    @apply relative;
 }
 
 .image-embed-preview {
@@ -174,11 +174,11 @@
 }
 
 .image-embed-overlay {
-    @apply absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center;
+    @apply absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center;
 }
 
 .image-zoom-button {
-    @apply bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-800 p-2 rounded-full shadow-lg transform scale-0 group-hover:scale-100 transition-transform duration-200;
+    @apply bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-800 p-2 rounded-full shadow-lg transform scale-0 hover:scale-100 transition-transform duration-200;
 }
 
 /* Audio embeds */

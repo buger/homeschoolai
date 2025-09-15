@@ -140,7 +140,7 @@ class TopicController extends Controller
         try {
             // Process rich content if provided
             $contentFormat = $validated['content_format'] ?? 'plain';
-            $description = $validated['description'];
+            $description = $validated['description'] ?? null;
             $contentMetadata = null;
 
             if (! empty($description) && $contentFormat !== 'plain') {
@@ -211,7 +211,7 @@ class TopicController extends Controller
 
             // Process rich content if provided
             $contentFormat = $validated['content_format'] ?? 'plain';
-            $description = $validated['description'];
+            $description = $validated['description'] ?? null;
             $contentMetadata = null;
 
             if (! empty($description) && $contentFormat !== 'plain') {
@@ -363,7 +363,7 @@ class TopicController extends Controller
 
             // Process rich content if provided
             $contentFormat = $validated['content_format'] ?? $topic->content_format ?? 'plain';
-            $description = $validated['description'];
+            $description = $validated['description'] ?? null;
             $contentMetadata = $topic->content_metadata;
 
             if (! empty($description) && $contentFormat !== 'plain') {
