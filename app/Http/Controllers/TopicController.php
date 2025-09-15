@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Child;
 use App\Models\Subject;
 use App\Models\Topic;
 use App\Models\Unit;
+use App\Services\KidsGamificationService;
 use App\Services\RichContentService;
 use App\Services\TopicMaterialService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -18,8 +21,10 @@ class TopicController extends Controller
 
     protected RichContentService $richContentService;
 
-    public function __construct(TopicMaterialService $materialService, RichContentService $richContentService)
-    {
+    public function __construct(
+        TopicMaterialService $materialService,
+        RichContentService $richContentService
+    ) {
         $this->materialService = $materialService;
         $this->richContentService = $richContentService;
     }
@@ -1228,6 +1233,526 @@ class TopicController extends Controller
             }
 
             return back()->with('error', 'Migration failed: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Start chunked upload session for large files - Phase 5 enhanced file handling
+     */
+    public function startChunkedUpload(Request $request, int $id)
+    {
+        try {
+            $userId = auth()->id();
+            if (! $userId) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            $topic = Topic::find($id);
+            if (! $topic) {
+                return response()->json(['error' => 'Topic not found'], 404);
+            }
+
+            // Verify ownership
+            $unit = Unit::find($topic->unit_id);
+            $subject = Subject::find($unit->subject_id);
+            if (! $subject || $subject->user_id != $userId) {
+                return response()->json(['error' => 'Access denied'], 403);
+            }
+
+            $validated = $request->validate([
+                'filename' => 'required|string|max:255',
+                'size' => 'required|integer|min:1|max:104857600', // 100MB max
+                'type' => 'required|string',
+                'chunks' => 'required|integer|min:1',
+            ]);
+
+            // Create chunked upload session
+            $sessionId = uniqid('chunk_session_', true);
+            $sessionDir = storage_path("app/temp/chunks/{$sessionId}");
+
+            if (! file_exists($sessionDir)) {
+                mkdir($sessionDir, 0755, true);
+            }
+
+            // Store session metadata
+            $sessionData = [
+                'session_id' => $sessionId,
+                'filename' => $validated['filename'],
+                'total_size' => $validated['size'],
+                'file_type' => $validated['type'],
+                'total_chunks' => $validated['chunks'],
+                'uploaded_chunks' => [],
+                'topic_id' => $id,
+                'user_id' => $userId,
+                'created_at' => now()->toISOString(),
+                'expires_at' => now()->addHours(24)->toISOString(),
+            ];
+
+            file_put_contents(
+                storage_path("app/temp/chunks/{$sessionId}/session.json"),
+                json_encode($sessionData)
+            );
+
+            return response()->json([
+                'success' => true,
+                'session_id' => $sessionId,
+                'message' => 'Chunked upload session created',
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'error' => 'Validation failed',
+                'details' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error starting chunked upload: '.$e->getMessage());
+
+            return response()->json([
+                'error' => 'Failed to start chunked upload: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Upload individual chunk
+     */
+    public function uploadChunk(Request $request, int $id)
+    {
+        try {
+            $userId = auth()->id();
+            if (! $userId) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            $validated = $request->validate([
+                'chunk' => 'required|file',
+                'session_id' => 'required|string',
+                'chunk_index' => 'required|integer|min:0',
+            ]);
+
+            $sessionId = $validated['session_id'];
+            $chunkIndex = $validated['chunk_index'];
+            $chunkFile = $validated['chunk'];
+
+            // Load session data
+            $sessionPath = storage_path("app/temp/chunks/{$sessionId}/session.json");
+            if (! file_exists($sessionPath)) {
+                return response()->json(['error' => 'Upload session not found'], 404);
+            }
+
+            $sessionData = json_decode(file_get_contents($sessionPath), true);
+
+            // Verify session ownership and topic
+            if ($sessionData['user_id'] != $userId || $sessionData['topic_id'] != $id) {
+                return response()->json(['error' => 'Access denied'], 403);
+            }
+
+            // Check if session expired
+            if (now() > Carbon::parse($sessionData['expires_at'])) {
+                return response()->json(['error' => 'Upload session expired'], 410);
+            }
+
+            // Store chunk
+            $chunkPath = storage_path("app/temp/chunks/{$sessionId}/chunk_{$chunkIndex}");
+            $chunkFile->move(dirname($chunkPath), basename($chunkPath));
+
+            // Update session data
+            $sessionData['uploaded_chunks'][] = $chunkIndex;
+            $sessionData['uploaded_chunks'] = array_unique($sessionData['uploaded_chunks']);
+            sort($sessionData['uploaded_chunks']);
+
+            file_put_contents($sessionPath, json_encode($sessionData));
+
+            return response()->json([
+                'success' => true,
+                'chunk_index' => $chunkIndex,
+                'uploaded_chunks' => count($sessionData['uploaded_chunks']),
+                'total_chunks' => $sessionData['total_chunks'],
+                'message' => "Chunk {$chunkIndex} uploaded successfully",
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'error' => 'Validation failed',
+                'details' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error uploading chunk: '.$e->getMessage());
+
+            return response()->json([
+                'error' => 'Failed to upload chunk: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Finalize chunked upload and assemble file
+     */
+    public function finalizeChunkedUpload(Request $request, int $id)
+    {
+        try {
+            $userId = auth()->id();
+            if (! $userId) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            $topic = Topic::find($id);
+            if (! $topic) {
+                return response()->json(['error' => 'Topic not found'], 404);
+            }
+
+            $validated = $request->validate([
+                'session_id' => 'required|string',
+            ]);
+
+            $sessionId = $validated['session_id'];
+
+            // Load session data
+            $sessionPath = storage_path("app/temp/chunks/{$sessionId}/session.json");
+            if (! file_exists($sessionPath)) {
+                return response()->json(['error' => 'Upload session not found'], 404);
+            }
+
+            $sessionData = json_decode(file_get_contents($sessionPath), true);
+
+            // Verify session ownership and topic
+            if ($sessionData['user_id'] != $userId || $sessionData['topic_id'] != $id) {
+                return response()->json(['error' => 'Access denied'], 403);
+            }
+
+            // Check if all chunks are uploaded
+            if (count($sessionData['uploaded_chunks']) !== $sessionData['total_chunks']) {
+                return response()->json([
+                    'error' => 'Not all chunks uploaded',
+                    'uploaded' => count($sessionData['uploaded_chunks']),
+                    'expected' => $sessionData['total_chunks'],
+                ], 400);
+            }
+
+            // Assemble file from chunks
+            $assembledFilePath = storage_path("app/temp/assembled_{$sessionId}");
+            $assembledFile = fopen($assembledFilePath, 'wb');
+
+            for ($i = 0; $i < $sessionData['total_chunks']; $i++) {
+                $chunkPath = storage_path("app/temp/chunks/{$sessionId}/chunk_{$i}");
+                if (! file_exists($chunkPath)) {
+                    fclose($assembledFile);
+                    unlink($assembledFilePath);
+
+                    return response()->json(['error' => "Missing chunk {$i}"], 400);
+                }
+
+                $chunkData = file_get_contents($chunkPath);
+                fwrite($assembledFile, $chunkData);
+            }
+
+            fclose($assembledFile);
+
+            // Create UploadedFile object from assembled file
+            $uploadedFile = new \Illuminate\Http\UploadedFile(
+                $assembledFilePath,
+                $sessionData['filename'],
+                $sessionData['file_type'],
+                null,
+                true
+            );
+
+            // Detect file type
+            $fileType = $this->detectFileType($uploadedFile);
+
+            // Validate file type
+            $this->validateFileByType($uploadedFile, $fileType);
+
+            // Generate unique filename
+            $filename = $this->generateUnifiedContentFilename($topic->id, $uploadedFile);
+
+            // Store file
+            $path = $uploadedFile->storeAs("topics/{$topic->id}/unified-content", $filename, 'public');
+            $url = Storage::url($path);
+
+            // Update content assets
+            $contentAssets = $topic->getContentAssets();
+
+            $assetData = [
+                'filename' => $filename,
+                'original_name' => $sessionData['filename'],
+                'path' => $path,
+                'url' => $url,
+                'size' => $sessionData['total_size'],
+                'type' => $sessionData['file_type'],
+                'category' => $fileType,
+                'uploaded_at' => now()->toISOString(),
+                'referenced_in_content' => false,
+                'chunked_upload' => true,
+            ];
+
+            if ($fileType === 'image') {
+                $contentAssets['images'][] = $assetData;
+            } else {
+                $contentAssets['files'][] = $assetData;
+            }
+
+            $topic->update(['content_assets' => $contentAssets]);
+
+            // Generate markdown
+            $markdown = $this->generateMarkdownForFile($assetData, $fileType);
+
+            // Cleanup session files
+            $this->cleanupChunkedUploadSession($sessionId);
+
+            return response()->json([
+                'success' => true,
+                'filename' => $filename,
+                'original_name' => $sessionData['filename'],
+                'url' => $url,
+                'size' => $sessionData['total_size'],
+                'type' => $sessionData['file_type'],
+                'category' => $fileType,
+                'markdown' => $markdown,
+                'message' => 'Chunked upload completed successfully',
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'error' => 'Validation failed',
+                'details' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error finalizing chunked upload: '.$e->getMessage());
+
+            return response()->json([
+                'error' => 'Failed to finalize chunked upload: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Cleanup chunked upload session files
+     */
+    private function cleanupChunkedUploadSession(string $sessionId)
+    {
+        try {
+            $sessionDir = storage_path("app/temp/chunks/{$sessionId}");
+            $assembledFile = storage_path("app/temp/assembled_{$sessionId}");
+
+            // Remove assembled file
+            if (file_exists($assembledFile)) {
+                unlink($assembledFile);
+            }
+
+            // Remove session directory and all chunks
+            if (is_dir($sessionDir)) {
+                $files = glob($sessionDir.'/*');
+                foreach ($files as $file) {
+                    if (is_file($file)) {
+                        unlink($file);
+                    }
+                }
+                rmdir($sessionDir);
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to cleanup chunked upload session: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Show topic in kids-friendly view
+     */
+    public function showKidsView(Request $request, int $unitId, int $id)
+    {
+        try {
+            $userId = auth()->id();
+            if (! $userId) {
+                return redirect()->route('login');
+            }
+
+            // Check if kids mode is active
+            $isKidsMode = $request->session()->get('kids_mode_active', false);
+            $childId = $request->session()->get('kids_mode_child_id');
+
+            if (! $isKidsMode || ! $childId) {
+                return redirect()->route('topics.show', [$unitId, $id])
+                    ->with('error', 'Kids mode is not active.');
+            }
+
+            $unit = Unit::find($unitId);
+            if (! $unit) {
+                return redirect()->route('subjects.index')->with('error', 'Unit not found.');
+            }
+
+            $subject = Subject::find($unit->subject_id);
+            if (! $subject || $subject->user_id != $userId) {
+                return redirect()->route('subjects.index')->with('error', 'Access denied.');
+            }
+
+            $topic = Topic::find($id);
+            if (! $topic || $topic->unit_id !== $unitId) {
+                return redirect()->route('subjects.units.show', [$subject->id, $unitId])
+                    ->with('error', 'Topic not found.');
+            }
+
+            // Get the child
+            $child = Child::find($childId);
+            if (! $child || $child->user_id !== $userId) {
+                return redirect()->route('topics.show', [$unitId, $id])
+                    ->with('error', 'Child not found.');
+            }
+
+            // Render kids view with enhanced content
+            return view('topics.partials.unified-content-kids-view',
+                compact('topic', 'unit', 'subject', 'child'));
+
+        } catch (\Exception $e) {
+            Log::error('Error loading kids topic view: '.$e->getMessage());
+
+            return redirect()->route('topics.show', [$unitId, $id])
+                ->with('error', 'Unable to load kids view. Please try again.');
+        }
+    }
+
+    /**
+     * Track kids learning activity
+     */
+    public function trackKidsActivity(Request $request, int $id)
+    {
+        try {
+            $userId = auth()->id();
+            if (! $userId) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            // Verify kids mode
+            $isKidsMode = $request->session()->get('kids_mode_active', false);
+            $childId = $request->session()->get('kids_mode_child_id');
+
+            if (! $isKidsMode || ! $childId) {
+                return response()->json(['error' => 'Kids mode not active'], 403);
+            }
+
+            $child = Child::find($childId);
+            if (! $child || $child->user_id !== $userId) {
+                return response()->json(['error' => 'Child not found'], 404);
+            }
+
+            $topic = Topic::find($id);
+            if (! $topic) {
+                return response()->json(['error' => 'Topic not found'], 404);
+            }
+
+            $validated = $request->validate([
+                'activity_type' => 'required|string|in:read_paragraph,complete_task,highlight_text,use_feature,complete_topic,focus_time',
+                'data' => 'nullable|array',
+                'data.reading_progress' => 'nullable|numeric|min:0|max:100',
+                'data.interactions' => 'nullable|integer|min:0',
+                'data.time_spent' => 'nullable|integer|min:0',
+                'data.tasks_completed' => 'nullable|integer|min:0',
+                'data.accuracy' => 'nullable|numeric|min:0|max:100',
+            ]);
+
+            // Track activity using gamification service
+            $gamificationService = app(KidsGamificationService::class);
+            $result = $gamificationService->trackActivity(
+                $child,
+                $validated['activity_type'],
+                $validated['data'] ?? []
+            );
+
+            return response()->json([
+                'success' => true,
+                'result' => $result,
+                'child_level' => $gamificationService->getChildLevel($child),
+                'encouragement' => $gamificationService->getEncouragementMessages($child),
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error tracking kids activity: '.$e->getMessage());
+
+            return response()->json(['error' => 'Unable to track activity'], 500);
+        }
+    }
+
+    /**
+     * Complete topic for child
+     */
+    public function completeForChild(Request $request, int $id)
+    {
+        try {
+            $userId = auth()->id();
+            if (! $userId) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            // Verify kids mode
+            $isKidsMode = $request->session()->get('kids_mode_active', false);
+            $childId = $request->session()->get('kids_mode_child_id');
+
+            if (! $isKidsMode || ! $childId) {
+                return response()->json(['error' => 'Kids mode not active'], 403);
+            }
+
+            $child = Child::find($childId);
+            if (! $child || $child->user_id !== $userId) {
+                return response()->json(['error' => 'Child not found'], 404);
+            }
+
+            $topic = Topic::find($id);
+            if (! $topic) {
+                return response()->json(['error' => 'Topic not found'], 404);
+            }
+
+            $validated = $request->validate([
+                'reading_progress' => 'required|numeric|min:0|max:100',
+                'interaction_score' => 'required|numeric|min:0|max:100',
+                'time_spent' => 'required|integer|min:0',
+                'tasks_completed' => 'nullable|integer|min:0',
+            ]);
+
+            // Generate session summary
+            $gamificationService = app(KidsGamificationService::class);
+            $sessionSummary = $gamificationService->generateSessionSummary($child, $validated);
+
+            // Track completion activity
+            $result = $gamificationService->trackActivity($child, 'complete_topic', $validated);
+
+            // Log completion for parental tracking
+            Log::info('Child completed topic', [
+                'child_id' => $child->id,
+                'topic_id' => $topic->id,
+                'session_data' => $validated,
+                'summary' => $sessionSummary,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => '🎉 Great job completing this topic!',
+                'session_summary' => $sessionSummary,
+                'achievements' => $result['new_achievements'],
+                'total_points' => $result['total_points'],
+                'current_level' => $result['current_level'],
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error completing topic for child: '.$e->getMessage());
+
+            return response()->json(['error' => 'Unable to complete topic'], 500);
+        }
+    }
+
+    /**
+     * Detect file type for enhanced processing
+     */
+    private function detectFileType(\Illuminate\Http\UploadedFile $file): string
+    {
+        $mimeType = $file->getMimeType();
+
+        if (str_starts_with($mimeType, 'image/')) {
+            return 'image';
+        } elseif (str_starts_with($mimeType, 'video/')) {
+            return 'video';
+        } elseif (str_starts_with($mimeType, 'audio/')) {
+            return 'audio';
+        } else {
+            return 'document';
         }
     }
 }

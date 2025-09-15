@@ -112,8 +112,20 @@ Route::middleware('auth')->group(function () {
     // Enhanced markdown editor file uploads
     Route::post('/topics/{topic}/markdown-upload', [TopicController::class, 'markdownFileUpload'])->name('topics.markdown.upload');
 
+    // Chunked upload endpoints for Phase 5 enhanced file handling
+    Route::post('/topics/{topic}/chunked-upload/start', [TopicController::class, 'startChunkedUpload'])->name('topics.chunked-upload.start');
+    Route::post('/topics/{topic}/chunked-upload/chunk', [TopicController::class, 'uploadChunk'])->name('topics.chunked-upload.chunk');
+    Route::post('/topics/{topic}/chunked-upload/finalize', [TopicController::class, 'finalizeChunkedUpload'])->name('topics.chunked-upload.finalize');
+
     // Topic migration to unified system
     Route::post('/topics/{topic}/migrate', [TopicController::class, 'migrateToUnified'])->name('topics.migrate');
+
+    // Kids view routes (protected by kids mode middleware)
+    Route::middleware(['kids-mode'])->group(function () {
+        Route::get('/units/{unit}/topics/{topic}/kids', [TopicController::class, 'showKidsView'])->name('topics.kids.show');
+        Route::post('/topics/{topic}/kids/activity', [TopicController::class, 'trackKidsActivity'])->name('topics.kids.activity');
+        Route::post('/topics/{topic}/kids/complete', [TopicController::class, 'completeForChild'])->name('topics.kids.complete');
+    });
 
     // Planning board
     Route::get('/planning', [PlanningController::class, 'index'])->name('planning.index');

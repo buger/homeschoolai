@@ -268,20 +268,65 @@ You can drag and drop files directly into this editor, or paste images from your
                 </div>
             </div>
 
-            <!-- Upload Progress Indicators -->
+            <!-- Enhanced Upload Progress Indicators -->
             <div x-show="getUploadProgress().length > 0"
-                 class="absolute bottom-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-3 max-w-sm z-20">
-                <div class="mb-2 text-xs font-medium text-gray-700">File Uploads</div>
+                 class="absolute bottom-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4 max-w-sm z-20">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="text-sm font-medium text-gray-700">File Operations</div>
+                    <div class="text-xs text-gray-500" x-text="`${Object.keys(uploadProgress).length} active`"></div>
+                </div>
+
                 <template x-for="upload in getUploadProgress()" :key="upload.filename">
-                    <div class="flex items-center space-x-2 mb-2 last:mb-0">
-                        <div class="flex-1">
-                            <div class="text-xs font-medium truncate" x-text="upload.filename"></div>
-                            <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
-                                <div class="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
-                                     :style="`width: ${upload.progress}%`"></div>
+                    <div class="mb-3 last:mb-0">
+                        <div class="flex items-center space-x-2 mb-1">
+                            <span x-text="getFileTypeEmoji(upload.type || 'document')" class="text-sm"></span>
+                            <div class="flex-1">
+                                <div class="text-xs font-medium truncate" x-text="upload.filename"></div>
+                                <div class="text-xs text-gray-500" x-show="upload.size" x-text="formatFileSize(upload.size)"></div>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <!-- Status indicator -->
+                                <div :class="{
+                                    'w-2 h-2 rounded-full': true,
+                                    'bg-blue-500 animate-pulse': upload.status === 'uploading',
+                                    'bg-yellow-500 animate-bounce': upload.status === 'retrying',
+                                    'bg-green-500': upload.status === 'completed',
+                                    'bg-red-500': upload.status === 'failed'
+                                }"></div>
+                                <div class="text-xs text-gray-500 min-w-0" x-text="`${Math.round(upload.progress || 0)}%`"></div>
                             </div>
                         </div>
-                        <div class="text-xs text-gray-500 min-w-0" x-text="`${upload.progress}%`"></div>
+
+                        <!-- Progress bar with enhanced styling -->
+                        <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                            <div :class="{
+                                'h-2 rounded-full transition-all duration-300': true,
+                                'bg-blue-500': upload.status === 'uploading',
+                                'bg-yellow-500': upload.status === 'retrying',
+                                'bg-green-500': upload.status === 'completed',
+                                'bg-red-500': upload.status === 'failed'
+                            }" :style="`width: ${upload.progress || 0}%`"></div>
+                        </div>
+
+                        <!-- Status message -->
+                        <div x-show="upload.status" class="text-xs mt-1" :class="{
+                            'text-blue-600': upload.status === 'uploading',
+                            'text-yellow-600': upload.status === 'retrying',
+                            'text-green-600': upload.status === 'completed',
+                            'text-red-600': upload.status === 'failed'
+                        }">
+                            <span x-show="upload.status === 'uploading'">⏳ Uploading...</span>
+                            <span x-show="upload.status === 'retrying'">🔄 Retrying...</span>
+                            <span x-show="upload.status === 'completed'">✅ Complete</span>
+                            <span x-show="upload.status === 'failed'">❌ Failed</span>
+                            <span x-show="upload.type === 'chunked'" class="ml-1">(chunked)</span>
+                        </div>
+
+                        <!-- Batch upload info -->
+                        <div x-show="upload.type === 'batch'" class="text-xs text-gray-600 mt-1">
+                            <span x-text="`${upload.completedFiles || 0}/${upload.totalFiles || 0} files`"></span>
+                            <span x-show="upload.failedFiles > 0" class="text-red-600 ml-1" x-text="`(${upload.failedFiles} failed)`"></span>
+                        </div>
                     </div>
                 </template>
             </div>
