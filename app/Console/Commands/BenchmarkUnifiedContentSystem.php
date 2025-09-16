@@ -163,30 +163,13 @@ class BenchmarkUnifiedContentSystem extends Command
             return $this->performanceService->optimizeTopicQueries($unitId);
         });
 
-        // Test topic migration
-        $topic = Topic::notMigrated()->first();
+        // Test basic topic content loading
+        $topic = Topic::first();
         if ($topic) {
-            $this->benchmark('topic_migration', function () use ($topic) {
-                return $topic->migrateToUnified();
+            $this->benchmark('topic_content_loading', function () use ($topic) {
+                return $topic->getContent();
             });
         }
-
-        // Test content asset extraction
-        $this->benchmark('content_asset_extraction', function () use ($topic) {
-            return $topic->extractContentAssets();
-        });
-
-        // Test legacy material extraction
-        $this->benchmark('legacy_material_extraction', function () use ($topic) {
-            return $topic->getLegacyMaterials();
-        });
-
-        // Test orphaned asset cleanup
-        $this->benchmark('orphaned_asset_cleanup', function () use ($topic) {
-            $topic->cleanupOrphanedAssets();
-
-            return true;
-        });
 
         $this->line('✅ Database operation benchmarks completed');
         $this->newLine();

@@ -112,7 +112,7 @@ class TopicMaterialService
         $this->validateVideoUrl($url);
 
         // Parse video metadata
-        $videoData = Topic::parseVideoUrl($url);
+        $videoData = $this->parseVideoUrl($url);
 
         if (! $videoData) {
             throw new \InvalidArgumentException('Unable to parse video URL. Please check the URL format.');
@@ -255,5 +255,41 @@ class TopicMaterialService
         if (! $allowed) {
             throw new \InvalidArgumentException('Video URL must be from an allowed domain: '.implode(', ', self::ALLOWED_VIDEO_DOMAINS));
         }
+    }
+
+    /**
+     * Parse video URL to extract metadata
+     */
+    private function parseVideoUrl(string $url): ?array
+    {
+        $domain = parse_url($url, PHP_URL_HOST);
+        $domain = strtolower(preg_replace('/^www\./', '', $domain));
+
+        // Basic video metadata based on domain
+        $videoData = [
+            'url' => $url,
+            'type' => 'video',
+            'platform' => $this->getPlatformFromDomain($domain),
+        ];
+
+        return $videoData;
+    }
+
+    /**
+     * Get platform name from domain
+     */
+    private function getPlatformFromDomain(string $domain): string
+    {
+        if (str_contains($domain, 'youtube.com') || str_contains($domain, 'youtu.be')) {
+            return 'youtube';
+        }
+        if (str_contains($domain, 'vimeo.com')) {
+            return 'vimeo';
+        }
+        if (str_contains($domain, 'khanacademy.org')) {
+            return 'khan_academy';
+        }
+
+        return 'unknown';
     }
 }
