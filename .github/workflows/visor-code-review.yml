@@ -16,7 +16,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - uses: probelabs/visor@v0.1.7
+      - uses: probelabs/visor@v0.1.9
         env:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           
