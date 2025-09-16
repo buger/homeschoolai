@@ -22,7 +22,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - uses: probelabs/visor@v0.1.13
+      - uses: probelabs/visor@v0.1.14
         with:
           app-id: ${{ secrets.VISOR_APP_ID }}
           private-key: ${{ secrets.VISOR_APP_PRIVATE_KEY }}
