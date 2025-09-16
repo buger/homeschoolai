@@ -15,15 +15,7 @@ NC='\033[0m' # No Color
 echo -e "${GREEN}🛡️  Safe Test Runner - Database Protection Active${NC}"
 echo ""
 
-# Check if we're about to use the wrong database
-if [ "$DB_DATABASE" == "learning_app" ]; then
-    echo -e "${RED}❌ CRITICAL ERROR: Attempting to run tests on development database!${NC}"
-    echo -e "${RED}   Tests would wipe the 'learning_app' database.${NC}"
-    echo -e "${YELLOW}   Use this script or explicitly set DB_DATABASE=learning_app_test${NC}"
-    exit 1
-fi
-
-# Force the test environment and database
+# Force the test environment and database FIRST (we'll override any current setting)
 export APP_ENV=testing
 export DB_CONNECTION=pgsql
 export DB_HOST=127.0.0.1
@@ -33,6 +25,10 @@ export DB_USERNAME=laravel
 export DB_PASSWORD=12345
 export CACHE_STORE=array
 export SESSION_DRIVER=file
+
+# Create temp directory for file operations
+mkdir -p storage/temp
+export TMPDIR="$(pwd)/storage/temp"
 
 echo -e "${YELLOW}📋 Test Configuration:${NC}"
 echo "   Environment: $APP_ENV"

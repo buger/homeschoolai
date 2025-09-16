@@ -1,3 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Alpine.js cloak to prevent flash of unstyled content */
+[x-cloak] {
+    display: none !important;
+}

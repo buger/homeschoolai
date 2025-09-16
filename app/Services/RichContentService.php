@@ -58,8 +58,7 @@ class RichContentService
 
         // Add our custom extensions for enhanced learning content
         $environment->addRenderer(CommonMarkLink::class, new UnifiedLinkRenderer, 100);
-        // Temporarily disable InteractiveExtension to fix table rendering
-        // $environment->addExtension(new InteractiveExtension);
+        $environment->addExtension(new InteractiveExtension);
 
         $this->markdownConverter = new MarkdownConverter($environment);
     }

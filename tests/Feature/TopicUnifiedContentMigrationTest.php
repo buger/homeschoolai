@@ -7,6 +7,7 @@ use App\Models\Topic;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class TopicUnifiedContentMigrationTest extends TestCase
@@ -40,7 +41,7 @@ class TopicUnifiedContentMigrationTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_migrate_topic_with_description_only()
     {
         $topic = Topic::create([
@@ -64,7 +65,7 @@ class TopicUnifiedContentMigrationTest extends TestCase
         $this->assertEquals(['images' => [], 'files' => []], $topic->content_assets);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_migrate_topic_with_videos()
     {
         $learningMaterials = [
@@ -98,7 +99,7 @@ class TopicUnifiedContentMigrationTest extends TestCase
         $this->assertTrue($topic->migrated_to_unified);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_migrate_topic_with_links()
     {
         $learningMaterials = [
@@ -132,7 +133,7 @@ class TopicUnifiedContentMigrationTest extends TestCase
         $this->assertEquals($expectedContent, $topic->learning_content);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_migrate_topic_with_files()
     {
         $learningMaterials = [
@@ -180,7 +181,7 @@ class TopicUnifiedContentMigrationTest extends TestCase
         $this->assertTrue($assets['files'][0]['referenced_in_content']);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_migrate_complex_topic_with_all_types()
     {
         $learningMaterials = [
@@ -228,7 +229,7 @@ class TopicUnifiedContentMigrationTest extends TestCase
         $this->assertStringContainsString('Study Guide', $content);
     }
 
-    /** @test */
+    #[Test]
     public function it_skips_empty_topics()
     {
         $topic = Topic::create([
@@ -245,7 +246,7 @@ class TopicUnifiedContentMigrationTest extends TestCase
         $this->assertEquals('', $topic->learning_content);
     }
 
-    /** @test */
+    #[Test]
     public function it_extracts_content_assets_correctly()
     {
         $embeddedImages = [
@@ -287,7 +288,7 @@ class TopicUnifiedContentMigrationTest extends TestCase
         $this->assertEquals('/storage/files/document.pdf', $assets['files'][0]['path']);
     }
 
-    /** @test */
+    #[Test]
     public function it_provides_backward_compatibility()
     {
         // Create a topic with old format
@@ -323,7 +324,7 @@ class TopicUnifiedContentMigrationTest extends TestCase
         $this->assertEquals('Test Link', $extractedMaterials['links'][0]['title']);
     }
 
-    /** @test */
+    #[Test]
     public function it_provides_unified_content_with_fallback()
     {
         $topic = Topic::create([
@@ -351,7 +352,7 @@ class TopicUnifiedContentMigrationTest extends TestCase
         $this->assertEquals($topic->learning_content, $storedContent);
     }
 
-    /** @test */
+    #[Test]
     public function it_tracks_migration_status_correctly()
     {
         $topic = Topic::create([
@@ -378,7 +379,7 @@ class TopicUnifiedContentMigrationTest extends TestCase
         $this->assertCount(0, $notMigratedTopics);
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_malformed_learning_materials()
     {
         $topic = Topic::create([
@@ -404,7 +405,7 @@ class TopicUnifiedContentMigrationTest extends TestCase
         $this->assertStringContainsString('## Video Resources', $content);
     }
 
-    /** @test */
+    #[Test]
     public function it_updates_to_array_with_unified_fields()
     {
         $topic = Topic::create([
