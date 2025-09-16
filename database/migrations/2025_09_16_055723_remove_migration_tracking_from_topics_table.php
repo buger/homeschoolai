@@ -12,11 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('topics', function (Blueprint $table) {
-            // Add unified learning content field
-            $table->longText('learning_content')->nullable()->after('description');
-
-            // Add assets tracking for file management
-            $table->json('content_assets')->nullable()->after('learning_content');
+            // Remove migration tracking fields that are no longer needed
+            if (Schema::hasColumn('topics', 'migrated_to_unified')) {
+                $table->dropIndex(['migrated_to_unified']);
+                $table->dropColumn('migrated_to_unified');
+            }
         });
     }
 
@@ -26,7 +26,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('topics', function (Blueprint $table) {
-            $table->dropColumn(['learning_content', 'content_assets']);
+            // Re-add migration tracking field if needed to rollback
+            $table->boolean('migrated_to_unified')->default(false)->after('content_assets');
+            $table->index(['migrated_to_unified']);
         });
     }
 };

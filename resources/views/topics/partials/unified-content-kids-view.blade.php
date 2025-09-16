@@ -52,7 +52,7 @@
             @if($topic->estimated_minutes)
                 <div class="kids-meta-item">
                     <span class="kids-meta-icon">⏰</span>
-                    <span class="kids-meta-text">{{ $topic->getEstimatedDuration() }}</span>
+                    <span class="kids-meta-text">{{ $topic->estimated_minutes }} min</span>
                 </div>
             @endif
 

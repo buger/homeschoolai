@@ -14,13 +14,10 @@
                         </button>
                         <div x-show="open" x-cloak @click.away="open = false" class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
                             <div class="py-1">
-                                <button 
-                                    hx-get="{{ route('topics.edit', ['topic' => $topic->id]) }}"
-                                    hx-target="#topic-modal"
-                                    hx-swap="innerHTML"
-                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <a href="{{ route('topics.edit', ['topic' => $topic->id]) }}"
+                                   class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                     {{ __('edit') }}
-                                </button>
+                                </a>
                                 <button 
                                     hx-delete="{{ route('topics.destroy', ['topic' => $topic->id]) }}"
                                     hx-target="#topics-list"
@@ -68,7 +65,7 @@
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        {{ $topic->getEstimatedDuration() }}
+                        {{ $topic->estimated_minutes }} min
                     </p>
                     @if($topic->flashcards && $topic->flashcards->count() > 0)
                         <p class="flex items-center">

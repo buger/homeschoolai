@@ -27,22 +27,6 @@
           {
             "type": "command",
             "command": "npx @probelabs/vow check --hook --hook-type=Stop"
-          },
-          {
-            "type": "command",
-            "command": ".claude/hooks/pre-commit-full.sh",
-            "timeout": 60000
-          }
-        ]
-      }
-    ],
-    "SubagentStop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": ".claude/hooks/pre-commit-full.sh",
-            "timeout": 60000
           }
         ]
       }

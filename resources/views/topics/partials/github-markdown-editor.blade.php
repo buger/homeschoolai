@@ -245,7 +245,6 @@ Code blocks are supported
         <input type="hidden" name="learning_content" :value="content">
         <input type="hidden" name="description" :value="content">
         <input type="hidden" name="content_format" value="markdown">
-        <input type="hidden" name="migrated_to_unified" value="1">
         <input type="hidden" name="name" value="{{ $topic->title }}">
         <input type="hidden" name="estimated_minutes" value="{{ $topic->estimated_minutes }}">
         <input type="hidden" name="required" value="{{ $topic->required ? '1' : '0' }}">

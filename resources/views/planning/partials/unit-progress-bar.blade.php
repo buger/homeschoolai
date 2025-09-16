@@ -103,7 +103,7 @@
             </div>
             
             <div class="flex items-center space-x-2 ml-2">
-              <span class="text-xs text-gray-500">{{ $topic->getEstimatedDuration() }}</span>
+              <span class="text-xs text-gray-500">{{ $topic->estimated_minutes }} min</span>
               
               <!-- Quick add session button -->
               <button

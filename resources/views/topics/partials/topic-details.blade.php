@@ -24,11 +24,10 @@
                 @endif
             </div>
             <div class="flex gap-2">
-                <button hx-get="{{ route('topics.edit', ['topic' => $topic->id]) }}"
-                        hx-target="#topic-modal"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                <a href="{{ route('topics.edit', ['topic' => $topic->id]) }}"
+                   class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors">
                     Edit Topic
-                </button>
+                </a>
                 <form method="POST" action="{{ route('topics.destroy', ['topic' => $topic->id]) }}"
                       onsubmit="return confirm('Are you sure you want to delete this topic?')"
                       class="inline">
@@ -63,19 +62,9 @@
                     {{-- Render enhanced rich content --}}
                     <div class="bg-white border border-gray-200 rounded-lg">
                         @php
-                            // Use enhanced processing for unified content if available
+                            // Use unified content processing
                             $richContentService = app(App\Services\RichContentService::class);
-
-                            if ($topic->migrated_to_unified && !empty($topic->learning_content)) {
-                                // Use unified content with enhanced processing
-                                $richContent = $richContentService->processUnifiedContent($topic->learning_content);
-                            } else {
-                                // Fallback to regular processing
-                                $richContent = $richContentService->processRichContent(
-                                    $topic->description,
-                                    $topic->content_format
-                                );
-                            }
+                            $richContent = $richContentService->processUnifiedContent($topic->learning_content ?? '');
                         @endphp
                         @include('topics.partials.content-preview', [
                             'html' => $richContent['html'],
@@ -98,7 +87,7 @@
                     <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    <span class="text-gray-600">{{ $topic->getEstimatedDuration() }}</span>
+                    <span class="text-gray-600">{{ $topic->estimated_minutes }} min</span>
                 </div>
             </div>
             @if($topic->prerequisites && count($topic->prerequisites) > 0)
@@ -119,11 +108,10 @@
             <div class="border-t pt-6 mb-6">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-semibold">Learning Materials</h3>
-                    <button hx-get="{{ route('topics.edit', ['topic' => $topic->id]) }}"
-                            hx-target="#topic-modal"
-                            class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                    <a href="{{ route('topics.edit', ['topic' => $topic->id]) }}"
+                       class="text-blue-600 hover:text-blue-700 text-sm font-medium">
                         Manage Materials
-                    </button>
+                    </a>
                 </div>
 
                 @include('topics.partials.learning-materials-display', ['topic' => $topic])

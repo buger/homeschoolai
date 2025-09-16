@@ -662,9 +662,110 @@ class FileSecurityService
      */
     private function scanArchiveContents(UploadedFile $file, array &$result): void
     {
-        // This would require ZipArchive or similar to inspect contents
-        // For now, we'll add a warning
-        $result['warnings'][] = 'Archive files require manual review for security';
+        if (! class_exists('ZipArchive')) {
+            $result['errors'][] = 'ZIP archive scanning requires ZipArchive extension';
+            $result['security_checks']['archive_scan'] = 'failed';
+
+            return;
+        }
+
+        $zip = new \ZipArchive;
+        $zipResult = $zip->open($file->getPathname());
+
+        if ($zipResult !== true) {
+            $result['errors'][] = 'Failed to open ZIP archive for security scanning';
+            $result['security_checks']['archive_scan'] = 'failed';
+
+            return;
+        }
+
+        try {
+            $filesInArchive = $zip->numFiles;
+            $totalExtractedSize = 0;
+            $maxExtractedSize = 100 * 1024 * 1024; // 100MB limit for extracted content
+            $maxFileCount = 1000; // Maximum number of files in archive
+
+            if ($filesInArchive > $maxFileCount) {
+                $result['errors'][] = "Archive contains too many files ({$filesInArchive} > {$maxFileCount})";
+                $result['security_checks']['archive_scan'] = 'failed';
+
+                return;
+            }
+
+            // Scan each file in the archive
+            for ($i = 0; $i < $filesInArchive; $i++) {
+                $stat = $zip->statIndex($i);
+                if ($stat === false) {
+                    continue;
+                }
+
+                $filename = $stat['name'];
+                $filesize = $stat['size'];
+                $totalExtractedSize += $filesize;
+
+                // Check for zip bombs (excessive compression ratio)
+                if ($totalExtractedSize > $maxExtractedSize) {
+                    $result['errors'][] = 'Archive extraction size limit exceeded (potential zip bomb)';
+                    $result['security_checks']['archive_scan'] = 'failed';
+
+                    return;
+                }
+
+                // Check for directory traversal in file names
+                if (strpos($filename, '../') !== false || strpos($filename, '..\\') !== false) {
+                    $result['errors'][] = "Archive contains path traversal attempt: {$filename}";
+                    $result['security_checks']['archive_scan'] = 'failed';
+
+                    return;
+                }
+
+                // Skip directories
+                if (substr($filename, -1) === '/') {
+                    continue;
+                }
+
+                // Check file extension
+                $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+                // Block dangerous file types
+                $dangerousExtensions = [
+                    'exe', 'bat', 'cmd', 'com', 'pif', 'scr', 'vbs', 'js', 'jse',
+                    'jar', 'php', 'phtml', 'asp', 'jsp', 'pl', 'py', 'sh', 'ps1',
+                ];
+
+                if (in_array($extension, $dangerousExtensions)) {
+                    $result['errors'][] = "Archive contains dangerous file type: {$filename}";
+                    $result['security_checks']['archive_scan'] = 'failed';
+
+                    return;
+                }
+
+                // Validate against allowed file types
+                if (! empty($extension) && ! array_key_exists($extension, self::ALLOWED_FILE_TYPES)) {
+                    $result['warnings'][] = "Archive contains unrecognized file type: {$filename}";
+                }
+
+                // Check individual file size limits
+                if (isset(self::ALLOWED_FILE_TYPES[$extension])) {
+                    $maxSize = self::ALLOWED_FILE_TYPES[$extension]['max_size'] ?? 10 * 1024 * 1024;
+                    if ($filesize > $maxSize) {
+                        $result['errors'][] = "File in archive exceeds size limit: {$filename}";
+                        $result['security_checks']['archive_scan'] = 'failed';
+
+                        return;
+                    }
+                }
+            }
+
+            $result['security_checks']['archive_scan'] = 'passed';
+            $result['archive_info'] = [
+                'file_count' => $filesInArchive,
+                'total_uncompressed_size' => $totalExtractedSize,
+            ];
+
+        } finally {
+            $zip->close();
+        }
     }
 
     /**

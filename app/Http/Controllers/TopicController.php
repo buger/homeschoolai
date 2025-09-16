@@ -1181,62 +1181,6 @@ class TopicController extends Controller
     }
 
     /**
-     * Migrate topic to unified markdown system
-     */
-    public function migrateToUnified(Request $request, int $id)
-    {
-        try {
-            $userId = auth()->id();
-            if (! $userId) {
-                return response()->json(['error' => 'Unauthorized'], 401);
-            }
-
-            $topic = Topic::find($id);
-            if (! $topic) {
-                return response()->json(['error' => 'Topic not found'], 404);
-            }
-
-            // Verify ownership
-            $unit = Unit::find($topic->unit_id);
-            $subject = Subject::find($unit->subject_id);
-            if (! $subject || $subject->user_id != $userId) {
-                return response()->json(['error' => 'Access denied'], 403);
-            }
-
-            // Check if already migrated
-            if ($topic->migrated_to_unified) {
-                return back()->with('info', 'Topic is already using the unified system.');
-            }
-
-            // Perform migration
-            $success = $topic->migrateToUnified();
-
-            if ($success) {
-                if ($request->header('HX-Request')) {
-                    return view('topics.partials.edit-form', compact('topic'));
-                }
-
-                return back()->with('success', 'Topic has been successfully upgraded to the enhanced markdown system!');
-            } else {
-                if ($request->header('HX-Request')) {
-                    return response('<div class="text-red-500">Migration failed. Please try again.</div>', 500);
-                }
-
-                return back()->with('error', 'Failed to upgrade topic. Please try again.');
-            }
-
-        } catch (\Exception $e) {
-            Log::error('Error migrating topic to unified system: '.$e->getMessage());
-
-            if ($request->header('HX-Request')) {
-                return response('<div class="text-red-500">Migration error: '.$e->getMessage().'</div>', 500);
-            }
-
-            return back()->with('error', 'Migration failed: '.$e->getMessage());
-        }
-    }
-
-    /**
      * Start chunked upload session for large files - Phase 5 enhanced file handling
      */
     public function startChunkedUpload(Request $request, int $id)
@@ -1330,7 +1274,7 @@ class TopicController extends Controller
                 'chunk_index' => 'required|integer|min:0',
             ]);
 
-            $sessionId = $validated['session_id'];
+            $sessionId = basename($validated['session_id']); // Sanitize to prevent path traversal
             $chunkIndex = $validated['chunk_index'];
             $chunkFile = $validated['chunk'];
 
@@ -1405,7 +1349,7 @@ class TopicController extends Controller
                 'session_id' => 'required|string',
             ]);
 
-            $sessionId = $validated['session_id'];
+            $sessionId = basename($validated['session_id']); // Sanitize to prevent path traversal
 
             // Load session data
             $sessionPath = storage_path("app/temp/chunks/{$sessionId}/session.json");
@@ -1532,6 +1476,7 @@ class TopicController extends Controller
     private function cleanupChunkedUploadSession(string $sessionId)
     {
         try {
+            $sessionId = basename($sessionId); // Sanitize to prevent path traversal
             $sessionDir = storage_path("app/temp/chunks/{$sessionId}");
             $assembledFile = storage_path("app/temp/assembled_{$sessionId}");
 

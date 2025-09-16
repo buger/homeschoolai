@@ -117,9 +117,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/topics/{topic}/chunked-upload/chunk', [TopicController::class, 'uploadChunk'])->name('topics.chunked-upload.chunk');
     Route::post('/topics/{topic}/chunked-upload/finalize', [TopicController::class, 'finalizeChunkedUpload'])->name('topics.chunked-upload.finalize');
 
-    // Topic migration to unified system
-    Route::post('/topics/{topic}/migrate', [TopicController::class, 'migrateToUnified'])->name('topics.migrate');
-
     // Kids view routes (protected by kids mode middleware)
     Route::middleware(['kids-mode'])->group(function () {
         Route::get('/units/{unit}/topics/{topic}/kids', [TopicController::class, 'showKidsView'])->name('topics.kids.show');
