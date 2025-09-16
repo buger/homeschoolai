@@ -3,6 +3,8 @@ name: Visor Code Review
 on:
   pull_request:
     types: [opened, synchronize]
+  issues:
+    types: [opened]
   issue_comment:
     types: [created]
 
