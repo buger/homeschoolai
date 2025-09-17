@@ -22,6 +22,10 @@ use Illuminate\Support\Collection;
  * @property-read bool $can_complete
  * @property-read \App\Models\Subject $subject
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Topic> $topics
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Flashcard> $flashcards
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Flashcard> $allFlashcards
+ * @property-read int $flashcards_count
+ * @property-read int $all_flashcards_count
  */
 class Unit extends Model
 {
@@ -97,11 +101,22 @@ class Unit extends Model
     }
 
     /**
-     * Get the flashcards for this unit.
+     * Get the flashcards directly associated with this unit (not through topics).
      */
     public function flashcards(): HasMany
     {
-        return $this->hasMany(Flashcard::class);
+        return $this->hasMany(Flashcard::class)->where('topic_id', null)->where('is_active', true);
+    }
+
+    /**
+     * Get all flashcards for this unit (both direct unit flashcards and through topics).
+     */
+    public function allFlashcards()
+    {
+        return Flashcard::where(function ($query) {
+            $query->where('unit_id', $this->id)
+                ->where('is_active', true);
+        });
     }
 
     /**
@@ -110,6 +125,15 @@ class Unit extends Model
     public function scopeForSubject($query, int $subjectId)
     {
         return $query->where('subject_id', $subjectId)->orderBy('target_completion_date');
+    }
+
+    /**
+     * Scope to get units with flashcards (either direct or through topics)
+     */
+    public function scopeWithFlashcards($query)
+    {
+        return $query->whereHas('flashcards')
+            ->orWhereHas('topics.flashcards');
     }
 
     /**
@@ -134,6 +158,57 @@ class Unit extends Model
     public function getTopicCount(): int
     {
         return $this->topics()->count();
+    }
+
+    /**
+     * Get count of all flashcards (both direct unit flashcards and through topics)
+     */
+    public function getAllFlashcardsCount(): int
+    {
+        return $this->allFlashcards()->count();
+    }
+
+    /**
+     * Get count of flashcards through topics only
+     */
+    public function getTopicFlashcardsCount(): int
+    {
+        return Flashcard::where('unit_id', $this->id)
+            ->whereNotNull('topic_id')
+            ->where('is_active', true)
+            ->count();
+    }
+
+    /**
+     * Get count of direct unit flashcards (not through topics)
+     */
+    public function getDirectFlashcardsCount(): int
+    {
+        return $this->flashcards()->count();
+    }
+
+    /**
+     * Check if unit has any flashcards (direct or through topics)
+     */
+    public function hasAnyFlashcards(): bool
+    {
+        return $this->allFlashcards()->exists();
+    }
+
+    /**
+     * Check if unit has direct flashcards (not through topics)
+     */
+    public function hasDirectFlashcards(): bool
+    {
+        return $this->flashcards()->exists();
+    }
+
+    /**
+     * Check if unit has flashcards through topics
+     */
+    public function hasTopicFlashcards(): bool
+    {
+        return $this->getTopicFlashcardsCount() > 0;
     }
 
     /**
@@ -322,6 +397,12 @@ class Unit extends Model
             'total_topics_count' => $this->total_topics_count,
             'completion_percentage' => $this->completion_percentage,
             'can_complete' => $this->can_complete,
+            'flashcards_count' => $this->getDirectFlashcardsCount(),
+            'topic_flashcards_count' => $this->getTopicFlashcardsCount(),
+            'all_flashcards_count' => $this->getAllFlashcardsCount(),
+            'has_flashcards' => $this->hasDirectFlashcards(),
+            'has_topic_flashcards' => $this->hasTopicFlashcards(),
+            'has_any_flashcards' => $this->hasAnyFlashcards(),
         ];
     }
 }

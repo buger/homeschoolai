@@ -22,6 +22,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read \App\Models\Unit $unit
  * @property-read \App\Models\Subject $subject
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \Illuminate\Database\Eloquent\Model> $sessions
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Flashcard> $flashcards
+ * @property-read int $flashcards_count
  */
 class Topic extends Model
 {
@@ -80,6 +82,14 @@ class Topic extends Model
     public function sessions(): HasMany
     {
         return $this->hasMany(Session::class);
+    }
+
+    /**
+     * Get the flashcards for this topic.
+     */
+    public function flashcards(): HasMany
+    {
+        return $this->hasMany(Flashcard::class)->where('is_active', true);
     }
 
     /**
@@ -198,11 +208,35 @@ class Topic extends Model
     }
 
     /**
+     * Scope to get topics with flashcards
+     */
+    public function scopeWithFlashcards($query)
+    {
+        return $query->whereHas('flashcards');
+    }
+
+    /**
      * Check if this topic has prerequisites
      */
     public function hasPrerequisites(): bool
     {
         return ! empty($this->prerequisites);
+    }
+
+    /**
+     * Get count of flashcards for this topic
+     */
+    public function getFlashcardsCount(): int
+    {
+        return $this->flashcards()->count();
+    }
+
+    /**
+     * Check if topic has flashcards
+     */
+    public function hasFlashcards(): bool
+    {
+        return $this->flashcards()->exists();
     }
 
     /**
@@ -279,6 +313,8 @@ class Topic extends Model
             'estimated_reading_time' => $this->getEstimatedReadingTime(),
             'complexity_score' => $this->getComplexityScore(),
             'has_prerequisites' => $this->hasPrerequisites(),
+            'flashcards_count' => $this->getFlashcardsCount(),
+            'has_flashcards' => $this->hasFlashcards(),
         ];
     }
 

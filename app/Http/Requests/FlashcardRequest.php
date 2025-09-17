@@ -41,6 +41,7 @@ class FlashcardRequest extends FormRequest
             'tags.*' => 'string|max:100',
             'is_active' => 'nullable|boolean',
             'hint' => 'nullable|string|max:65535',
+            'topic_id' => 'nullable|integer|exists:topics,id',
         ];
 
         // Add card-type specific rules

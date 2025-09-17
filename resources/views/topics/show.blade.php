@@ -35,6 +35,7 @@
         </div>
     </div>
 
-    <!-- Modal placeholder for HTMX -->
+    <!-- Modal placeholders for HTMX -->
     <div id="topic-modal"></div>
+    <div id="flashcard-modal"></div>
 @endsection

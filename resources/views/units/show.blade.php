@@ -81,15 +81,15 @@
                 <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                 </svg>
-                Flashcards 
+                Flashcards
                 <span class="ml-2 text-sm font-normal text-gray-600" id="flashcard-count">
-                    ({{ $unit->flashcards()->where('is_active', true)->count() }})
+                    ({{ $unit->getAllFlashcardsCount() }})
                 </span>
             </h2>
             
             @unless(session('kids_mode'))
                 <div class="flex space-x-3">
-                    @php $flashcardCount = $unit->flashcards()->where('is_active', true)->count() @endphp
+                    @php $flashcardCount = $unit->getAllFlashcardsCount() @endphp
                     @if($flashcardCount > 0)
                         <a href="{{ route('units.flashcards.preview.start', $unit->id) }}" 
                            data-testid="preview-flashcards-button"
@@ -131,15 +131,98 @@
             @endunless
         </div>
 
-            <!-- Flashcards List -->
-            <div id="flashcards-list" 
-                 hx-get="{{ route('units.flashcards.list', $unit->id) }}" 
-                 hx-trigger="load" 
-                 hx-swap="innerHTML">
-                <!-- Loading state -->
-                <div class="text-center py-8">
-                    <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
-                    <p class="mt-2 text-sm text-gray-500">{{ __('Loading flashcards...') }}</p>
+            <!-- Flashcard Summary by Topic -->
+            @if($unit->topics && $unit->topics->count() > 0)
+                <div class="mb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Flashcards by Topic</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        @foreach($unit->topics as $topic)
+                            @php $topicFlashcardCount = $topic->flashcards()->where('is_active', true)->count() @endphp
+                            <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h4 class="font-medium text-gray-900 truncate">{{ $topic->title }}</h4>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $topicFlashcardCount > 0 ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' }}">
+                                        {{ $topicFlashcardCount }} cards
+                                    </span>
+                                </div>
+                                @if($topicFlashcardCount > 0)
+                                    <div class="flex space-x-2">
+                                        <a href="{{ route('units.topics.show', [$unit->id, $topic->id]) }}"
+                                           class="text-xs text-blue-600 hover:text-blue-800 underline">
+                                            View Topic
+                                        </a>
+                                        @unless(session('kids_mode'))
+                                            <button
+                                                type="button"
+                                                hx-get="{{ route('topics.flashcards.create', $topic->id) }}"
+                                                hx-target="#flashcard-modal"
+                                                hx-swap="innerHTML"
+                                                class="text-xs text-green-600 hover:text-green-800 underline">
+                                                Add Card
+                                            </button>
+                                        @endunless
+                                    </div>
+                                @else
+                                    <div class="flex space-x-2">
+                                        <a href="{{ route('units.topics.show', [$unit->id, $topic->id]) }}"
+                                           class="text-xs text-gray-600 hover:text-gray-800 underline">
+                                            View Topic
+                                        </a>
+                                        @unless(session('kids_mode'))
+                                            <button
+                                                type="button"
+                                                hx-get="{{ route('topics.flashcards.create', $topic->id) }}"
+                                                hx-target="#flashcard-modal"
+                                                hx-swap="innerHTML"
+                                                class="text-xs text-green-600 hover:text-green-800 underline">
+                                                Add First Card
+                                            </button>
+                                        @endunless
+                                    </div>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            <!-- Unit-level Flashcards -->
+            @php $unitLevelFlashcardCount = $unit->getDirectFlashcardsCount() @endphp
+            @if($unitLevelFlashcardCount > 0)
+                <div class="mb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">
+                        Unit-level Flashcards
+                        <span class="ml-2 text-sm font-normal text-gray-600">({{ $unitLevelFlashcardCount }})</span>
+                    </h3>
+                    <div id="unit-flashcards-list"
+                         hx-get="{{ route('units.flashcards.list', $unit->id) }}"
+                         hx-trigger="load"
+                         hx-swap="innerHTML">
+                        <!-- Loading state -->
+                        <div class="text-center py-8">
+                            <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+                            <p class="mt-2 text-sm text-gray-500">{{ __('Loading flashcards...') }}</p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            <!-- All Flashcards View Toggle -->
+            <div class="border-t pt-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">All Flashcards</h3>
+                    <button
+                        type="button"
+                        id="toggle-all-flashcards"
+                        hx-get="{{ route('units.flashcards.list', $unit->id) }}"
+                        hx-target="#all-flashcards-list"
+                        hx-swap="innerHTML"
+                        class="text-sm text-blue-600 hover:text-blue-800 underline">
+                        Show All Flashcards
+                    </button>
+                </div>
+                <div id="all-flashcards-list" class="hidden">
+                    <!-- Will be populated when toggled -->
                 </div>
             </div>
         </div>
@@ -161,6 +244,25 @@ document.addEventListener('DOMContentLoaded', function() {
             if (modal) {
                 modal.style.display = 'flex';
                 modal.style.visibility = 'visible';
+            }
+        }
+
+        // Handle all flashcards toggle
+        if (event.detail.target.id === 'all-flashcards-list') {
+            const container = event.detail.target;
+            const toggleButton = document.getElementById('toggle-all-flashcards');
+
+            if (container.innerHTML.trim() !== '') {
+                container.classList.remove('hidden');
+                if (toggleButton) {
+                    toggleButton.textContent = 'Hide All Flashcards';
+                    toggleButton.onclick = function() {
+                        container.classList.add('hidden');
+                        container.innerHTML = '';
+                        toggleButton.textContent = 'Show All Flashcards';
+                        toggleButton.onclick = null;
+                    };
+                }
             }
         }
     });

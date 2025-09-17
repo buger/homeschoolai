@@ -209,6 +209,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/units/{unitId}/flashcards/performance', [FlashcardController::class, 'performanceMetrics'])->name('units.flashcards.performance');
     Route::get('/units/{unitId}/flashcards/errors', [FlashcardController::class, 'errorStatistics'])->name('units.flashcards.errors');
 
+    // Topic-scoped flashcard routes (web interface)
+    Route::get('/topics/{topicId}/flashcards/list', [FlashcardController::class, 'listView'])->name('topics.flashcards.list');
+    Route::get('/topics/{topicId}/flashcards/create', [FlashcardController::class, 'create'])->name('topics.flashcards.create');
+    Route::post('/topics/{topicId}/flashcards', [FlashcardController::class, 'storeView'])->name('topics.flashcards.store');
+    Route::get('/topics/{topicId}/flashcards/{flashcardId}', [FlashcardController::class, 'show'])->name('topics.flashcards.show');
+    Route::get('/topics/{topicId}/flashcards/{flashcardId}/edit', [FlashcardController::class, 'edit'])->name('topics.flashcards.edit');
+    Route::put('/topics/{topicId}/flashcards/{flashcardId}', [FlashcardController::class, 'updateView'])->name('topics.flashcards.update');
+    Route::delete('/topics/{topicId}/flashcards/{flashcardId}', [FlashcardController::class, 'destroyView'])->name('topics.flashcards.destroy');
+
+    // Topic flashcard preview
+    Route::get('/topics/{topic}/flashcards/preview/start', [FlashcardPreviewController::class, 'startPreview'])->name('topics.flashcards.preview.start');
+
     // API Routes for JSON responses (used by tests and API consumers)
     Route::prefix('api')->group(function () {
         // Unit-scoped flashcard routes
@@ -217,10 +229,28 @@ Route::middleware('auth')->group(function () {
         Route::get('/units/{unitId}/flashcards/{flashcardId}', [FlashcardController::class, 'show'])->name('api.units.flashcards.show');
         Route::put('/units/{unitId}/flashcards/{flashcardId}', [FlashcardController::class, 'update'])->name('api.units.flashcards.update');
         Route::delete('/units/{unitId}/flashcards/{flashcardId}', [FlashcardController::class, 'destroy'])->name('api.units.flashcards.destroy');
+
+        // Topic-scoped flashcard routes
+        Route::get('/topics/{topicId}/flashcards', [FlashcardController::class, 'index'])->name('api.topics.flashcards.index');
+        Route::post('/topics/{topicId}/flashcards', [FlashcardController::class, 'store'])->name('api.topics.flashcards.store');
+        Route::get('/topics/{topicId}/flashcards/{flashcardId}', [FlashcardController::class, 'show'])->name('api.topics.flashcards.show');
+        Route::put('/topics/{topicId}/flashcards/{flashcardId}', [FlashcardController::class, 'update'])->name('api.topics.flashcards.update');
+        Route::delete('/topics/{topicId}/flashcards/{flashcardId}', [FlashcardController::class, 'destroy'])->name('api.topics.flashcards.destroy');
+        Route::post('/topics/{topicId}/flashcards/{flashcardId}/restore', [FlashcardController::class, 'restore'])->name('api.topics.flashcards.restore');
+        Route::get('/topics/{topicId}/flashcards/stats', [FlashcardController::class, 'topicStats'])->name('api.topics.flashcards.stats');
+        Route::post('/topics/{topicId}/flashcards/bulk', [FlashcardController::class, 'bulkTopicOperations'])->name('api.topics.flashcards.bulk');
+        Route::patch('/topics/{topicId}/flashcards/bulk-status', [FlashcardController::class, 'bulkUpdateTopicStatus'])->name('api.topics.flashcards.bulk-status');
+
+        // Flashcard management across topics
+        Route::post('/flashcards/{flashcardId}/move', [FlashcardController::class, 'moveToTopic'])->name('api.flashcards.move');
         Route::patch('/units/{unitId}/flashcards/bulk-status', [FlashcardController::class, 'bulkUpdateStatus'])->name('api.units.flashcards.bulk-status');
         Route::get('/units/{unitId}/flashcards/type/{cardType}', [FlashcardController::class, 'getByType'])->name('api.units.flashcards.by-type');
         Route::post('/units/{unitId}/flashcards/{flashcardId}/restore', [FlashcardController::class, 'restore'])->name('api.units.flashcards.restore');
         Route::delete('/units/{unitId}/flashcards/{flashcardId}/force', [FlashcardController::class, 'forceDestroy'])->name('api.units.flashcards.force-destroy');
+
+        // API Import/Export routes (tests expect these)
+        Route::post('/units/{unitId}/flashcards/import/preview', [FlashcardController::class, 'previewImport'])->name('api.units.flashcards.import.preview');
+        Route::post('/units/{unitId}/flashcards/import', [FlashcardController::class, 'executeImport'])->name('api.units.flashcards.import.execute');
 
         // Legacy flashcard API routes for backwards compatibility (tests expect these)
         Route::get('/flashcards/{unitId}', [FlashcardController::class, 'index'])->name('api.flashcards.index');
