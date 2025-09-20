@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 /**
  * @property int $id
  * @property int $unit_id
+ * @property int|null $topic_id
  * @property string $card_type
  * @property string $question
  * @property string $answer
@@ -30,6 +31,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Carbon\Carbon|null $updated_at
  * @property \Carbon\Carbon|null $deleted_at
  * @property-read \App\Models\Unit $unit
+ * @property-read \App\Models\Topic|null $topic
  * @property-read \App\Models\Subject $subject
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \Illuminate\Database\Eloquent\Model> $reviews
  */
@@ -42,6 +44,7 @@ class Flashcard extends Model
      */
     protected $fillable = [
         'unit_id',
+        'topic_id',
         'card_type',
         'question',
         'answer',
@@ -64,6 +67,7 @@ class Flashcard extends Model
      */
     protected $casts = [
         'unit_id' => 'integer',
+        'topic_id' => 'integer',
         'choices' => 'array',
         'correct_choices' => 'array',
         'cloze_answers' => 'array',
@@ -149,10 +153,19 @@ class Flashcard extends Model
     }
 
     /**
-     * Get the subject this flashcard belongs to (through unit).
+     * Get the topic that owns the flashcard.
+     */
+    public function topic(): BelongsTo
+    {
+        return $this->belongsTo(Topic::class);
+    }
+
+    /**
+     * Get the subject this flashcard belongs to (through unit or topic).
      */
     public function subject()
     {
+        // Always use unit -> subject relationship since both unit and topic flashcards have unit_id
         return $this->hasOneThrough(Subject::class, Unit::class, 'id', 'id', 'unit_id', 'subject_id');
     }
 
@@ -172,6 +185,14 @@ class Flashcard extends Model
     public function scopeForUnit($query, int $unitId)
     {
         return $query->where('unit_id', $unitId)->where('is_active', true)->orderBy('created_at');
+    }
+
+    /**
+     * Scope to get flashcards for a specific topic
+     */
+    public function scopeForTopic($query, int $topicId)
+    {
+        return $query->where('topic_id', $topicId)->where('is_active', true)->orderBy('created_at');
     }
 
     /**
@@ -275,17 +296,38 @@ class Flashcard extends Model
      */
     public function canBeAccessedBy(string $userId): bool
     {
+        // If topic_id is set, check through topic -> unit -> subject
+        if ($this->topic_id && $this->topic) {
+            return $this->topic->unit->subject->user_id === $userId;
+        }
+
+        // Fallback to unit -> subject
         return $this->unit->subject->user_id === $userId;
     }
 
     /**
      * Compatibility methods for controllers that still use legacy patterns
+     * Returns only unit-scoped flashcards (excludes topic flashcards)
      *
      * @return \Illuminate\Database\Eloquent\Collection<int, \App\Models\Flashcard>
      */
     public static function forUnit(int $unitId, $supabase = null): \Illuminate\Database\Eloquent\Collection
     {
-        return self::where('unit_id', $unitId)->where('is_active', true)->orderBy('created_at')->get();
+        return self::where('unit_id', $unitId)
+            ->whereNull('topic_id') // Only unit-scoped flashcards
+            ->where('is_active', true)
+            ->orderBy('created_at')
+            ->get();
+    }
+
+    /**
+     * Get flashcards for a specific topic
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, \App\Models\Flashcard>
+     */
+    public static function forTopic(int $topicId, $supabase = null): \Illuminate\Database\Eloquent\Collection
+    {
+        return self::where('topic_id', $topicId)->where('is_active', true)->orderBy('created_at')->get();
     }
 
     // Override find to support string IDs for compatibility
@@ -299,6 +341,7 @@ class Flashcard extends Model
         return [
             'id' => $this->id,
             'unit_id' => $this->unit_id,
+            'topic_id' => $this->topic_id,
             'card_type' => $this->card_type,
             'question' => $this->question,
             'answer' => $this->answer,

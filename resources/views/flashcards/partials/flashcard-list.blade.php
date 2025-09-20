@@ -43,54 +43,76 @@
     @unless(session('kids_mode'))
         <div class="flex items-center justify-between mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
             <div class="text-sm text-gray-700">
-                <strong>{{ $flashcards->total() ?? $flashcards->count() }}</strong> flashcard{{ ($flashcards->total() ?? $flashcards->count()) !== 1 ? 's' : '' }} in this unit
+                <strong>{{ $flashcards->total() ?? $flashcards->count() }}</strong> flashcard{{ ($flashcards->total() ?? $flashcards->count()) !== 1 ? 's' : '' }}
+                @if(isset($topic))
+                    in {{ $topic->title }}
+                @else
+                    in this unit
+                @endif
             </div>
             <div class="flex space-x-2">
-                <button 
-                    type="button"
-                    hx-get="{{ route('units.flashcards.print.show', $unit->id) }}"
-                    hx-target="#flashcard-modal"
-                    hx-swap="innerHTML"
-                    class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
-                    </svg>
-                    Print Flashcards
-                </button>
-                <button 
-                    type="button"
-                    hx-get="{{ route('units.flashcards.export.show', $unit->id) }}"
-                    hx-target="#flashcard-modal"
-                    hx-swap="innerHTML"
-                    class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-4-4m4 4l4-4m-4-4V3"/>
-                    </svg>
-                    Export
-                </button>
-                <button 
-                    type="button"
-                    hx-get="{{ route('units.flashcards.import.show', $unit->id) }}"
-                    hx-target="#flashcard-modal"
-                    hx-swap="innerHTML"
-                    class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                    </svg>
-                    Import
-                </button>
-                <button 
-                    type="button"
-                    hx-get="{{ route('units.flashcards.create', $unit->id) }}"
-                    hx-target="#flashcard-modal"
-                    hx-swap="innerHTML"
-                    class="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-opacity"
-                    style="background-color: {{ $unit->subject->color }}">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                    </svg>
-                    Add Flashcard
-                </button>
+                @if(isset($topic))
+                    <!-- Topic-specific actions -->
+                    <button
+                        type="button"
+                        hx-get="{{ route('topics.flashcards.create', $topic->id) }}"
+                        hx-target="#flashcard-modal"
+                        hx-swap="innerHTML"
+                        class="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-opacity"
+                        style="background-color: {{ $unit->subject->color }}">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        Add Flashcard to Topic
+                    </button>
+                @else
+                    <!-- Unit-level actions -->
+                    <button
+                        type="button"
+                        hx-get="{{ route('units.flashcards.print.show', $unit->id) }}"
+                        hx-target="#flashcard-modal"
+                        hx-swap="innerHTML"
+                        class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                        </svg>
+                        Print Flashcards
+                    </button>
+                    <button
+                        type="button"
+                        hx-get="{{ route('units.flashcards.export.show', $unit->id) }}"
+                        hx-target="#flashcard-modal"
+                        hx-swap="innerHTML"
+                        class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-4-4m4 4l4-4m-4-4V3"/>
+                        </svg>
+                        Export
+                    </button>
+                    <button
+                        type="button"
+                        hx-get="{{ route('units.flashcards.import.show', $unit->id) }}"
+                        hx-target="#flashcard-modal"
+                        hx-swap="innerHTML"
+                        class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                        </svg>
+                        Import
+                    </button>
+                    <button
+                        type="button"
+                        hx-get="{{ route('units.flashcards.create', $unit->id) }}"
+                        hx-target="#flashcard-modal"
+                        hx-swap="innerHTML"
+                        class="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-opacity"
+                        style="background-color: {{ $unit->subject->color }}">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        Add Flashcard
+                    </button>
+                @endif
             </div>
         </div>
     @endunless
@@ -104,6 +126,13 @@
                             <h4 class="text-sm font-medium text-gray-900 truncate max-w-md">
                                 {{ Str::limit($flashcard->question, 100) }}
                             </h4>
+
+                            @if(isset($flashcard->topic) && !isset($topic))
+                                <!-- Show topic label when viewing unit-level but flashcard belongs to topic -->
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                    {{ $flashcard->topic->title }}
+                                </span>
+                            @endif
                             
                             <!-- Card Type Badge -->
                             @php
@@ -177,9 +206,13 @@
                     <!-- Actions (only show in parent mode) -->
                     @unless(session('kids_mode'))
                         <div class="flex items-center space-x-2">
-                            <button 
+                            <button
                                 data-testid="edit-flashcard-button"
-                                hx-get="{{ route('units.flashcards.edit', [$unit->id, $flashcard->id]) }}"
+                                @if(isset($topic) && $flashcard->topic_id)
+                                    hx-get="{{ route('topics.flashcards.edit', [$flashcard->topic_id, $flashcard->id]) }}"
+                                @else
+                                    hx-get="{{ route('units.flashcards.edit', [$unit->id, $flashcard->id]) }}"
+                                @endif
                                 hx-target="#flashcard-modal"
                                 hx-swap="innerHTML"
                                 class="text-gray-400 hover:text-gray-600 p-1"
@@ -188,9 +221,13 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
                             </button>
-                            <button 
+                            <button
                                 data-testid="delete-flashcard-button"
-                                hx-delete="{{ route('units.flashcards.destroy', [$unit->id, $flashcard->id]) }}"
+                                @if(isset($topic) && $flashcard->topic_id)
+                                    hx-delete="{{ route('topics.flashcards.destroy', [$flashcard->topic_id, $flashcard->id]) }}"
+                                @else
+                                    hx-delete="{{ route('units.flashcards.destroy', [$unit->id, $flashcard->id]) }}"
+                                @endif
                                 hx-target="#flashcards-list"
                                 hx-swap="innerHTML"
                                 hx-confirm="Are you sure you want to delete this flashcard? This action cannot be undone."
@@ -219,29 +256,47 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
         </svg>
         <h3 class="mt-2 text-sm font-medium text-gray-900">No flashcards yet</h3>
-        <p class="mt-1 text-sm text-gray-500">Get started by creating your first flashcard for this unit.</p>
+        <p class="mt-1 text-sm text-gray-500">
+            @if(isset($topic))
+                Get started by creating your first flashcard for this topic.
+            @else
+                Get started by creating your first flashcard for this unit.
+            @endif
+        </p>
         @unless(session('kids_mode'))
             <div class="mt-6 flex flex-wrap gap-3 justify-center">
-                <button 
-                    type="button"
-                    hx-get="{{ route('units.flashcards.import.show', $unit->id) }}"
-                    hx-target="#flashcard-modal"
-                    hx-swap="innerHTML"
-                    class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                    </svg>
-                    Import Flashcards
-                </button>
-                <button 
-                    type="button"
-                    hx-get="{{ route('units.flashcards.create', $unit->id) }}"
-                    hx-target="#flashcard-modal"
-                    hx-swap="innerHTML"
-                    class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white hover:opacity-90 transition-opacity"
-                    style="background-color: {{ $unit->subject->color }}">
-                    Add Flashcard
-                </button>
+                @if(isset($topic))
+                    <button
+                        type="button"
+                        hx-get="{{ route('topics.flashcards.create', $topic->id) }}"
+                        hx-target="#flashcard-modal"
+                        hx-swap="innerHTML"
+                        class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white hover:opacity-90 transition-opacity"
+                        style="background-color: {{ $unit->subject->color }}">
+                        Add Flashcard to Topic
+                    </button>
+                @else
+                    <button
+                        type="button"
+                        hx-get="{{ route('units.flashcards.import.show', $unit->id) }}"
+                        hx-target="#flashcard-modal"
+                        hx-swap="innerHTML"
+                        class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                        </svg>
+                        Import Flashcards
+                    </button>
+                    <button
+                        type="button"
+                        hx-get="{{ route('units.flashcards.create', $unit->id) }}"
+                        hx-target="#flashcard-modal"
+                        hx-swap="innerHTML"
+                        class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white hover:opacity-90 transition-opacity"
+                        style="background-color: {{ $unit->subject->color }}">
+                        Add Flashcard
+                    </button>
+                @endif
             </div>
         @endunless
     </div>

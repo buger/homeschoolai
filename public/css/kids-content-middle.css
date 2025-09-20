@@ -1,0 +1,551 @@
+/**
+ * Kids Content CSS - Middle School (6th-8th Grade)
+ *
+ * Sophisticated yet engaging design for developing independence
+ * with advanced interactive features and academic focus.
+ */
+
+@import url('./kids-content-base.css');
+
+/* Middle School Color Palette */
+:root {
+  --middle-primary: #1D4ED8;
+  --middle-secondary: #7C2D12;
+  --middle-accent: #BE185D;
+  --middle-success: #059669;
+  --middle-warning: #D97706;
+  --middle-info: #0284C7;
+  --middle-neutral: #374151;
+
+  --middle-bg-primary: #F1F5F9;
+  --middle-bg-secondary: #FEF7FF;
+  --middle-bg-accent: #FDF2F8;
+  --middle-bg-success: #ECFDF5;
+  --middle-bg-warning: #FFFBEB;
+  --middle-bg-info: #F0F9FF;
+
+  --middle-gradient-academic: linear-gradient(135deg, #1D4ED8, #7C2D12);
+  --middle-gradient-success: linear-gradient(90deg, #059669, #10B981);
+  --middle-gradient-analytical: linear-gradient(135deg, #0284C7, #BE185D);
+  --middle-gradient-sophisticated: linear-gradient(45deg, #6366F1, #8B5CF6);
+}
+
+/* Container for Middle School */
+.kids-content-container[data-age-group="middle"] {
+  background: var(--middle-bg-primary);
+  border: 2px solid var(--middle-primary);
+  border-radius: var(--kids-radius-lg);
+  padding: var(--kids-space-xl);
+  font-size: 1rem;
+  line-height: 1.6;
+  position: relative;
+  box-shadow: var(--kids-shadow-md);
+}
+
+/* Academic header indicator */
+.kids-content-container[data-age-group="middle"]::before {
+  content: '🧠 Academic Content ⚡';
+  position: absolute;
+  top: -12px;
+  left: var(--kids-space-xl);
+  background: var(--middle-gradient-academic);
+  color: white;
+  padding: var(--kids-space-sm) var(--kids-space-lg);
+  border-radius: var(--kids-radius-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: var(--kids-shadow-md);
+}
+
+/* Middle School Typography */
+.kids-content-container[data-age-group="middle"] .kids-heading-xl {
+  font-size: 2.25rem;
+  font-weight: 800;
+  background: var(--middle-gradient-academic);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-align: center;
+  margin-bottom: var(--kids-space-2xl);
+  position: relative;
+}
+
+.kids-content-container[data-age-group="middle"] .kids-heading-xl::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 3px;
+  background: var(--middle-gradient-academic);
+  border-radius: var(--kids-radius-full);
+}
+
+.kids-content-container[data-age-group="middle"] .kids-heading-lg {
+  font-size: 1.875rem;
+  color: var(--middle-secondary);
+  margin-bottom: var(--kids-space-lg);
+  position: relative;
+  padding-left: var(--kids-space-xl);
+}
+
+.kids-content-container[data-age-group="middle"] .kids-heading-lg::before {
+  content: '🧠';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--middle-secondary);
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+.kids-content-container[data-age-group="middle"] .kids-heading-md {
+  font-size: 1.5rem;
+  color: var(--middle-info);
+  border-bottom: 2px solid var(--middle-info);
+  padding-bottom: var(--kids-space-sm);
+  margin-bottom: var(--kids-space-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--kids-space-sm);
+}
+
+/* Sophisticated Text Styling */
+.kids-content-container[data-age-group="middle"] .kids-text {
+  font-size: 1rem;
+  line-height: 1.7;
+  background: white;
+  padding: var(--kids-space-lg);
+  border-radius: var(--kids-radius-md);
+  border-left: 4px solid var(--middle-primary);
+  margin-bottom: var(--kids-space-lg);
+  box-shadow: var(--kids-shadow-sm);
+  position: relative;
+}
+
+/* Academic content indicators */
+.kids-content-container[data-age-group="middle"] .kids-text[data-content-type="analysis"]::before {
+  content: '🔬 Analysis';
+  position: absolute;
+  top: var(--kids-space-sm);
+  right: var(--kids-space-sm);
+  background: var(--middle-bg-info);
+  color: var(--middle-info);
+  padding: var(--kids-space-xs) var(--kids-space-sm);
+  border-radius: var(--kids-radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.kids-content-container[data-age-group="middle"] .kids-text[data-content-type="concept"]::before {
+  content: '💡 Key Concept';
+  background: var(--middle-bg-warning);
+  color: var(--middle-warning);
+}
+
+.kids-content-container[data-age-group="middle"] .kids-text[data-content-type="example"]::before {
+  content: '📝 Example';
+  background: var(--middle-bg-success);
+  color: var(--middle-success);
+}
+
+/* Advanced List System */
+.kids-content-container[data-age-group="middle"] .kids-list-item {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-left: 4px solid var(--middle-accent);
+  border-radius: var(--kids-radius-md);
+  padding: var(--kids-space-lg);
+  margin-bottom: var(--kids-space-md);
+  min-height: var(--kids-touch-sm);
+  position: relative;
+  transition: all var(--kids-transition-normal);
+  box-shadow: var(--kids-shadow-sm);
+}
+
+.kids-content-container[data-age-group="middle"] .kids-list-item:hover {
+  transform: translateX(4px);
+  border-left-color: var(--middle-primary);
+  box-shadow: var(--kids-shadow-md);
+  background: var(--middle-bg-info);
+}
+
+.kids-content-container[data-age-group="middle"] .kids-list-item::before {
+  content: '▶';
+  position: absolute;
+  left: var(--kids-space-md);
+  top: var(--kids-space-md);
+  color: var(--middle-accent);
+  font-weight: 700;
+  transition: all var(--kids-transition-normal);
+}
+
+.kids-content-container[data-age-group="middle"] .kids-list-item:hover::before {
+  color: var(--middle-primary);
+  transform: rotate(90deg);
+}
+
+/* Advanced Checkboxes */
+.kids-content-container[data-age-group="middle"] .kids-checkbox {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--middle-primary);
+  border-radius: var(--kids-radius-sm);
+  position: relative;
+  transition: all var(--kids-transition-normal);
+}
+
+.kids-content-container[data-age-group="middle"] .kids-checkbox:checked {
+  background: var(--middle-primary);
+  border-color: var(--middle-primary);
+  animation: middle-check-complete 0.3s ease-out;
+}
+
+.kids-content-container[data-age-group="middle"] .kids-checkbox:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.kids-content-container[data-age-group="middle"] .kids-checkbox:indeterminate {
+  background: var(--middle-warning);
+  border-color: var(--middle-warning);
+}
+
+.kids-content-container[data-age-group="middle"] .kids-checkbox:indeterminate::after {
+  content: '−';
+  color: white;
+  font-weight: 700;
+}
+
+/* Academic Progress Tracking */
+.kids-content-container[data-age-group="middle"] .kids-progress-tracking {
+  background: var(--middle-bg-secondary);
+  border: 2px solid var(--middle-accent);
+  border-radius: var(--kids-radius-lg);
+  padding: var(--kids-space-xl);
+  position: relative;
+}
+
+.kids-content-container[data-age-group="middle"] .kids-progress-bar {
+  height: 14px;
+  background: #F3F4F6;
+  border-radius: var(--kids-radius-full);
+  border: 1px solid #D1D5DB;
+  overflow: hidden;
+  position: relative;
+}
+
+.kids-content-container[data-age-group="middle"] .kids-progress-fill {
+  background: var(--middle-gradient-success);
+  height: 100%;
+  border-radius: var(--kids-radius-full);
+  position: relative;
+  transition: width var(--kids-transition-slow);
+}
+
+.kids-content-container[data-age-group="middle"] .kids-progress-fill::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: progress-scan 2s infinite;
+}
+
+/* Advanced Achievement System */
+.kids-content-container[data-age-group="middle"] .kids-achievement-badge {
+  background: var(--middle-gradient-analytical);
+  color: white;
+  padding: var(--kids-space-sm) var(--kids-space-md);
+  border-radius: var(--kids-radius-md);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--kids-space-xs);
+  box-shadow: var(--kids-shadow-md);
+  position: relative;
+  overflow: hidden;
+}
+
+.kids-content-container[data-age-group="middle"] .kids-achievement-badge::before {
+  content: '🏆';
+  font-size: 1.1rem;
+}
+
+.kids-content-container[data-age-group="middle"] .kids-achievement-badge::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  animation: achievement-shine 3s infinite;
+}
+
+/* Sophisticated Buttons */
+.kids-content-container[data-age-group="middle"] .kids-btn {
+  min-height: var(--kids-touch-md);
+  padding: var(--kids-space-md) var(--kids-space-xl);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  border-radius: var(--kids-radius-md);
+  background: var(--middle-gradient-sophisticated);
+  color: white;
+  border: 1px solid transparent;
+  box-shadow: var(--kids-shadow-md);
+  position: relative;
+  overflow: hidden;
+  transition: all var(--kids-transition-normal);
+}
+
+.kids-content-container[data-age-group="middle"] .kids-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--kids-shadow-lg);
+  border-color: rgba(255,255,255,0.3);
+}
+
+.kids-content-container[data-age-group="middle"] .kids-btn:active {
+  transform: translateY(0);
+}
+
+/* Academic Tools */
+.kids-content-container[data-age-group="middle"] .kids-read-aloud-btn {
+  width: var(--kids-touch-sm);
+  height: var(--kids-touch-sm);
+  background: var(--middle-primary);
+  border: 1px solid white;
+  font-size: 1rem;
+}
+
+.kids-content-container[data-age-group="middle"] .kids-bookmark-btn,
+.kids-content-container[data-age-group="middle"] .kids-add-note-btn {
+  width: var(--kids-touch-sm);
+  height: var(--kids-touch-sm);
+  background: var(--middle-info);
+  border: 1px solid var(--middle-info);
+  color: white;
+  font-size: 0.875rem;
+}
+
+.kids-content-container[data-age-group="middle"] .kids-add-note-btn {
+  background: var(--middle-warning);
+  border-color: var(--middle-warning);
+}
+
+/* Advanced Highlighting */
+.kids-content-container[data-age-group="middle"] .kids-highlightable {
+  padding: 2px 4px;
+  border-radius: var(--kids-radius-sm);
+  transition: all var(--kids-transition-fast);
+  cursor: pointer;
+  position: relative;
+}
+
+.kids-content-container[data-age-group="middle"] .kids-highlightable:hover {
+  background: rgba(245, 158, 11, 0.15);
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.3);
+}
+
+.kids-content-container[data-age-group="middle"] .kids-highlighted {
+  background: rgba(245, 158, 11, 0.3);
+  box-shadow: 0 0 0 1px var(--middle-warning);
+}
+
+.kids-content-container[data-age-group="middle"] .kids-highlighted::after {
+  content: '🖍️';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  font-size: 0.75rem;
+}
+
+/* Media Enhancements for Middle School */
+.kids-content-container[data-age-group="middle"] .kids-video-enhancements {
+  background: var(--middle-bg-info);
+  border: 2px solid var(--middle-info);
+  border-radius: var(--kids-radius-md);
+  position: relative;
+}
+
+.kids-content-container[data-age-group="middle"] .kids-video-enhancements::before {
+  content: '🎬 Educational Content';
+  position: absolute;
+  top: -10px;
+  left: var(--kids-space-lg);
+  background: var(--middle-info);
+  color: white;
+  padding: var(--kids-space-xs) var(--kids-space-md);
+  border-radius: var(--kids-radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.kids-content-container[data-age-group="middle"] .kids-image-enhancements {
+  background: var(--middle-bg-success);
+  border: 2px solid var(--middle-success);
+}
+
+.kids-content-container[data-age-group="middle"] .kids-image-enhancements::before {
+  content: '🖼️ Visual Resource';
+  background: var(--middle-success);
+}
+
+.kids-content-container[data-age-group="middle"] .kids-file-enhancements {
+  background: var(--middle-bg-accent);
+  border: 2px solid var(--middle-accent);
+}
+
+.kids-content-container[data-age-group="middle"] .kids-file-enhancements::before {
+  content: '📄 Document';
+  background: var(--middle-accent);
+}
+
+/* Academic Time Management */
+.kids-content-container[data-age-group="middle"] .kids-time-tracking {
+  background: var(--middle-bg-warning);
+  border: 1px solid var(--middle-warning);
+  border-radius: var(--kids-radius-md);
+  padding: var(--kids-space-lg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.kids-content-container[data-age-group="middle"] .kids-time-display {
+  display: flex;
+  align-items: center;
+  gap: var(--kids-space-md);
+}
+
+.kids-content-container[data-age-group="middle"] .kids-time-spent {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--middle-warning);
+  background: white;
+  padding: var(--kids-space-sm) var(--kids-space-md);
+  border-radius: var(--kids-radius-sm);
+  border: 1px solid var(--middle-warning);
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+/* Note-Taking System */
+.kids-content-container[data-age-group="middle"] .kids-note-container {
+  background: var(--middle-bg-secondary);
+  border: 1px solid var(--middle-accent);
+  border-radius: var(--kids-radius-md);
+  padding: var(--kids-space-md);
+  margin: var(--kids-space-sm) 0;
+  display: none;
+}
+
+.kids-content-container[data-age-group="middle"] .kids-note-container.active {
+  display: block;
+  animation: note-expand 0.3s ease-out;
+}
+
+.kids-content-container[data-age-group="middle"] .kids-note-input {
+  width: 100%;
+  border: 1px solid #D1D5DB;
+  border-radius: var(--kids-radius-sm);
+  padding: var(--kids-space-sm);
+  font-size: 0.875rem;
+  resize: vertical;
+  min-height: 60px;
+}
+
+/* Middle School Animations */
+@keyframes middle-check-complete {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+@keyframes progress-scan {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes achievement-shine {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+@keyframes note-expand {
+  0% { opacity: 0; max-height: 0; }
+  100% { opacity: 1; max-height: 200px; }
+}
+
+/* Focus and Study Modes */
+.kids-content-container[data-age-group="middle"].focus-mode {
+  background: #FAFAFA;
+  border: 2px solid var(--middle-primary);
+}
+
+.kids-content-container[data-age-group="middle"].focus-mode .kids-text {
+  background: white;
+  box-shadow: var(--kids-shadow-lg);
+}
+
+.kids-content-container[data-age-group="middle"].study-mode {
+  filter: contrast(1.05) brightness(0.98);
+}
+
+/* Mobile Optimizations for Middle School */
+@media (max-width: 768px) {
+  .kids-content-container[data-age-group="middle"] {
+    padding: var(--kids-space-lg);
+    font-size: 0.9375rem;
+  }
+
+  .kids-content-container[data-age-group="middle"] .kids-heading-xl {
+    font-size: 1.875rem;
+  }
+
+  .kids-content-container[data-age-group="middle"] .kids-btn {
+    min-height: var(--kids-touch-lg);
+    font-size: 1rem;
+  }
+
+  .kids-content-container[data-age-group="middle"] .kids-time-tracking {
+    flex-direction: column;
+    gap: var(--kids-space-md);
+  }
+}
+
+/* Dark Mode Support for Middle School */
+@media (prefers-color-scheme: dark) {
+  .kids-content-container[data-age-group="middle"] {
+    background: #1E293B;
+    border-color: #3B82F6;
+    color: #F1F5F9;
+  }
+
+  .kids-content-container[data-age-group="middle"] .kids-text {
+    background: #334155;
+    color: #F1F5F9;
+  }
+
+  .kids-content-container[data-age-group="middle"] .kids-list-item {
+    background: #334155;
+    border-color: #475569;
+  }
+}

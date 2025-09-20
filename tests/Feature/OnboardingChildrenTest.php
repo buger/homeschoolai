@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class OnboardingChildrenTest extends TestCase
@@ -25,7 +26,7 @@ class OnboardingChildrenTest extends TestCase
         $this->actingAs($this->user);
     }
 
-    /** @test */
+    #[Test]
     public function onboarding_children_endpoint_validates_required_fields()
     {
         // User is already authenticated in setUp()
@@ -39,7 +40,7 @@ class OnboardingChildrenTest extends TestCase
         $response->assertJsonValidationErrors(['children']);
     }
 
-    /** @test */
+    #[Test]
     public function onboarding_children_endpoint_validates_child_fields()
     {
         // User is already authenticated in setUp()
@@ -63,7 +64,7 @@ class OnboardingChildrenTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function onboarding_children_endpoint_validates_grade_options()
     {
         // User is already authenticated in setUp()
@@ -97,7 +98,7 @@ class OnboardingChildrenTest extends TestCase
         $response->assertJsonValidationErrors(['children.0.grade']);
     }
 
-    /** @test */
+    #[Test]
     public function onboarding_children_endpoint_validates_independence_level()
     {
         // User is already authenticated in setUp()
@@ -117,7 +118,7 @@ class OnboardingChildrenTest extends TestCase
         $response->assertJsonValidationErrors(['children.0.independence_level']);
     }
 
-    /** @test */
+    #[Test]
     public function onboarding_children_endpoint_validates_maximum_children()
     {
         // User is already authenticated in setUp()
@@ -140,7 +141,7 @@ class OnboardingChildrenTest extends TestCase
         $response->assertJsonValidationErrors(['children']);
     }
 
-    /** @test */
+    #[Test]
     public function onboarding_children_endpoint_requires_authentication()
     {
         // Override authentication for this test - logout the user
@@ -161,7 +162,7 @@ class OnboardingChildrenTest extends TestCase
         $response->assertStatus(401);
     }
 
-    /** @test */
+    #[Test]
     public function onboarding_view_loads_successfully()
     {
         // User is already authenticated in setUp()
@@ -176,7 +177,7 @@ class OnboardingChildrenTest extends TestCase
         $response->assertSee('data-testid="children-form"', false);
     }
 
-    /** @test */
+    #[Test]
     public function onboarding_form_includes_required_elements()
     {
         // User is already authenticated in setUp()

@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="bg-white shadow rounded-lg">
         <!-- Header -->
         <div class="p-6 border-b border-gray-200">
@@ -84,5 +83,4 @@
     <!-- Modals -->
     <div id="unit-modal"></div>
     <div id="subject-modal"></div>
-</div>
 @endsection

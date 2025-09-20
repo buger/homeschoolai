@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\FlashcardRequest;
 use App\Models\Flashcard;
+use App\Models\Topic;
 use App\Models\Unit;
 use App\Services\FlashcardCacheService;
 use App\Services\FlashcardErrorService;
@@ -60,12 +61,27 @@ class FlashcardController extends Controller
     }
 
     /**
-     * Display a listing of flashcards for a specific unit with performance monitoring.
+     * Display a listing of flashcards for a specific unit or topic with performance monitoring.
+     * Supports both /units/{unitId}/flashcards and /topics/{topicId}/flashcards routes.
      */
-    public function index(Request $request, int $unitId): JsonResponse
+    public function index(Request $request, ?int $unitId = null, ?int $topicId = null): JsonResponse
     {
+        // Handle route parameter binding - Laravel passes parameters based on route names
+        if ($unitId === null && $request->route('unitId')) {
+            $unitId = (int) $request->route('unitId');
+        }
+        if ($topicId === null && $request->route('topicId')) {
+            $topicId = (int) $request->route('topicId');
+        }
+
+        // Determine if this is a topic-based or unit-based request
+        $isTopicBased = $topicId !== null || str_contains($request->route()->getName() ?? '', 'topics.flashcards');
+        $resourceId = $isTopicBased ? $topicId : $unitId;
+
         $monitoringId = $this->performanceService->startMonitoring('flashcard_index', [
             'unit_id' => $unitId,
+            'topic_id' => $topicId,
+            'is_topic_based' => $isTopicBased,
             'user_id' => auth()->id(),
         ]);
 
@@ -74,34 +90,65 @@ class FlashcardController extends Controller
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
 
-            // Verify unit exists and user has access
-            $unit = Unit::findOrFail($unitId);
-            if ((int) $unit->subject->user_id !== auth()->id()) {
-                return response()->json(['error' => 'Access denied'], 403);
+            if ($isTopicBased) {
+                // Topic-based flashcard listing
+                $topic = Topic::findOrFail($topicId);
+                if ((int) $topic->unit->subject->user_id !== auth()->id()) {
+                    return response()->json(['error' => 'Access denied'], 403);
+                }
+
+                // Get flashcards for this topic
+                $flashcards = $topic->flashcards()
+                    ->where('is_active', true)
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+
+                $performance = $this->performanceService->endMonitoring($monitoringId, [
+                    'flashcards_count' => $flashcards->count(),
+                    'cache_hit' => false, // Topic caching not implemented yet
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'flashcards' => $flashcards->toArray(),
+                    'topic' => $topic->toArray(),
+                    'unit' => $topic->unit->toArray(),
+                    'context' => 'topic',
+                    'performance' => config('app.debug') ? $performance : null,
+                ]);
+            } else {
+                // Unit-based flashcard listing (backward compatibility)
+                $unit = Unit::findOrFail($unitId);
+                if ((int) $unit->subject->user_id !== auth()->id()) {
+                    return response()->json(['error' => 'Access denied'], 403);
+                }
+
+                // Use cached flashcards for better performance
+                $flashcards = $this->cacheService->cacheUnitFlashcards($unitId);
+
+                // Get cached statistics
+                $stats = $this->cacheService->cacheUnitStats($unitId);
+
+                $performance = $this->performanceService->endMonitoring($monitoringId, [
+                    'flashcards_count' => $flashcards->count(),
+                    'cache_hit' => true,
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'flashcards' => $flashcards->toArray(),
+                    'unit' => $unit->toArray(),
+                    'stats' => $stats,
+                    'context' => 'unit',
+                    'performance' => config('app.debug') ? $performance : null,
+                ]);
             }
-
-            // Use cached flashcards for better performance
-            $flashcards = $this->cacheService->cacheUnitFlashcards($unitId);
-
-            // Get cached statistics
-            $stats = $this->cacheService->cacheUnitStats($unitId);
-
-            $performance = $this->performanceService->endMonitoring($monitoringId, [
-                'flashcards_count' => $flashcards->count(),
-                'cache_hit' => true,
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'flashcards' => $flashcards->toArray(),
-                'unit' => $unit->toArray(),
-                'stats' => $stats,
-                'performance' => config('app.debug') ? $performance : null,
-            ]);
 
         } catch (\Exception $e) {
             $errorResponse = $this->errorService->handleError($e, 'flashcard_index', [
                 'unit_id' => $unitId,
+                'topic_id' => $topicId,
+                'is_topic_based' => $isTopicBased,
                 'user_id' => auth()->id(),
             ]);
 
@@ -113,22 +160,54 @@ class FlashcardController extends Controller
 
     /**
      * Store a newly created flashcard.
+     * Supports both unit-based and topic-based creation.
      */
-    public function store(FlashcardRequest $request, int $unitId): JsonResponse
+    public function store(FlashcardRequest $request, ?int $unitId = null, ?int $topicId = null): JsonResponse
     {
         try {
             if (! auth()->check()) {
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
 
-            // Verify unit exists and user has access
-            $unit = Unit::findOrFail($unitId);
-            if ((int) $unit->subject->user_id !== auth()->id()) {
-                return response()->json(['error' => 'Access denied'], 403);
+            // Handle route parameter binding
+            if ($unitId === null && $request->route('unitId')) {
+                $unitId = (int) $request->route('unitId');
+            }
+            if ($topicId === null && $request->route('topicId')) {
+                $topicId = (int) $request->route('topicId');
+            }
+
+            // Determine if this is a topic-based or unit-based request
+            $isTopicBased = $topicId !== null || str_contains($request->route()->getName() ?? '', 'topics.flashcards');
+
+            $unit = null;
+            $topic = null;
+
+            if ($isTopicBased) {
+                // Topic-based flashcard creation
+                $topic = Topic::findOrFail($topicId);
+                $unit = $topic->unit;
+                if ((int) $unit->subject->user_id !== auth()->id()) {
+                    return response()->json(['error' => 'Access denied'], 403);
+                }
+            } else {
+                // Unit-based flashcard creation (backward compatibility)
+                $unit = Unit::findOrFail($unitId);
+                if ((int) $unit->subject->user_id !== auth()->id()) {
+                    return response()->json(['error' => 'Access denied'], 403);
+                }
             }
 
             $validated = $request->validated();
-            $validated['unit_id'] = $unitId;
+            $validated['unit_id'] = $unit->id;
+
+            // Set topic_id if this is a topic-based flashcard
+            if ($isTopicBased) {
+                $validated['topic_id'] = $topic->id;
+            } else {
+                // Explicitly set topic_id to null for unit-based flashcards
+                $validated['topic_id'] = null;
+            }
 
             $flashcard = new Flashcard($validated);
 
@@ -149,17 +228,27 @@ class FlashcardController extends Controller
                 }
 
                 // Invalidate cache after creating flashcard
-                $this->cacheService->invalidateUnitCache($unitId);
+                $this->cacheService->invalidateUnitCache($unit->id);
 
-                return response()->json([
+                $response = [
                     'success' => true,
                     'message' => 'Flashcard created successfully',
                     'flashcard' => $flashcard->toArray(),
-                ], 201);
+                    'unit' => $unit->toArray(),
+                    'context' => $isTopicBased ? 'topic' : 'unit',
+                ];
+
+                if ($isTopicBased) {
+                    $response['topic'] = $topic->toArray();
+                }
+
+                return response()->json($response, 201);
             }
 
             return response()->json(['error' => 'Failed to create flashcard'], 500);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['error' => 'Topic or unit not found'], 404);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'error' => 'Validation failed',
@@ -174,29 +263,68 @@ class FlashcardController extends Controller
 
     /**
      * Display the specified flashcard.
+     * Supports both unit-based and topic-based access.
      */
-    public function show(int $unitId, int $flashcardId): JsonResponse
+    public function show(Request $request, ?int $unitId = null, ?int $flashcardId = null, ?int $topicId = null): JsonResponse
     {
         try {
             if (! auth()->check()) {
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
 
-            // Verify unit exists and user has access
-            $unit = Unit::findOrFail($unitId);
-            if ((int) $unit->subject->user_id !== auth()->id()) {
-                return response()->json(['error' => 'Access denied'], 403);
+            // Handle route parameter binding
+            if ($unitId === null && $request->route('unitId')) {
+                $unitId = (int) $request->route('unitId');
+            }
+            if ($flashcardId === null && $request->route('flashcardId')) {
+                $flashcardId = (int) $request->route('flashcardId');
+            }
+            if ($topicId === null && $request->route('topicId')) {
+                $topicId = (int) $request->route('topicId');
             }
 
-            $flashcard = Flashcard::where('unit_id', $unitId)
-                ->where('id', $flashcardId)
-                ->firstOrFail();
+            // Determine if this is a topic-based or unit-based request
+            $isTopicBased = $topicId !== null || str_contains($request->route()->getName() ?? '', 'topics.flashcards');
 
-            return response()->json([
+            $flashcard = null;
+            $unit = null;
+            $topic = null;
+
+            if ($isTopicBased) {
+                // Topic-based flashcard access
+                $topic = Topic::findOrFail($topicId);
+                $unit = $topic->unit;
+                if ((int) $unit->subject->user_id !== auth()->id()) {
+                    return response()->json(['error' => 'Access denied'], 403);
+                }
+
+                $flashcard = Flashcard::where('topic_id', $topicId)
+                    ->where('id', $flashcardId)
+                    ->firstOrFail();
+            } else {
+                // Unit-based flashcard access (backward compatibility)
+                $unit = Unit::findOrFail($unitId);
+                if ((int) $unit->subject->user_id !== auth()->id()) {
+                    return response()->json(['error' => 'Access denied'], 403);
+                }
+
+                $flashcard = Flashcard::where('unit_id', $unitId)
+                    ->where('id', $flashcardId)
+                    ->firstOrFail();
+            }
+
+            $response = [
                 'success' => true,
                 'flashcard' => $flashcard->toArray(),
                 'unit' => $unit->toArray(),
-            ]);
+                'context' => $isTopicBased ? 'topic' : 'unit',
+            ];
+
+            if ($isTopicBased) {
+                $response['topic'] = $topic->toArray();
+            }
+
+            return response()->json($response);
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json(['error' => 'Flashcard not found'], 404);
@@ -209,25 +337,77 @@ class FlashcardController extends Controller
 
     /**
      * Update the specified flashcard.
+     * Supports both unit-based and topic-based updates, including moving flashcards between topics.
      */
-    public function update(FlashcardRequest $request, int $unitId, int $flashcardId): JsonResponse
+    public function update(FlashcardRequest $request, ?int $unitId = null, ?int $flashcardId = null, ?int $topicId = null): JsonResponse
     {
         try {
             if (! auth()->check()) {
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
 
-            // Verify unit exists and user has access
-            $unit = Unit::findOrFail($unitId);
-            if ((int) $unit->subject->user_id !== auth()->id()) {
-                return response()->json(['error' => 'Access denied'], 403);
+            // Handle route parameter binding
+            if ($unitId === null && $request->route('unitId')) {
+                $unitId = (int) $request->route('unitId');
+            }
+            if ($flashcardId === null && $request->route('flashcardId')) {
+                $flashcardId = (int) $request->route('flashcardId');
+            }
+            if ($topicId === null && $request->route('topicId')) {
+                $topicId = (int) $request->route('topicId');
             }
 
-            $flashcard = Flashcard::where('unit_id', $unitId)
-                ->where('id', $flashcardId)
-                ->firstOrFail();
+            // Determine if this is a topic-based or unit-based request
+            $isTopicBased = $topicId !== null || str_contains($request->route()->getName() ?? '', 'topics.flashcards');
+
+            $flashcard = null;
+            $unit = null;
+            $topic = null;
+
+            if ($isTopicBased) {
+                // Topic-based flashcard update
+                $topic = Topic::findOrFail($topicId);
+                $unit = $topic->unit;
+                if ((int) $unit->subject->user_id !== auth()->id()) {
+                    return response()->json(['error' => 'Access denied'], 403);
+                }
+
+                $flashcard = Flashcard::where('topic_id', $topicId)
+                    ->where('id', $flashcardId)
+                    ->firstOrFail();
+            } else {
+                // Unit-based flashcard update (backward compatibility)
+                $unit = Unit::findOrFail($unitId);
+                if ((int) $unit->subject->user_id !== auth()->id()) {
+                    return response()->json(['error' => 'Access denied'], 403);
+                }
+
+                $flashcard = Flashcard::where('unit_id', $unitId)
+                    ->where('id', $flashcardId)
+                    ->firstOrFail();
+            }
 
             $validated = $request->validated();
+
+            // Handle topic reassignment - but not when updating through topic context
+            if (! $isTopicBased && isset($validated['topic_id'])) {
+                $newTopicId = $validated['topic_id'];
+
+                // Validate the new topic belongs to the same unit or user's units
+                if ($newTopicId !== null) {
+                    $newTopic = Topic::findOrFail($newTopicId);
+                    if ((int) $newTopic->unit->subject->user_id !== auth()->id()) {
+                        return response()->json(['error' => 'Invalid topic assignment'], 403);
+                    }
+                    // Update unit_id if topic changed to different unit
+                    $validated['unit_id'] = $newTopic->unit_id;
+                }
+            } elseif ($isTopicBased) {
+                // When updating through topic context, ignore any topic_id changes
+                unset($validated['topic_id']);
+                unset($validated['unit_id']);
+            }
+
             $flashcard->fill($validated);
 
             // Validate card-specific data
@@ -240,11 +420,25 @@ class FlashcardController extends Controller
             }
 
             if ($flashcard->save()) {
-                return response()->json([
+                // Invalidate cache for affected units
+                $this->cacheService->invalidateUnitCache($unit->id);
+                if (isset($newTopic) && $newTopic->unit_id !== $unit->id) {
+                    $this->cacheService->invalidateUnitCache($newTopic->unit_id);
+                }
+
+                $response = [
                     'success' => true,
                     'message' => 'Flashcard updated successfully',
-                    'flashcard' => $flashcard->toArray(),
-                ]);
+                    'flashcard' => $flashcard->fresh()->toArray(),
+                    'unit' => $unit->toArray(),
+                    'context' => $isTopicBased ? 'topic' : 'unit',
+                ];
+
+                if ($isTopicBased || $flashcard->topic_id) {
+                    $response['topic'] = $flashcard->topic ? $flashcard->topic->toArray() : null;
+                }
+
+                return response()->json($response);
             }
 
             return response()->json(['error' => 'Failed to update flashcard'], 500);
@@ -265,29 +459,67 @@ class FlashcardController extends Controller
 
     /**
      * Remove the specified flashcard (soft delete).
+     * Works with both unit-based and topic-based flashcards.
      */
-    public function destroy(int $unitId, int $flashcardId): JsonResponse
+    public function destroy(Request $request, ?int $unitId = null, ?int $flashcardId = null, ?int $topicId = null): JsonResponse
     {
         try {
             if (! auth()->check()) {
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
 
-            // Verify unit exists and user has access
-            $unit = Unit::findOrFail($unitId);
-            if ((int) $unit->subject->user_id !== auth()->id()) {
-                return response()->json(['error' => 'Access denied'], 403);
+            // Handle route parameter binding
+            if ($unitId === null && $request->route('unitId')) {
+                $unitId = (int) $request->route('unitId');
+            }
+            if ($flashcardId === null && $request->route('flashcardId')) {
+                $flashcardId = (int) $request->route('flashcardId');
+            }
+            if ($topicId === null && $request->route('topicId')) {
+                $topicId = (int) $request->route('topicId');
             }
 
-            $flashcard = Flashcard::where('unit_id', $unitId)
-                ->where('id', $flashcardId)
-                ->firstOrFail();
+            // Determine if this is a topic-based or unit-based request
+            $isTopicBased = $topicId !== null || str_contains($request->route()->getName() ?? '', 'topics.flashcards');
+
+            $flashcard = null;
+            $unit = null;
+            $topic = null;
+
+            if ($isTopicBased) {
+                // Topic-based flashcard deletion
+                $topic = Topic::findOrFail($topicId);
+                $unit = $topic->unit;
+                if ((int) $unit->subject->user_id !== auth()->id()) {
+                    return response()->json(['error' => 'Access denied'], 403);
+                }
+
+                $flashcard = Flashcard::where('topic_id', $topicId)
+                    ->where('id', $flashcardId)
+                    ->firstOrFail();
+            } else {
+                // Unit-based flashcard deletion (backward compatibility)
+                $unit = Unit::findOrFail($unitId);
+                if ((int) $unit->subject->user_id !== auth()->id()) {
+                    return response()->json(['error' => 'Access denied'], 403);
+                }
+
+                $flashcard = Flashcard::where('unit_id', $unitId)
+                    ->where('id', $flashcardId)
+                    ->firstOrFail();
+            }
 
             if ($flashcard->delete()) {
-                return response()->json([
+                // Invalidate cache after deletion
+                $this->cacheService->invalidateUnitCache($unit->id);
+
+                $response = [
                     'success' => true,
                     'message' => 'Flashcard deleted successfully',
-                ]);
+                    'context' => $isTopicBased ? 'topic' : 'unit',
+                ];
+
+                return response()->json($response);
             }
 
             return response()->json(['error' => 'Failed to delete flashcard'], 500);
@@ -304,23 +536,51 @@ class FlashcardController extends Controller
     /**
      * Restore a soft-deleted flashcard.
      */
-    public function restore(int $unitId, int $flashcardId): JsonResponse
+    public function restore(Request $request, ?int $unitId = null, ?int $flashcardId = null, ?int $topicId = null): JsonResponse
     {
         try {
             if (! auth()->check()) {
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
 
-            // Verify unit exists and user has access
-            $unit = Unit::findOrFail($unitId);
-            if ((int) $unit->subject->user_id !== auth()->id()) {
-                return response()->json(['error' => 'Access denied'], 403);
+            // Handle route parameter binding
+            if ($unitId === null && $request->route('unitId')) {
+                $unitId = (int) $request->route('unitId');
+            }
+            if ($flashcardId === null && $request->route('flashcardId')) {
+                $flashcardId = (int) $request->route('flashcardId');
+            }
+            if ($topicId === null && $request->route('topicId')) {
+                $topicId = (int) $request->route('topicId');
             }
 
-            $flashcard = Flashcard::withTrashed()
-                ->where('unit_id', $unitId)
-                ->where('id', $flashcardId)
-                ->firstOrFail();
+            $isTopicBased = $topicId !== null;
+            $flashcard = null;
+
+            if ($isTopicBased) {
+                // Topic-based flashcard restore
+                $topic = Topic::findOrFail($topicId);
+                if ((int) $topic->unit->subject->user_id !== auth()->id()) {
+                    return response()->json(['error' => 'Access denied'], 403);
+                }
+
+                $flashcard = Flashcard::withTrashed()
+                    ->where('topic_id', $topicId)
+                    ->where('id', $flashcardId)
+                    ->firstOrFail();
+            } else {
+                // Unit-based flashcard restore (backward compatibility)
+                $unit = Unit::findOrFail($unitId);
+                if ((int) $unit->subject->user_id !== auth()->id()) {
+                    return response()->json(['error' => 'Access denied'], 403);
+                }
+
+                $flashcard = Flashcard::withTrashed()
+                    ->where('unit_id', $unitId)
+                    ->whereNull('topic_id')
+                    ->where('id', $flashcardId)
+                    ->firstOrFail();
+            }
 
             if ($flashcard->restore()) {
                 return response()->json([
@@ -402,6 +662,7 @@ class FlashcardController extends Controller
             }
 
             $flashcards = Flashcard::where('unit_id', $unitId)
+                ->whereNull('topic_id')
                 ->byCardType($cardType)
                 ->where('is_active', true)
                 ->orderBy('created_at')
@@ -445,6 +706,7 @@ class FlashcardController extends Controller
 
             $updated = Flashcard::whereIn('id', $validated['flashcard_ids'])
                 ->where('unit_id', $unitId)
+                ->whereNull('topic_id')
                 ->update(['is_active' => $validated['is_active']]);
 
             return response()->json([
@@ -460,6 +722,63 @@ class FlashcardController extends Controller
             ], 422);
         } catch (\Exception $e) {
             Log::error('Error bulk updating flashcards: '.$e->getMessage());
+
+            return response()->json(['error' => 'Unable to update flashcards'], 500);
+        }
+    }
+
+    /**
+     * Bulk update topic flashcard status
+     */
+    public function bulkUpdateTopicStatus(Request $request, int $topicId): JsonResponse
+    {
+        try {
+            if (! auth()->check()) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            // Verify topic exists and user has access
+            $topic = Topic::findOrFail($topicId);
+            if ((int) $topic->unit->subject->user_id !== auth()->id()) {
+                return response()->json(['error' => 'Access denied'], 403);
+            }
+
+            $validated = $request->validate([
+                'flashcard_ids' => 'required|array|min:1',
+                'flashcard_ids.*' => 'integer|exists:flashcards,id',
+                'is_active' => 'required|boolean',
+            ]);
+
+            // Validate that all flashcard IDs belong to this topic
+            $validFlashcardIds = Flashcard::whereIn('id', $validated['flashcard_ids'])
+                ->where('topic_id', $topicId)
+                ->pluck('id')
+                ->toArray();
+
+            if (count($validFlashcardIds) !== count($validated['flashcard_ids'])) {
+                return response()->json([
+                    'error' => 'Validation failed',
+                    'messages' => ['flashcard_ids' => ['Some flashcards do not belong to this topic']],
+                ], 422);
+            }
+
+            $updated = Flashcard::whereIn('id', $validated['flashcard_ids'])
+                ->where('topic_id', $topicId)
+                ->update(['is_active' => $validated['is_active']]);
+
+            return response()->json([
+                'success' => true,
+                'message' => "{$updated} flashcards updated successfully",
+                'updated_count' => $updated,
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'error' => 'Validation failed',
+                'messages' => $e->validator->errors()->toArray(),
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error bulk updating topic flashcards: '.$e->getMessage());
 
             return response()->json(['error' => 'Unable to update flashcards'], 500);
         }
@@ -807,9 +1126,9 @@ class FlashcardController extends Controller
             // Custom validation with HTMX-friendly error responses
             try {
                 $validated = $request->validate([
-                    'import_method' => 'required|in:file,paste',
+                    'import_method' => 'required|in:file,paste,text',
                     'import_file' => 'required_if:import_method,file|file|max:5120', // 5MB max
-                    'import_text' => 'required_if:import_method,paste|string|max:500000', // 500KB max
+                    'import_text' => 'required_if:import_method,paste,text|string|max:500000', // 500KB max
                 ]);
             } catch (\Illuminate\Validation\ValidationException $e) {
                 // Return HTMX-friendly validation error for empty import text
@@ -907,7 +1226,7 @@ class FlashcardController extends Controller
             }
 
             $validated = $request->validate([
-                'import_method' => 'required|in:file,paste',
+                'import_method' => 'required|in:file,paste,text',
                 'import_data' => 'required|string', // Base64 encoded data
                 'confirm_import' => 'required|boolean|accepted',
             ]);
@@ -2053,6 +2372,267 @@ class FlashcardController extends Controller
             Log::error('Error rolling back import: '.$e->getMessage());
 
             return response()->json(['error' => 'Unable to rollback import'], 500);
+        }
+    }
+
+    // ==================== Topic-Specific Methods ====================
+
+    /**
+     * Move a flashcard between topics
+     */
+    public function moveToTopic(Request $request, int $flashcardId): JsonResponse
+    {
+        try {
+            if (! auth()->check()) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            $validated = $request->validate([
+                'topic_id' => 'nullable|integer|exists:topics,id',
+                'unit_id' => 'required|integer|exists:units,id',
+            ]);
+
+            $flashcard = Flashcard::findOrFail($flashcardId);
+
+            // Verify user has access to the flashcard
+            if (! $flashcard->canBeAccessedBy(auth()->id())) {
+                return response()->json(['error' => 'Access denied'], 403);
+            }
+
+            // Verify user has access to the target topic/unit
+            if ($validated['topic_id']) {
+                $topic = Topic::findOrFail($validated['topic_id']);
+                if ((int) $topic->unit->subject->user_id !== auth()->id()) {
+                    return response()->json(['error' => 'Access denied to target topic'], 403);
+                }
+                $validated['unit_id'] = $topic->unit_id;
+            } else {
+                $unit = Unit::findOrFail($validated['unit_id']);
+                if ((int) $unit->subject->user_id !== auth()->id()) {
+                    return response()->json(['error' => 'Access denied to target unit'], 403);
+                }
+            }
+
+            $oldUnitId = $flashcard->unit_id;
+            $flashcard->update($validated);
+
+            // Invalidate cache for both old and new units if different
+            $this->cacheService->invalidateUnitCache($oldUnitId);
+            if ($validated['unit_id'] !== $oldUnitId) {
+                $this->cacheService->invalidateUnitCache($validated['unit_id']);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Flashcard moved successfully',
+                'flashcard' => $flashcard->fresh()->toArray(),
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'error' => 'Validation failed',
+                'messages' => $e->validator->errors()->toArray(),
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error moving flashcard: '.$e->getMessage());
+
+            return response()->json(['error' => 'Unable to move flashcard'], 500);
+        }
+    }
+
+    /**
+     * Get all flashcards for a topic with filtering and pagination
+     */
+    public function topicFlashcards(Request $request, int $topicId): JsonResponse
+    {
+        try {
+            if (! auth()->check()) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            $topic = Topic::findOrFail($topicId);
+            if ((int) $topic->unit->subject->user_id !== auth()->id()) {
+                return response()->json(['error' => 'Access denied'], 403);
+            }
+
+            $query = $topic->flashcards()->where('is_active', true);
+
+            // Apply filters
+            if ($request->has('card_type')) {
+                $query->where('card_type', $request->get('card_type'));
+            }
+
+            if ($request->has('difficulty')) {
+                $query->where('difficulty_level', $request->get('difficulty'));
+            }
+
+            // Apply sorting
+            $sortBy = $request->get('sort_by', 'created_at');
+            $sortDirection = $request->get('sort_direction', 'desc');
+            $query->orderBy($sortBy, $sortDirection);
+
+            // Pagination
+            $perPage = min($request->get('per_page', 20), 100);
+            $flashcards = $query->paginate($perPage);
+
+            return response()->json([
+                'success' => true,
+                'flashcards' => $flashcards->items(),
+                'pagination' => [
+                    'current_page' => $flashcards->currentPage(),
+                    'last_page' => $flashcards->lastPage(),
+                    'per_page' => $flashcards->perPage(),
+                    'total' => $flashcards->total(),
+                ],
+                'topic' => $topic->toArray(),
+                'unit' => $topic->unit->toArray(),
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error fetching topic flashcards: '.$e->getMessage());
+
+            return response()->json(['error' => 'Unable to fetch flashcards'], 500);
+        }
+    }
+
+    /**
+     * Get flashcard statistics for a topic
+     */
+    public function topicStats(Request $request, int $topicId): JsonResponse
+    {
+        try {
+            if (! auth()->check()) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            $topic = Topic::findOrFail($topicId);
+            if ((int) $topic->unit->subject->user_id !== auth()->id()) {
+                return response()->json(['error' => 'Access denied'], 403);
+            }
+
+            $flashcards = $topic->flashcards()->where('is_active', true)->get();
+
+            $stats = [
+                'total_flashcards' => $flashcards->count(),
+                'by_card_type' => $flashcards->groupBy('card_type')->map->count(),
+                'by_difficulty' => $flashcards->groupBy('difficulty_level')->map->count(),
+                'with_images' => $flashcards->whereNotNull('question_image_url')->count(),
+                'with_hints' => $flashcards->whereNotNull('hint')->count(),
+                'with_tags' => $flashcards->filter(function ($card) {
+                    return ! empty($card->tags);
+                })->count(),
+                'recent_additions' => $flashcards->where('created_at', '>=', now()->subDays(7))->count(),
+            ];
+
+            return response()->json([
+                'success' => true,
+                'stats' => $stats,
+                'topic' => $topic->toArray(),
+                'unit' => $topic->unit->toArray(),
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error fetching topic flashcard stats: '.$e->getMessage());
+
+            return response()->json(['error' => 'Unable to fetch statistics'], 500);
+        }
+    }
+
+    /**
+     * Bulk operations on topic flashcards
+     */
+    public function bulkTopicOperations(Request $request, int $topicId): JsonResponse
+    {
+        try {
+            if (! auth()->check()) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            $topic = Topic::findOrFail($topicId);
+            if ((int) $topic->unit->subject->user_id !== auth()->id()) {
+                return response()->json(['error' => 'Access denied'], 403);
+            }
+
+            $validated = $request->validate([
+                'operation' => 'required|in:activate,deactivate,delete,move',
+                'flashcard_ids' => 'required|array|min:1',
+                'flashcard_ids.*' => 'integer|exists:flashcards,id',
+                'target_topic_id' => 'nullable|integer|exists:topics,id',
+                'target_unit_id' => 'nullable|integer|exists:units,id',
+            ]);
+
+            $flashcards = Flashcard::whereIn('id', $validated['flashcard_ids'])
+                ->where('topic_id', $topicId)
+                ->get();
+
+            $updatedCount = 0;
+            $operation = $validated['operation'];
+
+            foreach ($flashcards as $flashcard) {
+                switch ($operation) {
+                    case 'activate':
+                        $flashcard->update(['is_active' => true]);
+                        $updatedCount++;
+                        break;
+                    case 'deactivate':
+                        $flashcard->update(['is_active' => false]);
+                        $updatedCount++;
+                        break;
+                    case 'delete':
+                        $flashcard->delete();
+                        $updatedCount++;
+                        break;
+                    case 'move':
+                        if (isset($validated['target_topic_id']) || isset($validated['target_unit_id'])) {
+                            $updateData = [];
+                            if ($validated['target_topic_id']) {
+                                $targetTopic = Topic::find($validated['target_topic_id']);
+                                if ($targetTopic && $targetTopic->unit->subject->user_id === auth()->id()) {
+                                    $updateData['topic_id'] = $validated['target_topic_id'];
+                                    $updateData['unit_id'] = $targetTopic->unit_id;
+                                }
+                            } else {
+                                $targetUnit = Unit::find($validated['target_unit_id']);
+                                if ($targetUnit && $targetUnit->subject->user_id === auth()->id()) {
+                                    $updateData['topic_id'] = null;
+                                    $updateData['unit_id'] = $validated['target_unit_id'];
+                                }
+                            }
+                            if (! empty($updateData)) {
+                                $flashcard->update($updateData);
+                                $updatedCount++;
+                            }
+                        }
+                        break;
+                }
+            }
+
+            // Invalidate cache
+            $this->cacheService->invalidateUnitCache($topic->unit_id);
+            if (isset($targetTopic) && $targetTopic->unit_id !== $topic->unit_id) {
+                $this->cacheService->invalidateUnitCache($targetTopic->unit_id);
+            }
+            if (isset($targetUnit) && $targetUnit->id !== $topic->unit_id) {
+                $this->cacheService->invalidateUnitCache($targetUnit->id);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "$updatedCount flashcards processed with operation: $operation",
+                'operation' => $operation,
+                'processed_count' => $updatedCount,
+                'total_requested' => count($validated['flashcard_ids']),
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'error' => 'Validation failed',
+                'messages' => $e->validator->errors()->toArray(),
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error performing bulk topic operations: '.$e->getMessage());
+
+            return response()->json(['error' => 'Unable to perform bulk operations'], 500);
         }
     }
 

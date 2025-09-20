@@ -6,12 +6,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Collection;
 
 /**
  * @property int $id
  * @property int $unit_id
  * @property string $title
+ * @property string|null $description
+ * @property string|null $learning_content
+ * @property array|null $content_assets
  * @property int $estimated_minutes
  * @property array|null $prerequisites
  * @property bool $required
@@ -20,6 +22,8 @@ use Illuminate\Support\Collection;
  * @property-read \App\Models\Unit $unit
  * @property-read \App\Models\Subject $subject
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \Illuminate\Database\Eloquent\Model> $sessions
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Flashcard> $flashcards
+ * @property-read int $flashcards_count
  */
 class Topic extends Model
 {
@@ -31,6 +35,9 @@ class Topic extends Model
     protected $fillable = [
         'unit_id',
         'title',
+        'description',
+        'learning_content',
+        'content_assets',
         'estimated_minutes',
         'prerequisites',
         'required',
@@ -42,7 +49,8 @@ class Topic extends Model
     protected $casts = [
         'unit_id' => 'integer',
         'estimated_minutes' => 'integer',
-        'prerequisites' => 'array', // JSON array handling
+        'content_assets' => 'array',
+        'prerequisites' => 'array',
         'required' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
@@ -53,6 +61,8 @@ class Topic extends Model
      */
     protected $attributes = [
         'estimated_minutes' => 30,
+        'learning_content' => '',
+        'content_assets' => null,
         'prerequisites' => '[]',
         'required' => true,
     ];
@@ -71,8 +81,106 @@ class Topic extends Model
      */
     public function sessions(): HasMany
     {
-        // Cannot use hasMany with non-Eloquent Session model
-        throw new \BadMethodCallException('Session relationship not yet available - Session model is still using Supabase pattern');
+        return $this->hasMany(Session::class);
+    }
+
+    /**
+     * Get the flashcards for this topic.
+     */
+    public function flashcards(): HasMany
+    {
+        return $this->hasMany(Flashcard::class)->where('is_active', true);
+    }
+
+    /**
+     * Get the subject through the unit.
+     */
+    public function subject(): BelongsTo
+    {
+        return $this->belongsTo(Subject::class, 'id', 'id')
+            ->join('units', 'units.subject_id', '=', 'subjects.id')
+            ->where('units.id', $this->unit_id);
+    }
+
+    /**
+     * Get topic content for display (unified markdown content)
+     */
+    public function getContent(): string
+    {
+        return $this->learning_content ?? '';
+    }
+
+    /**
+     * Get content assets for file management
+     */
+    public function getContentAssets(): array
+    {
+        return $this->content_assets ?? ['images' => [], 'files' => []];
+    }
+
+    /**
+     * Check if topic has content assets
+     */
+    public function hasContentAssets(): bool
+    {
+        $assets = $this->getContentAssets();
+
+        return ! empty($assets['images']) || ! empty($assets['files']);
+    }
+
+    /**
+     * Check if topic has learning materials (unified content)
+     */
+    public function hasLearningMaterials(): bool
+    {
+        return ! empty($this->learning_content);
+    }
+
+    /**
+     * Check if topic has rich content
+     */
+    public function hasRichContent(): bool
+    {
+        return $this->hasLearningMaterials();
+    }
+
+    /**
+     * Get unified content (simplified system)
+     */
+    public function getUnifiedContent(): string
+    {
+        return $this->learning_content ?? '';
+    }
+
+    /**
+     * Update content assets
+     */
+    public function updateContentAssets(array $assets): void
+    {
+        $this->content_assets = array_merge($this->getContentAssets(), $assets);
+        $this->save();
+    }
+
+    /**
+     * Get estimated reading time based on content
+     */
+    public function getEstimatedReadingTime(): int
+    {
+        $content = $this->getContent();
+        $wordCount = str_word_count(strip_tags($content));
+
+        // Average reading speed: 200 words per minute
+        $readingTime = ceil($wordCount / 200);
+
+        // Minimum 1 minute, add time for multimedia content
+        $baseTime = max(1, $readingTime);
+
+        // Add time for assets
+        $assets = $this->getContentAssets();
+        $imageTime = count($assets['images'] ?? []) * 0.5; // 30 seconds per image
+        $fileTime = count($assets['files'] ?? []) * 1; // 1 minute per file
+
+        return ceil($baseTime + $imageTime + $fileTime);
     }
 
     /**
@@ -80,20 +188,142 @@ class Topic extends Model
      */
     public function scopeForUnit($query, int $unitId)
     {
-        return $query->where('unit_id', $unitId)
-            ->orderBy('required', 'desc')
-            ->orderBy('title', 'asc');
+        return $query->where('unit_id', $unitId)->orderBy('created_at');
+    }
+
+    /**
+     * Scope to get required topics
+     */
+    public function scopeRequired($query)
+    {
+        return $query->where('required', true);
+    }
+
+    /**
+     * Scope to get optional topics
+     */
+    public function scopeOptional($query)
+    {
+        return $query->where('required', false);
+    }
+
+    /**
+     * Scope to get topics with flashcards
+     */
+    public function scopeWithFlashcards($query)
+    {
+        return $query->whereHas('flashcards');
+    }
+
+    /**
+     * Check if this topic has prerequisites
+     */
+    public function hasPrerequisites(): bool
+    {
+        return ! empty($this->prerequisites);
+    }
+
+    /**
+     * Get count of flashcards for this topic
+     */
+    public function getFlashcardsCount(): int
+    {
+        return $this->flashcards()->count();
+    }
+
+    /**
+     * Check if topic has flashcards
+     */
+    public function hasFlashcards(): bool
+    {
+        return $this->flashcards()->exists();
+    }
+
+    /**
+     * Get prerequisite topics
+     */
+    public function getPrerequisiteTopics()
+    {
+        if (! $this->hasPrerequisites()) {
+            return collect();
+        }
+
+        return self::whereIn('id', $this->prerequisites)->get();
+    }
+
+    /**
+     * Check if prerequisites are met for a given child
+     */
+    public function prerequisitesMet(int $childId): bool
+    {
+        if (! $this->hasPrerequisites()) {
+            return true;
+        }
+
+        // Check if all prerequisite topics have been completed
+        // This would need Session model integration when available
+        return true; // Placeholder for now
+    }
+
+    /**
+     * Get topic complexity score based on content
+     */
+    public function getComplexityScore(): int
+    {
+        $content = $this->getContent();
+        $score = 1; // Base score
+
+        // Add points for length
+        $wordCount = str_word_count(strip_tags($content));
+        $score += min(3, floor($wordCount / 500)); // Max 3 points for length
+
+        // Add points for assets
+        $assets = $this->getContentAssets();
+        $score += min(2, count($assets['images'] ?? [])); // Max 2 points for images
+        $score += min(3, count($assets['files'] ?? [])); // Max 3 points for files
+
+        // Add points for prerequisites
+        if ($this->hasPrerequisites()) {
+            $score += count($this->prerequisites);
+        }
+
+        return min(10, $score); // Cap at 10
+    }
+
+    /**
+     * Convert to array for API responses
+     */
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'unit_id' => $this->unit_id,
+            'title' => $this->title,
+            'description' => $this->description,
+            'learning_content' => $this->learning_content,
+            'content_assets' => $this->content_assets,
+            'estimated_minutes' => $this->estimated_minutes,
+            'prerequisites' => $this->prerequisites,
+            'required' => $this->required,
+            'created_at' => $this->created_at?->toIso8601String(),
+            'updated_at' => $this->updated_at?->toIso8601String(),
+
+            // Computed properties
+            'has_content_assets' => $this->hasContentAssets(),
+            'estimated_reading_time' => $this->getEstimatedReadingTime(),
+            'complexity_score' => $this->getComplexityScore(),
+            'has_prerequisites' => $this->hasPrerequisites(),
+            'flashcards_count' => $this->getFlashcardsCount(),
+            'has_flashcards' => $this->hasFlashcards(),
+        ];
     }
 
     /**
      * Compatibility methods for existing controllers
      */
-    public static function forUnit(int $unitId, $supabase = null): Collection
+    public static function forUnit(int $unitId): \Illuminate\Database\Eloquent\Collection
     {
-        return self::where('unit_id', $unitId)
-            ->orderBy('required', 'desc')
-            ->orderBy('title', 'asc')
-            ->get();
+        return self::where('unit_id', $unitId)->orderBy('created_at')->get();
     }
 
     // Override find to support string IDs for compatibility
@@ -102,94 +332,19 @@ class Topic extends Model
         return static::query()->find((int) $id, $columns);
     }
 
-    // The save() and delete() methods are now handled by Eloquent automatically
-
     /**
-     * Get the subject this topic belongs to (through unit)
+     * Get content for kids view (simplified)
      */
-    public function subject()
+    public function getKidsContent(): string
     {
-        return $this->hasOneThrough(Subject::class, Unit::class, 'id', 'id', 'unit_id', 'subject_id');
+        return $this->getContent();
     }
 
     /**
-     * Accessor method for backward compatibility
+     * Get content for parent/admin view (full)
      */
-    public function getSubjectAttribute(): ?Subject
+    public function getAdminContent(): string
     {
-        return $this->unit->subject ?? null;
-    }
-
-    /**
-     * Compatibility method for controllers
-     */
-    public function subject_compat($supabase = null): ?Subject
-    {
-        return $this->subject();
-    }
-
-    /**
-     * Get prerequisite topics
-     */
-    public function getPrerequisiteTopics($supabase = null): Collection
-    {
-        if (empty($this->prerequisites)) {
-            return collect([]);
-        }
-
-        return self::whereIn('id', $this->prerequisites)->get();
-    }
-
-    /**
-     * Check if all prerequisites are met
-     * Note: This is a simplified check - in a real app you'd track completion status
-     */
-    public function hasPrerequisitesMet($supabase = null): bool
-    {
-        // For now, return true - in a real app you'd check completion status
-        return true;
-    }
-
-    /**
-     * Get estimated duration in human readable format
-     */
-    public function getEstimatedDuration(): string
-    {
-        if ($this->estimated_minutes < 60) {
-            return "{$this->estimated_minutes} min";
-        }
-
-        $hours = floor($this->estimated_minutes / 60);
-        $minutes = $this->estimated_minutes % 60;
-
-        if ($minutes === 0) {
-            return "{$hours}h";
-        }
-
-        return "{$hours}h {$minutes}m";
-    }
-
-    /**
-     * Validate estimated_minutes is within reasonable bounds
-     */
-    public static function validateEstimatedMinutes(int $minutes): bool
-    {
-        return $minutes > 0 && $minutes <= 480; // 8 hours max
-    }
-
-    public function toArray(): array
-    {
-        return [
-            'id' => $this->id,
-            'unit_id' => $this->unit_id,
-            'title' => $this->title,
-            'estimated_minutes' => $this->estimated_minutes,
-            'estimated_duration' => $this->getEstimatedDuration(),
-            'prerequisites' => $this->prerequisites,
-            'required' => $this->required,
-            'created_at' => $this->created_at?->toIso8601String(),
-            'updated_at' => $this->updated_at?->toIso8601String(),
-            'has_prerequisites_met' => true, // Simplified for now
-        ];
+        return $this->getContent();
     }
 }

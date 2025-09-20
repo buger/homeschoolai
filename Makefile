@@ -40,7 +40,8 @@ install: ## Install all dependencies (Composer + NPM)
 dev: ## Start development server (Laravel + Vite)
 	@echo "$(GREEN)Starting development environment...$(NC)"
 	@echo "$(YELLOW)Laravel server: http://localhost:$(PORT)$(NC)"
-	$(ARTISAN) serve --port=$(PORT)
+	@echo "$(YELLOW)Using .env.local configuration$(NC)"
+	@export $$(cat .env.local | grep -v '^#' | xargs) && php artisan serve --port=$(PORT)
 
 .PHONY: dev-all
 dev-all: ## Start all development services (Laravel + Vite + Queue + Logs)
@@ -98,12 +99,12 @@ test: ## Run all tests (PHPUnit + E2E)
 test-unit: ## Run PHPUnit tests (SAFE - uses test database)
 	@echo "$(GREEN)Running PHPUnit tests on TEST database...$(NC)"
 	@echo "$(YELLOW)⚠️  Using safe test runner to protect development database$(NC)"
-	@./scripts/safe-test.sh
+	@export $$(cat .env.testing | grep -v '^#' | xargs) && ./scripts/safe-test.sh
 
 .PHONY: test-unit-coverage
 test-unit-coverage: ## Run PHPUnit tests with coverage (SAFE - uses test database)
 	@echo "$(GREEN)Running PHPUnit tests with coverage on TEST database...$(NC)"
-	@./scripts/safe-test.sh --coverage
+	@export $$(cat .env.testing | grep -v '^#' | xargs) && ./scripts/safe-test.sh --coverage
 
 .PHONY: test-e2e
 test-e2e: ## Run E2E tests with Playwright

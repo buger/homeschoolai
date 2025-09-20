@@ -41,14 +41,15 @@
     </button>
 
     <!-- Dropdown Menu -->
-    <div x-show="open" 
-         @click.away="open = false" 
+    <div x-show="open"
+         @click.away="open = false"
          x-transition:enter="transition ease-out duration-100"
          x-transition:enter-start="transform opacity-0 scale-95"
          x-transition:enter-end="transform opacity-100 scale-100"
          x-transition:leave="transition ease-in duration-75"
          x-transition:leave-start="transform opacity-100 scale-100"
          x-transition:leave-end="transform opacity-0 scale-95"
+         x-cloak
          class="absolute top-full right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
         
         @foreach($locales as $localeCode => $localeData)

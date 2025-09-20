@@ -10,6 +10,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Session;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class KidsModeSecurityTest extends TestCase
@@ -79,7 +80,7 @@ class KidsModeSecurityTest extends TestCase
         parent::tearDown();
     }
 
-    /** @test */
+    #[Test]
     public function it_logs_kids_mode_entry_with_security_details()
     {
         $response = $this->post(route('dashboard.kids-mode.enter', $this->child->id));
@@ -97,7 +98,7 @@ class KidsModeSecurityTest extends TestCase
         $response->assertRedirect(route('dashboard.child-today', ['child_id' => $this->child->id]));
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_session_fingerprint_on_pin_validation()
     {
         // Set up user preferences with PIN using real model
@@ -118,7 +119,7 @@ class KidsModeSecurityTest extends TestCase
         $response->assertStatus(200);
     }
 
-    /** @test */
+    #[Test]
     public function it_blocks_request_with_invalid_session_fingerprint()
     {
         // Set up user preferences with PIN
@@ -147,7 +148,7 @@ class KidsModeSecurityTest extends TestCase
         $this->assertNull(Session::get('user_id'));
     }
 
-    /** @test */
+    #[Test]
     public function it_implements_progressive_lockout_for_failed_pin_attempts()
     {
         // Set up user preferences with PIN using real model
@@ -179,7 +180,7 @@ class KidsModeSecurityTest extends TestCase
         $this->assertTrue($responseData['locked']);
     }
 
-    /** @test */
+    #[Test]
     public function it_implements_ip_based_rate_limiting()
     {
         // Set up user preferences with PIN using real model
@@ -205,7 +206,7 @@ class KidsModeSecurityTest extends TestCase
         $response->assertJsonStructure(['error', 'retry_after']);
     }
 
-    /** @test */
+    #[Test]
     public function it_applies_security_headers_in_kids_mode()
     {
         // Make request while in kids mode
@@ -228,7 +229,7 @@ class KidsModeSecurityTest extends TestCase
         $this->assertStringContainsString('microphone=()', $response->headers->get('Permissions-Policy'));
     }
 
-    /** @test */
+    #[Test]
     public function it_does_not_apply_security_headers_when_not_in_kids_mode()
     {
         // Exit kids mode
@@ -241,7 +242,7 @@ class KidsModeSecurityTest extends TestCase
         $this->assertNull($response->headers->get('Permissions-Policy'));
     }
 
-    /** @test */
+    #[Test]
     public function it_tracks_audit_logs_for_security_events()
     {
         // Test that KidsModeAuditLog can be called (interface test)
@@ -267,7 +268,7 @@ class KidsModeSecurityTest extends TestCase
         }
     }
 
-    /** @test */
+    #[Test]
     public function it_clears_rate_limiting_on_successful_pin_validation()
     {
         // Set up user preferences with PIN using real model
@@ -300,7 +301,7 @@ class KidsModeSecurityTest extends TestCase
         $this->assertNull(Session::get('kids_mode_fingerprint'));
     }
 
-    /** @test */
+    #[Test]
     public function it_prevents_access_when_not_in_kids_mode()
     {
         Session::forget('kids_mode_active');
@@ -313,7 +314,7 @@ class KidsModeSecurityTest extends TestCase
         $response->assertJson(['error' => 'Kids mode is not active']);
     }
 
-    /** @test */
+    #[Test]
     public function it_validates_pin_format()
     {
         // Set up PIN for the user

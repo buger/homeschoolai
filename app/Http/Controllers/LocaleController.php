@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Services\SupabaseClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -57,57 +58,86 @@ class LocaleController extends Controller
 
         try {
             if ($isAuthenticated) {
-                // Authenticated user - save to user_preferences
-                $accessToken = session('supabase_token');
-                $this->supabase->setUserToken($accessToken);
+                // Authenticated user - save to User model directly
+                $user = auth()->user();
+                $previousLocale = $user->locale;
+                $user->locale = $locale;
 
-                // Try to update existing preference first
-                try {
-                    $existing = $this->supabase->from('user_preferences')
-                        ->select('id')
-                        ->eq('user_id', $userId)
-                        ->single();
-
-                    if ($existing) {
-                        // Update existing preference - need to build query with WHERE clause first
-                        $this->supabase->from('user_preferences')
-                            ->eq('user_id', $userId)
-                            ->update([
-                                'locale' => $locale,
-                                'updated_at' => now()->toISOString(),
-                            ]);
-                    } else {
-                        // Insert new preference
-                        $this->supabase->from('user_preferences')
-                            ->insert([
-                                'user_id' => $userId,
-                                'locale' => $locale,
-                                'updated_at' => now()->toISOString(),
-                            ]);
+                // Apply regional format defaults if this is the first time setting locale
+                // or if the user is switching from one locale to another
+                if ($previousLocale !== $locale) {
+                    // Only apply defaults if user is not using custom format
+                    if (! $user->isCustomFormat()) {
+                        $user->applyRegionalDefaults($locale);
                     }
-                } catch (\Exception $e) {
-                    // Fallback: try insert (might fail on conflict, but that's OK)
+                }
+
+                $user->save();
+
+                // Also try to save to user_preferences in Supabase for compatibility
+                // Only try if we have a valid access token
+                $accessToken = session('supabase_token');
+                if ($accessToken) {
                     try {
-                        $this->supabase->from('user_preferences')
-                            ->insert([
-                                'user_id' => $userId,
-                                'locale' => $locale,
-                                'updated_at' => now()->toISOString(),
-                            ]);
-                    } catch (\Exception $insertError) {
-                        // Last attempt: update (in case of race condition) - need WHERE clause first
-                        $this->supabase->from('user_preferences')
-                            ->eq('user_id', $userId)
-                            ->update([
-                                'locale' => $locale,
-                                'updated_at' => now()->toISOString(),
-                            ]);
+                        $this->supabase->setUserToken($accessToken);
+
+                        // Try to update existing preference first
+                        try {
+                            $existing = $this->supabase->from('user_preferences')
+                                ->select('id')
+                                ->eq('user_id', $userId)
+                                ->single();
+
+                            if ($existing) {
+                                // Update existing preference - need to build query with WHERE clause first
+                                $this->supabase->from('user_preferences')
+                                    ->eq('user_id', $userId)
+                                    ->update([
+                                        'locale' => $locale,
+                                        'updated_at' => now()->toISOString(),
+                                    ]);
+                            } else {
+                                // Insert new preference
+                                $this->supabase->from('user_preferences')
+                                    ->insert([
+                                        'user_id' => $userId,
+                                        'locale' => $locale,
+                                        'updated_at' => now()->toISOString(),
+                                    ]);
+                            }
+                        } catch (\Exception $e) {
+                            // Fallback: try insert (might fail on conflict, but that's OK)
+                            try {
+                                $this->supabase->from('user_preferences')
+                                    ->insert([
+                                        'user_id' => $userId,
+                                        'locale' => $locale,
+                                        'updated_at' => now()->toISOString(),
+                                    ]);
+                            } catch (\Exception $insertError) {
+                                // Last attempt: update (in case of race condition) - need WHERE clause first
+                                $this->supabase->from('user_preferences')
+                                    ->eq('user_id', $userId)
+                                    ->update([
+                                        'locale' => $locale,
+                                        'updated_at' => now()->toISOString(),
+                                    ]);
+                            }
+                        }
+                    } catch (\Exception $supabaseError) {
+                        // Log the error but don't fail the request since we saved to User model
+                        \Log::warning('Failed to save locale to Supabase user_preferences', [
+                            'user_id' => $userId,
+                            'locale' => $locale,
+                            'error' => $supabaseError->getMessage(),
+                        ]);
                     }
                 }
 
                 \Log::debug('Updated user locale in database', [
                     'user_id' => $userId,
                     'locale' => $locale,
+                    'supabase_attempted' => ! empty($accessToken),
                 ]);
             } else {
                 // Guest user - save to guest_preferences

@@ -80,7 +80,7 @@
                                     </div>
                                 </div>
                                 <div class="flex gap-2">
-                                    <a href="{{ route('topics.show', ['topic' => $topic->id]) }}" 
+                                    <a href="{{ route('units.topics.show', [$unit->id, $topic->id]) }}" 
                                        class="text-blue-600 hover:text-blue-700 text-sm">
                                         {{ __('View') }}
                                     </a>

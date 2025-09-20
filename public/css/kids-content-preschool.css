@@ -1,0 +1,401 @@
+/**
+ * Kids Content CSS - Preschool (PreK-K)
+ *
+ * Extra large, colorful, playful design for youngest learners
+ * with maximum visual appeal and simple interactions.
+ */
+
+@import url('./kids-content-base.css');
+
+/* Preschool-Specific Color Palette */
+:root {
+  --preschool-rainbow-1: #FF6B9D;
+  --preschool-rainbow-2: #C44AFF;
+  --preschool-rainbow-3: #4A90FF;
+  --preschool-rainbow-4: #4AFFDB;
+  --preschool-rainbow-5: #4AFF88;
+  --preschool-rainbow-6: #FFEB4A;
+  --preschool-rainbow-7: #FF8E4A;
+
+  --preschool-bg-pattern: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23FFE4E1' fill-opacity='0.1'%3E%3Ccircle cx='20' cy='20' r='4'/%3E%3Ccircle cx='40' cy='40' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Container Enhancements */
+.kids-content-container[data-age-group="preschool"] {
+  background: var(--kids-bg-cream) var(--preschool-bg-pattern);
+  border: 4px solid var(--preschool-rainbow-2);
+  border-radius: var(--kids-radius-2xl);
+  padding: var(--kids-space-2xl);
+  font-size: 1.5rem;
+  line-height: 2;
+  position: relative;
+  overflow: visible;
+}
+
+/* Add floating decorative elements */
+.kids-content-container[data-age-group="preschool"]::before {
+  content: '🌟✨🎈🦋🌈';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 2rem;
+  animation: float-decoration 3s ease-in-out infinite;
+  z-index: 5;
+}
+
+/* Extra Large Typography for Preschoolers */
+.kids-content-container[data-age-group="preschool"] .kids-heading-xl {
+  font-size: 3.5rem;
+  font-family: var(--kids-font-fun);
+  text-align: center;
+  margin-bottom: var(--kids-space-3xl);
+  background: linear-gradient(45deg,
+    var(--preschool-rainbow-1),
+    var(--preschool-rainbow-2),
+    var(--preschool-rainbow-3),
+    var(--preschool-rainbow-4),
+    var(--preschool-rainbow-5),
+    var(--preschool-rainbow-6),
+    var(--preschool-rainbow-7));
+  background-size: 400% 400%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: rainbow-wave 4s ease-in-out infinite;
+}
+
+.kids-content-container[data-age-group="preschool"] .kids-heading-lg {
+  font-size: 2.75rem;
+  font-family: var(--kids-font-fun);
+  color: var(--preschool-rainbow-3);
+  text-shadow: 2px 2px 4px rgba(74, 144, 255, 0.2);
+}
+
+.kids-content-container[data-age-group="preschool"] .kids-heading-md {
+  font-size: 2rem;
+  font-family: var(--kids-font-fun);
+  color: var(--preschool-rainbow-5);
+}
+
+/* Preschool Text Styling */
+.kids-content-container[data-age-group="preschool"] .kids-text {
+  font-size: 1.5rem;
+  line-height: 2.2;
+  background: rgba(255, 255, 255, 0.8);
+  padding: var(--kids-space-xl);
+  border-radius: var(--kids-radius-xl);
+  border: 3px solid var(--preschool-rainbow-6);
+  margin-bottom: var(--kids-space-2xl);
+  position: relative;
+  box-shadow: var(--kids-shadow-lg);
+}
+
+/* Add floating emoji decorations to text blocks */
+.kids-content-container[data-age-group="preschool"] .kids-text::after {
+  content: '🎨';
+  position: absolute;
+  top: -15px;
+  right: 20px;
+  font-size: 2rem;
+  animation: gentle-float 2s ease-in-out infinite;
+}
+
+.kids-content-container[data-age-group="preschool"] .kids-text:nth-child(even)::after {
+  content: '🌟';
+  left: 20px;
+  right: auto;
+}
+
+.kids-content-container[data-age-group="preschool"] .kids-text:nth-child(3n)::after {
+  content: '🦋';
+}
+
+/* Extra Large Interactive Elements */
+.kids-content-container[data-age-group="preschool"] .kids-btn {
+  min-height: var(--kids-touch-xl);
+  padding: var(--kids-space-xl) var(--kids-space-2xl);
+  font-size: 1.5rem;
+  font-weight: 800;
+  border-radius: var(--kids-radius-2xl);
+  background: linear-gradient(135deg, var(--preschool-rainbow-1), var(--preschool-rainbow-3));
+  border: 4px solid white;
+  box-shadow: var(--kids-shadow-xl), 0 0 20px rgba(255, 107, 157, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.kids-content-container[data-age-group="preschool"] .kids-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  transition: left 0.5s;
+}
+
+.kids-content-container[data-age-group="preschool"] .kids-btn:hover::before {
+  left: 100%;
+}
+
+.kids-content-container[data-age-group="preschool"] .kids-btn:hover {
+  transform: translateY(-4px) scale(1.05);
+  animation: preschool-button-wiggle 0.5s ease-in-out;
+}
+
+/* Giant Checkboxes for Little Hands */
+.kids-content-container[data-age-group="preschool"] .kids-checkbox {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--preschool-rainbow-5);
+  border-radius: var(--kids-radius-lg);
+}
+
+.kids-content-container[data-age-group="preschool"] .kids-checkbox:checked {
+  background: var(--preschool-rainbow-5);
+  animation: preschool-check-celebration 0.8s ease-out;
+}
+
+.kids-content-container[data-age-group="preschool"] .kids-checkbox:checked::after {
+  font-size: 24px;
+  content: '🎉';
+  animation: celebrate-bounce 0.6s ease-out;
+}
+
+/* Preschool List Items */
+.kids-content-container[data-age-group="preschool"] .kids-list-item {
+  font-size: 1.375rem;
+  padding: var(--kids-space-xl);
+  margin-bottom: var(--kids-space-xl);
+  border-radius: var(--kids-radius-xl);
+  border: 3px solid var(--preschool-rainbow-4);
+  background: linear-gradient(135deg,
+    rgba(74, 255, 219, 0.1),
+    rgba(255, 235, 74, 0.1));
+  min-height: var(--kids-touch-xl);
+  position: relative;
+}
+
+.kids-content-container[data-age-group="preschool"] .kids-list-item::before {
+  content: '🎯';
+  position: absolute;
+  left: var(--kids-space-lg);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.5rem;
+  animation: gentle-spin 3s linear infinite;
+}
+
+.kids-content-container[data-age-group="preschool"] .kids-list-item:hover {
+  transform: scale(1.02);
+  animation: preschool-item-dance 0.6s ease-in-out;
+}
+
+/* Progress Bar for Preschoolers */
+.kids-content-container[data-age-group="preschool"] .kids-progress-bar {
+  height: 20px;
+  border: 3px solid var(--preschool-rainbow-1);
+  background: linear-gradient(45deg, #FFE4E1, #FFF0F5);
+}
+
+.kids-content-container[data-age-group="preschool"] .kids-progress-fill {
+  background: linear-gradient(45deg,
+    var(--preschool-rainbow-1),
+    var(--preschool-rainbow-3),
+    var(--preschool-rainbow-5));
+  background-size: 200% 200%;
+  animation: rainbow-progress 2s ease-in-out infinite;
+  position: relative;
+}
+
+/* Add sparkles to progress bar */
+.kids-content-container[data-age-group="preschool"] .kids-progress-fill::after {
+  content: '✨✨✨';
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  font-size: 0.8rem;
+  animation: sparkle-dance 1.5s ease-in-out infinite;
+}
+
+/* Achievement Badges - Extra Fun */
+.kids-content-container[data-age-group="preschool"] .kids-achievement-badge {
+  font-size: 1.125rem;
+  padding: var(--kids-space-md) var(--kids-space-lg);
+  border-radius: var(--kids-radius-2xl);
+  background: linear-gradient(135deg, var(--preschool-rainbow-6), var(--preschool-rainbow-7));
+  border: 3px solid white;
+  box-shadow: var(--kids-shadow-lg);
+  animation: achievement-wiggle 2s ease-in-out infinite;
+}
+
+/* Read Aloud Button - Extra Prominent */
+.kids-content-container[data-age-group="preschool"] .kids-read-aloud-btn {
+  width: 60px;
+  height: 60px;
+  font-size: 2rem;
+  background: linear-gradient(135deg, var(--preschool-rainbow-2), var(--preschool-rainbow-4));
+  border: 4px solid white;
+  box-shadow: var(--kids-shadow-xl);
+  animation: gentle-pulse 2s ease-in-out infinite;
+}
+
+/* Media Enhancements for Preschool */
+.kids-content-container[data-age-group="preschool"] .kids-video-enhancements {
+  border: 4px solid var(--preschool-rainbow-3);
+  background: linear-gradient(135deg,
+    rgba(74, 144, 255, 0.1),
+    rgba(196, 74, 255, 0.1));
+  border-radius: var(--kids-radius-2xl);
+  position: relative;
+}
+
+.kids-content-container[data-age-group="preschool"] .kids-video-enhancements::before {
+  content: '📺🎬🍿';
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.5rem;
+  background: white;
+  padding: var(--kids-space-sm) var(--kids-space-md);
+  border-radius: var(--kids-radius-full);
+  border: 3px solid var(--preschool-rainbow-3);
+}
+
+/* Special Animations for Preschool */
+@keyframes float-decoration {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-10px); }
+}
+
+@keyframes rainbow-wave {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes gentle-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(5deg); }
+}
+
+@keyframes preschool-button-wiggle {
+  0%, 100% { transform: translateY(-4px) scale(1.05) rotate(0deg); }
+  25% { transform: translateY(-4px) scale(1.05) rotate(1deg); }
+  75% { transform: translateY(-4px) scale(1.05) rotate(-1deg); }
+}
+
+@keyframes preschool-check-celebration {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.2); }
+  50% { transform: scale(1.1); }
+  75% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+@keyframes celebrate-bounce {
+  0% { transform: translate(-50%, -50%) scale(0.5); }
+  50% { transform: translate(-50%, -50%) scale(1.2); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes gentle-spin {
+  0% { transform: translateY(-50%) rotate(0deg); }
+  100% { transform: translateY(-50%) rotate(360deg); }
+}
+
+@keyframes preschool-item-dance {
+  0%, 100% { transform: scale(1.02) rotate(0deg); }
+  25% { transform: scale(1.02) rotate(0.5deg); }
+  75% { transform: scale(1.02) rotate(-0.5deg); }
+}
+
+@keyframes rainbow-progress {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes sparkle-dance {
+  0%, 100% { transform: translateY(-50%) scale(1); }
+  50% { transform: translateY(-50%) scale(1.2); }
+}
+
+@keyframes achievement-wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(1deg); }
+  75% { transform: rotate(-1deg); }
+}
+
+@keyframes gentle-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Preschool Mobile Optimizations */
+@media (max-width: 768px) {
+  .kids-content-container[data-age-group="preschool"] {
+    padding: var(--kids-space-xl);
+    font-size: 1.375rem;
+  }
+
+  .kids-content-container[data-age-group="preschool"] .kids-heading-xl {
+    font-size: 2.5rem;
+  }
+
+  .kids-content-container[data-age-group="preschool"] .kids-btn {
+    min-height: 80px;
+    font-size: 1.25rem;
+  }
+
+  .kids-content-container[data-age-group="preschool"] .kids-checkbox {
+    width: 50px;
+    height: 50px;
+  }
+}
+
+/* Fun Loading State for Preschool */
+.kids-content-container[data-age-group="preschool"] .kids-content-loading {
+  font-size: 2rem;
+  color: var(--preschool-rainbow-3);
+}
+
+.kids-content-container[data-age-group="preschool"] .kids-content-loading::before {
+  content: '🎨🌟🎈';
+  animation: preschool-loading-dance 1s infinite;
+  margin-right: var(--kids-space-lg);
+}
+
+@keyframes preschool-loading-dance {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.1) rotate(5deg); }
+  50% { transform: scale(1.2) rotate(0deg); }
+  75% { transform: scale(1.1) rotate(-5deg); }
+}
+
+/* Special Touch Effects for Preschool */
+@media (hover: none) and (pointer: coarse) {
+  .kids-content-container[data-age-group="preschool"] .kids-btn:active {
+    animation: preschool-touch-feedback 0.3s ease-out;
+  }
+
+  .kids-content-container[data-age-group="preschool"] .kids-list-item:active {
+    animation: preschool-touch-bounce 0.2s ease-out;
+  }
+}
+
+@keyframes preschool-touch-feedback {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1.02); }
+}
+
+@keyframes preschool-touch-bounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.98); }
+  100% { transform: scale(1.01); }
+}

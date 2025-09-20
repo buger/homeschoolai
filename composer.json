@@ -14,21 +14,23 @@
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.2",
         "laravel/tinker": "^2.10.1",
-        "league/csv": "^9.24"
+        "league/commonmark": "^2.7",
+        "league/csv": "^9.24",
+        "league/html-to-markdown": "^5.1",
+        "mews/purifier": "^3.4"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
-        "larastan/larastan": "*",
         "laravel/breeze": "^2.3",
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.24",
         "laravel/sail": "^1.41",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
-        "phpstan/extension-installer": "*",
         "phpstan/phpstan": "*",
         "phpunit/phpunit": "^11.5.3",
         "psalm/plugin-laravel": "^3.0",
+        "tomasvotruba/bladestan": "^0.11.3",
         "vimeo/psalm": "^6.5"
     },
     "autoload": {
@@ -36,7 +38,10 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        },
+        "files": [
+            "app/helpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
@@ -67,11 +72,16 @@
             "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"php artisan pail\" --names=server,queue,logs --kill-others"
         ],
         "test": [
+            "@putenv APP_ENV=testing",
+            "@putenv DB_DATABASE=learning_app_test",
             "@php artisan config:clear --ansi",
-            "@php artisan test"
+            "./scripts/safe-test.sh"
+        ],
+        "test:safe": [
+            "./scripts/safe-test.sh"
         ],
         "phpstan": [
-            "./vendor/bin/phpstan analyse --memory-limit=512M"
+            "./vendor/bin/phpstan analyse --memory-limit=1G --no-progress"
         ]
     },
     "extra": {
@@ -85,8 +95,7 @@
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,
-            "php-http/discovery": true,
-            "phpstan/extension-installer": true
+            "php-http/discovery": true
         }
     },
     "minimum-stability": "stable",

@@ -50,6 +50,7 @@ Route::middleware('auth')->group(function () {
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::patch('/profile/preferences', [ProfileController::class, 'updatePreferences'])->name('profile.preferences');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Onboarding routes
@@ -90,6 +91,38 @@ Route::middleware('auth')->group(function () {
     Route::get('/subjects/{subject}/units/{unit}/topics/create', [TopicController::class, 'create'])->name('topics.create');
     Route::post('/units/{unit}/topics', [TopicController::class, 'storeForUnit'])->name('units.topics.store');
     Route::get('/units/{unit}/topics/{topic}', [TopicController::class, 'show'])->name('units.topics.show');
+
+    // Topic materials management
+    Route::post('/topics/{topic}/materials/video', [TopicController::class, 'addVideo'])->name('topics.materials.video');
+    Route::post('/topics/{topic}/materials/link', [TopicController::class, 'addLink'])->name('topics.materials.link');
+    Route::post('/topics/{topic}/materials/file', [TopicController::class, 'uploadFile'])->name('topics.materials.file');
+    Route::delete('/topics/{topic}/materials/{type}/{index}', [TopicController::class, 'removeMaterial'])->name('topics.materials.remove');
+
+    // Rich content management
+    Route::post('/topics/{topic}/content/images', [TopicController::class, 'uploadContentImage'])->name('topics.content.images.upload');
+    Route::get('/topics/{topic}/content/images', [TopicController::class, 'getContentImages'])->name('topics.content.images.list');
+    Route::delete('/topics/{topic}/content/images/{index}', [TopicController::class, 'deleteContentImage'])->name('topics.content.images.delete');
+    Route::post('/topics/content/preview', [TopicController::class, 'previewContent'])->name('topics.content.preview');
+
+    // Unified markdown editor enhanced endpoints
+    Route::post('/topics/content/preview-unified', [TopicController::class, 'previewUnifiedContent'])->name('topics.content.preview.unified');
+    Route::post('/topics/content/export', [TopicController::class, 'exportContent'])->name('topics.content.export');
+    Route::post('/topics/content/video-metadata', [TopicController::class, 'getVideoMetadata'])->name('topics.content.video.metadata');
+
+    // Enhanced markdown editor file uploads
+    Route::post('/topics/{topic}/markdown-upload', [TopicController::class, 'markdownFileUpload'])->name('topics.markdown.upload');
+
+    // Chunked upload endpoints for Phase 5 enhanced file handling
+    Route::post('/topics/{topic}/chunked-upload/start', [TopicController::class, 'startChunkedUpload'])->name('topics.chunked-upload.start');
+    Route::post('/topics/{topic}/chunked-upload/chunk', [TopicController::class, 'uploadChunk'])->name('topics.chunked-upload.chunk');
+    Route::post('/topics/{topic}/chunked-upload/finalize', [TopicController::class, 'finalizeChunkedUpload'])->name('topics.chunked-upload.finalize');
+
+    // Kids view routes (protected by kids mode middleware)
+    Route::middleware(['kids-mode'])->group(function () {
+        Route::get('/units/{unit}/topics/{topic}/kids', [TopicController::class, 'showKidsView'])->name('topics.kids.show');
+        Route::post('/topics/{topic}/kids/activity', [TopicController::class, 'trackKidsActivity'])->name('topics.kids.activity');
+        Route::post('/topics/{topic}/kids/complete', [TopicController::class, 'completeForChild'])->name('topics.kids.complete');
+    });
 
     // Planning board
     Route::get('/planning', [PlanningController::class, 'index'])->name('planning.index');
@@ -176,6 +209,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/units/{unitId}/flashcards/performance', [FlashcardController::class, 'performanceMetrics'])->name('units.flashcards.performance');
     Route::get('/units/{unitId}/flashcards/errors', [FlashcardController::class, 'errorStatistics'])->name('units.flashcards.errors');
 
+    // Topic-scoped flashcard routes (web interface)
+    Route::get('/topics/{topicId}/flashcards/list', [FlashcardController::class, 'listView'])->name('topics.flashcards.list');
+    Route::get('/topics/{topicId}/flashcards/create', [FlashcardController::class, 'create'])->name('topics.flashcards.create');
+    Route::post('/topics/{topicId}/flashcards', [FlashcardController::class, 'storeView'])->name('topics.flashcards.store');
+    Route::get('/topics/{topicId}/flashcards/{flashcardId}', [FlashcardController::class, 'show'])->name('topics.flashcards.show');
+    Route::get('/topics/{topicId}/flashcards/{flashcardId}/edit', [FlashcardController::class, 'edit'])->name('topics.flashcards.edit');
+    Route::put('/topics/{topicId}/flashcards/{flashcardId}', [FlashcardController::class, 'updateView'])->name('topics.flashcards.update');
+    Route::delete('/topics/{topicId}/flashcards/{flashcardId}', [FlashcardController::class, 'destroyView'])->name('topics.flashcards.destroy');
+
+    // Topic flashcard preview
+    Route::get('/topics/{topic}/flashcards/preview/start', [FlashcardPreviewController::class, 'startPreview'])->name('topics.flashcards.preview.start');
+
     // API Routes for JSON responses (used by tests and API consumers)
     Route::prefix('api')->group(function () {
         // Unit-scoped flashcard routes
@@ -184,10 +229,28 @@ Route::middleware('auth')->group(function () {
         Route::get('/units/{unitId}/flashcards/{flashcardId}', [FlashcardController::class, 'show'])->name('api.units.flashcards.show');
         Route::put('/units/{unitId}/flashcards/{flashcardId}', [FlashcardController::class, 'update'])->name('api.units.flashcards.update');
         Route::delete('/units/{unitId}/flashcards/{flashcardId}', [FlashcardController::class, 'destroy'])->name('api.units.flashcards.destroy');
+
+        // Topic-scoped flashcard routes
+        Route::get('/topics/{topicId}/flashcards', [FlashcardController::class, 'index'])->name('api.topics.flashcards.index');
+        Route::post('/topics/{topicId}/flashcards', [FlashcardController::class, 'store'])->name('api.topics.flashcards.store');
+        Route::get('/topics/{topicId}/flashcards/{flashcardId}', [FlashcardController::class, 'show'])->name('api.topics.flashcards.show');
+        Route::put('/topics/{topicId}/flashcards/{flashcardId}', [FlashcardController::class, 'update'])->name('api.topics.flashcards.update');
+        Route::delete('/topics/{topicId}/flashcards/{flashcardId}', [FlashcardController::class, 'destroy'])->name('api.topics.flashcards.destroy');
+        Route::post('/topics/{topicId}/flashcards/{flashcardId}/restore', [FlashcardController::class, 'restore'])->name('api.topics.flashcards.restore');
+        Route::get('/topics/{topicId}/flashcards/stats', [FlashcardController::class, 'topicStats'])->name('api.topics.flashcards.stats');
+        Route::post('/topics/{topicId}/flashcards/bulk', [FlashcardController::class, 'bulkTopicOperations'])->name('api.topics.flashcards.bulk');
+        Route::patch('/topics/{topicId}/flashcards/bulk-status', [FlashcardController::class, 'bulkUpdateTopicStatus'])->name('api.topics.flashcards.bulk-status');
+
+        // Flashcard management across topics
+        Route::post('/flashcards/{flashcardId}/move', [FlashcardController::class, 'moveToTopic'])->name('api.flashcards.move');
         Route::patch('/units/{unitId}/flashcards/bulk-status', [FlashcardController::class, 'bulkUpdateStatus'])->name('api.units.flashcards.bulk-status');
         Route::get('/units/{unitId}/flashcards/type/{cardType}', [FlashcardController::class, 'getByType'])->name('api.units.flashcards.by-type');
         Route::post('/units/{unitId}/flashcards/{flashcardId}/restore', [FlashcardController::class, 'restore'])->name('api.units.flashcards.restore');
         Route::delete('/units/{unitId}/flashcards/{flashcardId}/force', [FlashcardController::class, 'forceDestroy'])->name('api.units.flashcards.force-destroy');
+
+        // API Import/Export routes (tests expect these)
+        Route::post('/units/{unitId}/flashcards/import/preview', [FlashcardController::class, 'previewImport'])->name('api.units.flashcards.import.preview');
+        Route::post('/units/{unitId}/flashcards/import', [FlashcardController::class, 'executeImport'])->name('api.units.flashcards.import.execute');
 
         // Legacy flashcard API routes for backwards compatibility (tests expect these)
         Route::get('/flashcards/{unitId}', [FlashcardController::class, 'index'])->name('api.flashcards.index');
@@ -226,26 +289,29 @@ Route::middleware('auth')->group(function () {
     Route::post('/kids-mode/exit', [KidsModeController::class, 'validateExitPin'])->name('kids-mode.exit.validate');
 
     // Locale switching
-    Route::post('/locale', [LocaleController::class, 'update'])->name('locale.update');
+    Route::post('/locale', [LocaleController::class, 'updateLocale'])->name('locale.update');
+    Route::get('/translations/{locale}', [LocaleController::class, 'getTranslations'])->name('locale.translations');
 
-    // Translation files for JavaScript
-    Route::get('/lang/{locale}.json', function ($locale) {
-        // Validate locale to prevent directory traversal
-        if (! in_array($locale, ['en', 'ru'])) {
-            abort(404);
-        }
-
-        $path = lang_path("{$locale}.json");
-
-        if (! file_exists($path)) {
-            abort(404);
-        }
-
-        return response()->file($path, [
-            'Content-Type' => 'application/json',
-            'Cache-Control' => 'public, max-age=3600',
-        ]);
-    })->name('translations.json');
 });
+
+// Public routes (no authentication required)
+// Translation files for JavaScript
+Route::get('/lang/{locale}.json', function ($locale) {
+    // Validate locale to prevent directory traversal
+    if (! in_array($locale, ['en', 'ru'])) {
+        abort(404);
+    }
+
+    $path = lang_path("{$locale}.json");
+
+    if (! file_exists($path)) {
+        abort(404);
+    }
+
+    return response()->file($path, [
+        'Content-Type' => 'application/json',
+        'Cache-Control' => 'public, max-age=3600',
+    ]);
+})->name('translations.json');
 
 require __DIR__.'/auth.php';

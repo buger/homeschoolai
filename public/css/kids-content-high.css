@@ -1,0 +1,616 @@
+/**
+ * Kids Content CSS - High School (9th-12th Grade)
+ *
+ * Professional, mature design for advanced learners with
+ * sophisticated features and academic excellence focus.
+ */
+
+@import url('./kids-content-base.css');
+
+/* High School Color Palette */
+:root {
+  --high-primary: #1E40AF;
+  --high-secondary: #7C2D12;
+  --high-accent: #BE123C;
+  --high-success: #047857;
+  --high-warning: #B45309;
+  --high-info: #0369A1;
+  --high-neutral: #1F2937;
+  --high-muted: #6B7280;
+
+  --high-bg-primary: #F8FAFC;
+  --high-bg-secondary: #F1F5F9;
+  --high-bg-accent: #FEF7FF;
+  --high-bg-success: #ECFDF5;
+  --high-bg-warning: #FFFBEB;
+  --high-bg-info: #F0F9FF;
+  --high-bg-neutral: #F9FAFB;
+
+  --high-gradient-professional: linear-gradient(135deg, #1E40AF, #7C2D12);
+  --high-gradient-academic: linear-gradient(90deg, #047857, #059669);
+  --high-gradient-research: linear-gradient(135deg, #0369A1, #BE123C);
+  --high-gradient-excellence: linear-gradient(45deg, #4338CA, #7C3AED);
+  --high-gradient-subtle: linear-gradient(135deg, #F8FAFC, #E2E8F0);
+}
+
+/* High School Container */
+.kids-content-container[data-age-group="high"] {
+  background: var(--high-bg-primary);
+  border: 1px solid #E2E8F0;
+  border-radius: var(--kids-radius-lg);
+  padding: var(--kids-space-xl);
+  font-size: 1rem;
+  line-height: 1.6;
+  position: relative;
+  box-shadow: var(--kids-shadow-sm);
+  color: var(--high-neutral);
+}
+
+/* Professional header badge */
+.kids-content-container[data-age-group="high"]::before {
+  content: '🎓 Academic Excellence 📖';
+  position: absolute;
+  top: -10px;
+  right: var(--kids-space-xl);
+  background: var(--high-gradient-professional);
+  color: white;
+  padding: var(--kids-space-xs) var(--kids-space-md);
+  border-radius: var(--kids-radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: var(--kids-shadow-sm);
+}
+
+/* High School Typography */
+.kids-content-container[data-age-group="high"] .kids-heading-xl {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--high-primary);
+  text-align: left;
+  margin-bottom: var(--kids-space-xl);
+  position: relative;
+  border-bottom: 3px solid var(--high-primary);
+  padding-bottom: var(--kids-space-md);
+}
+
+.kids-content-container[data-age-group="high"] .kids-heading-xl::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background: var(--high-accent);
+  border-radius: var(--kids-radius-full);
+}
+
+.kids-content-container[data-age-group="high"] .kids-heading-lg {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--high-secondary);
+  margin-bottom: var(--kids-space-lg);
+  position: relative;
+  padding-left: var(--kids-space-lg);
+}
+
+.kids-content-container[data-age-group="high"] .kids-heading-lg::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--high-gradient-academic);
+  border-radius: var(--kids-radius-full);
+}
+
+.kids-content-container[data-age-group="high"] .kids-heading-md {
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: var(--high-info);
+  margin-bottom: var(--kids-space-md);
+  display: flex;
+  align-items: center;
+  gap: var(--kids-space-sm);
+}
+
+/* Professional Text Styling */
+.kids-content-container[data-age-group="high"] .kids-text {
+  font-size: 1rem;
+  line-height: 1.75;
+  background: white;
+  padding: var(--kids-space-lg);
+  border-radius: var(--kids-radius-md);
+  border: 1px solid #E5E7EB;
+  margin-bottom: var(--kids-space-lg);
+  box-shadow: var(--kids-shadow-sm);
+  position: relative;
+  color: var(--high-neutral);
+}
+
+/* Academic content type indicators */
+.kids-content-container[data-age-group="high"] .kids-text[data-content-type="research"]::before {
+  content: '🔬 Research';
+  position: absolute;
+  top: var(--kids-space-sm);
+  right: var(--kids-space-sm);
+  background: var(--high-bg-info);
+  color: var(--high-info);
+  padding: 2px var(--kids-space-sm);
+  border-radius: var(--kids-radius-sm);
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.kids-content-container[data-age-group="high"] .kids-text[data-content-type="theory"]::before {
+  content: '💡 Theory';
+  background: var(--high-bg-warning);
+  color: var(--high-warning);
+}
+
+.kids-content-container[data-age-group="high"] .kids-text[data-content-type="analysis"]::before {
+  content: '📊 Analysis';
+  background: var(--high-bg-accent);
+  color: var(--high-accent);
+}
+
+.kids-content-container[data-age-group="high"] .kids-text[data-content-type="synthesis"]::before {
+  content: '🔗 Synthesis';
+  background: var(--high-bg-success);
+  color: var(--high-success);
+}
+
+/* Sophisticated List System */
+.kids-content-container[data-age-group="high"] .kids-list-item {
+  background: white;
+  border: 1px solid #F3F4F6;
+  border-left: 3px solid var(--high-primary);
+  border-radius: var(--kids-radius-sm);
+  padding: var(--kids-space-md) var(--kids-space-lg);
+  margin-bottom: var(--kids-space-sm);
+  min-height: var(--kids-touch-sm);
+  position: relative;
+  transition: all var(--kids-transition-normal);
+  box-shadow: var(--kids-shadow-sm);
+}
+
+.kids-content-container[data-age-group="high"] .kids-list-item:hover {
+  border-left-color: var(--high-accent);
+  box-shadow: var(--kids-shadow-md);
+  background: var(--high-bg-info);
+  transform: translateX(2px);
+}
+
+.kids-content-container[data-age-group="high"] .kids-list-item::before {
+  content: '•';
+  position: absolute;
+  left: var(--kids-space-sm);
+  top: var(--kids-space-md);
+  color: var(--high-primary);
+  font-weight: 900;
+  font-size: 1.2rem;
+  transition: all var(--kids-transition-normal);
+}
+
+.kids-content-container[data-age-group="high"] .kids-list-item:hover::before {
+  color: var(--high-accent);
+  transform: scale(1.2);
+}
+
+/* Professional Checkboxes */
+.kids-content-container[data-age-group="high"] .kids-checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--high-primary);
+  border-radius: 3px;
+  position: relative;
+  transition: all var(--kids-transition-normal);
+  background: white;
+}
+
+.kids-content-container[data-age-group="high"] .kids-checkbox:checked {
+  background: var(--high-primary);
+  border-color: var(--high-primary);
+}
+
+.kids-content-container[data-age-group="high"] .kids-checkbox:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-weight: 700;
+  font-size: 10px;
+}
+
+.kids-content-container[data-age-group="high"] .kids-checkbox:indeterminate {
+  background: var(--high-warning);
+  border-color: var(--high-warning);
+}
+
+.kids-content-container[data-age-group="high"] .kids-checkbox:indeterminate::after {
+  content: '−';
+  color: white;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+/* Academic Progress System */
+.kids-content-container[data-age-group="high"] .kids-progress-tracking {
+  background: var(--high-bg-secondary);
+  border: 1px solid #D1D5DB;
+  border-radius: var(--kids-radius-md);
+  padding: var(--kids-space-lg);
+  position: relative;
+}
+
+.kids-content-container[data-age-group="high"] .kids-progress-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--high-primary);
+  margin-bottom: var(--kids-space-md);
+  display: flex;
+  align-items: center;
+  gap: var(--kids-space-sm);
+}
+
+.kids-content-container[data-age-group="high"] .kids-progress-bar {
+  height: 12px;
+  background: #F3F4F6;
+  border-radius: var(--kids-radius-full);
+  border: 1px solid #E5E7EB;
+  overflow: hidden;
+  position: relative;
+}
+
+.kids-content-container[data-age-group="high"] .kids-progress-fill {
+  background: var(--high-gradient-academic);
+  height: 100%;
+  border-radius: var(--kids-radius-full);
+  position: relative;
+  transition: width var(--kids-transition-slow);
+}
+
+.kids-content-container[data-age-group="high"] .kids-progress-percentage {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--high-success);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Achievement System for High School */
+.kids-content-container[data-age-group="high"] .kids-achievement-badge {
+  background: var(--high-gradient-excellence);
+  color: white;
+  padding: var(--kids-space-xs) var(--kids-space-md);
+  border-radius: var(--kids-radius-sm);
+  font-weight: 600;
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--kids-space-xs);
+  box-shadow: var(--kids-shadow-sm);
+  position: relative;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.kids-content-container[data-age-group="high"] .kids-achievement-badge::before {
+  content: '🏆';
+  font-size: 0.875rem;
+}
+
+/* Professional Buttons */
+.kids-content-container[data-age-group="high"] .kids-btn {
+  min-height: var(--kids-touch-sm);
+  padding: var(--kids-space-sm) var(--kids-space-lg);
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: var(--kids-radius-sm);
+  background: var(--high-gradient-professional);
+  color: white;
+  border: 1px solid transparent;
+  box-shadow: var(--kids-shadow-sm);
+  transition: all var(--kids-transition-normal);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.kids-content-container[data-age-group="high"] .kids-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--kids-shadow-md);
+  border-color: rgba(255,255,255,0.2);
+}
+
+.kids-content-container[data-age-group="high"] .kids-btn:active {
+  transform: translateY(0);
+}
+
+/* Academic Tools */
+.kids-content-container[data-age-group="high"] .kids-read-aloud-btn {
+  width: var(--kids-touch-sm);
+  height: var(--kids-touch-sm);
+  background: var(--high-primary);
+  border: 1px solid white;
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+.kids-content-container[data-age-group="high"] .kids-bookmark-btn,
+.kids-content-container[data-age-group="high"] .kids-add-note-btn {
+  width: var(--kids-touch-sm);
+  height: var(--kids-touch-sm);
+  background: var(--high-info);
+  border: 1px solid var(--high-info);
+  color: white;
+  font-size: 0.75rem;
+  opacity: 0.9;
+}
+
+.kids-content-container[data-age-group="high"] .kids-add-note-btn {
+  background: var(--high-warning);
+  border-color: var(--high-warning);
+}
+
+/* Advanced Highlighting System */
+.kids-content-container[data-age-group="high"] .kids-highlightable {
+  padding: 1px 3px;
+  border-radius: 2px;
+  transition: all var(--kids-transition-fast);
+  cursor: pointer;
+  position: relative;
+}
+
+.kids-content-container[data-age-group="high"] .kids-highlightable:hover {
+  background: rgba(245, 158, 11, 0.1);
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.2);
+}
+
+.kids-content-container[data-age-group="high"] .kids-highlighted {
+  background: rgba(245, 158, 11, 0.25);
+  box-shadow: 0 0 0 1px var(--high-warning);
+}
+
+.kids-content-container[data-age-group="high"] .kids-highlighted[data-highlight-type="important"] {
+  background: rgba(239, 68, 68, 0.15);
+  box-shadow: 0 0 0 1px var(--high-accent);
+}
+
+.kids-content-container[data-age-group="high"] .kids-highlighted[data-highlight-type="concept"] {
+  background: rgba(5, 150, 105, 0.15);
+  box-shadow: 0 0 0 1px var(--high-success);
+}
+
+/* Media Enhancements for High School */
+.kids-content-container[data-age-group="high"] .kids-video-enhancements,
+.kids-content-container[data-age-group="high"] .kids-image-enhancements,
+.kids-content-container[data-age-group="high"] .kids-file-enhancements {
+  background: var(--high-bg-neutral);
+  border: 1px solid #E5E7EB;
+  border-radius: var(--kids-radius-sm);
+  position: relative;
+}
+
+.kids-content-container[data-age-group="high"] .kids-video-enhancements::before {
+  content: '🎬 Media Resource';
+  position: absolute;
+  top: -8px;
+  left: var(--kids-space-md);
+  background: var(--high-info);
+  color: white;
+  padding: 2px var(--kids-space-sm);
+  border-radius: 2px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.kids-content-container[data-age-group="high"] .kids-image-enhancements::before {
+  content: '🖼️ Visual Aid';
+  background: var(--high-success);
+}
+
+.kids-content-container[data-age-group="high"] .kids-file-enhancements::before {
+  content: '📄 Reference';
+  background: var(--high-accent);
+}
+
+/* Academic Time Management */
+.kids-content-container[data-age-group="high"] .kids-time-tracking {
+  background: var(--high-bg-warning);
+  border: 1px solid var(--high-warning);
+  border-radius: var(--kids-radius-sm);
+  padding: var(--kids-space-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.875rem;
+}
+
+.kids-content-container[data-age-group="high"] .kids-time-display {
+  display: flex;
+  align-items: center;
+  gap: var(--kids-space-sm);
+}
+
+.kids-content-container[data-age-group="high"] .kids-time-spent {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--high-warning);
+  background: white;
+  padding: var(--kids-space-xs) var(--kids-space-sm);
+  border-radius: 3px;
+  border: 1px solid var(--high-warning);
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Advanced Note-Taking */
+.kids-content-container[data-age-group="high"] .kids-note-container {
+  background: var(--high-bg-secondary);
+  border: 1px solid #D1D5DB;
+  border-radius: var(--kids-radius-sm);
+  padding: var(--kids-space-sm);
+  margin: var(--kids-space-xs) 0;
+  display: none;
+}
+
+.kids-content-container[data-age-group="high"] .kids-note-container.active {
+  display: block;
+  animation: note-slide-in 0.2s ease-out;
+}
+
+.kids-content-container[data-age-group="high"] .kids-note-input {
+  width: 100%;
+  border: 1px solid #D1D5DB;
+  border-radius: 3px;
+  padding: var(--kids-space-xs);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  resize: vertical;
+  min-height: 50px;
+  font-family: inherit;
+}
+
+/* Research and Citation Tools */
+.kids-content-container[data-age-group="high"] .kids-citation-tool {
+  background: var(--high-bg-info);
+  border: 1px solid var(--high-info);
+  border-radius: var(--kids-radius-sm);
+  padding: var(--kids-space-sm);
+  margin: var(--kids-space-md) 0;
+  font-size: 0.875rem;
+}
+
+.kids-content-container[data-age-group="high"] .kids-citation-format {
+  font-family: 'Monaco', 'Menlo', monospace;
+  background: white;
+  padding: var(--kids-space-xs);
+  border-radius: 2px;
+  font-size: 0.75rem;
+  color: var(--high-neutral);
+}
+
+/* High School Animations - Subtle and Professional */
+@keyframes note-slide-in {
+  0% { opacity: 0; transform: translateY(-10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes achievement-earned-high {
+  0% { opacity: 0; transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Focus Modes for High School */
+.kids-content-container[data-age-group="high"].research-mode {
+  background: var(--high-bg-secondary);
+  border: 2px solid var(--high-info);
+}
+
+.kids-content-container[data-age-group="high"].research-mode::before {
+  content: '🔬 Research Mode Active';
+  background: var(--high-info);
+}
+
+.kids-content-container[data-age-group="high"].study-mode {
+  background: white;
+  border: 2px solid var(--high-primary);
+  box-shadow: var(--kids-shadow-md);
+}
+
+.kids-content-container[data-age-group="high"].exam-prep {
+  background: var(--high-bg-warning);
+  border: 2px solid var(--high-warning);
+}
+
+.kids-content-container[data-age-group="high"].exam-prep::before {
+  content: '📚 Exam Preparation';
+  background: var(--high-warning);
+}
+
+/* Mobile Optimizations for High School */
+@media (max-width: 768px) {
+  .kids-content-container[data-age-group="high"] {
+    padding: var(--kids-space-md);
+    font-size: 0.9375rem;
+  }
+
+  .kids-content-container[data-age-group="high"] .kids-heading-xl {
+    font-size: 1.75rem;
+  }
+
+  .kids-content-container[data-age-group="high"] .kids-btn {
+    min-height: var(--kids-touch-md);
+    font-size: 0.9375rem;
+  }
+
+  .kids-content-container[data-age-group="high"] .kids-time-tracking {
+    flex-direction: column;
+    gap: var(--kids-space-sm);
+    text-align: center;
+  }
+}
+
+/* Dark Mode Support for High School */
+@media (prefers-color-scheme: dark) {
+  .kids-content-container[data-age-group="high"] {
+    background: #0F172A;
+    border-color: #334155;
+    color: #E2E8F0;
+  }
+
+  .kids-content-container[data-age-group="high"] .kids-text {
+    background: #1E293B;
+    border-color: #334155;
+    color: #E2E8F0;
+  }
+
+  .kids-content-container[data-age-group="high"] .kids-list-item {
+    background: #1E293B;
+    border-color: #334155;
+  }
+
+  .kids-content-container[data-age-group="high"] .kids-checkbox {
+    background: #1E293B;
+    border-color: #60A5FA;
+  }
+
+  .kids-content-container[data-age-group="high"] .kids-note-input {
+    background: #1E293B;
+    border-color: #334155;
+    color: #E2E8F0;
+  }
+}
+
+/* Print Styles for High School */
+@media print {
+  .kids-content-container[data-age-group="high"] {
+    background: white;
+    border: 1px solid #000;
+    color: #000;
+    box-shadow: none;
+  }
+
+  .kids-content-container[data-age-group="high"] .kids-text {
+    background: white;
+    border: 1px solid #ccc;
+  }
+
+  .kids-content-container[data-age-group="high"] .kids-btn,
+  .kids-content-container[data-age-group="high"] .kids-read-aloud-btn,
+  .kids-content-container[data-age-group="high"] .kids-bookmark-btn,
+  .kids-content-container[data-age-group="high"] .kids-add-note-btn {
+    display: none;
+  }
+
+  .kids-content-container[data-age-group="high"] .kids-citation-format {
+    border: 1px solid #ccc;
+  }
+}

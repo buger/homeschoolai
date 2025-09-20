@@ -57,7 +57,9 @@ class FlashcardCacheService
         }
 
         // Cache miss - fetch from database
+        // Only fetch flashcards that are not assigned to a topic (unit-level context)
         $flashcards = Flashcard::where('unit_id', $unitId)
+            ->whereNull('topic_id')
             ->where('is_active', true)
             ->with('unit.subject')
             ->orderBy('created_at', 'desc')
@@ -89,7 +91,9 @@ class FlashcardCacheService
         }
 
         // Cache miss - fetch from database
+        // Only count flashcards that are not assigned to a topic (unit-level context)
         $count = Flashcard::where('unit_id', $unitId)
+            ->whereNull('topic_id')
             ->where('is_active', true)
             ->count();
 

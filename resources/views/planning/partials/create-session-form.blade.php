@@ -44,7 +44,7 @@
               <option value="{{ $topic->id }}" data-minutes="{{ $topic->estimated_minutes }}">
                 {{ $topic->title }}
                 @if($subject) ({{ $subject->name }}) @endif
-                - {{ $topic->getEstimatedDuration() }}
+                - {{ $topic->estimated_minutes }} min
               </option>
             @endforeach
           </select>

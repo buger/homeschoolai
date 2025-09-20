@@ -8,6 +8,7 @@ use App\Models\Topic;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class ModelRelationshipsTest extends TestCase

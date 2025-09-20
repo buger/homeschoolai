@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="bg-white shadow rounded-lg">
         <div class="p-6 border-b border-gray-200">
             <div class="flex items-center justify-between">
@@ -35,5 +34,8 @@
             @include('topics.partials.topic-details', compact('topic', 'unit', 'subject'))
         </div>
     </div>
-</div>
+
+    <!-- Modal placeholders for HTMX -->
+    <div id="topic-modal"></div>
+    <div id="flashcard-modal"></div>
 @endsection

@@ -12,10 +12,23 @@
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-        
+        @vite(['resources/css/app.css', 'resources/css/enhanced-markdown.css', 'resources/css/unified-markdown-editor.css', 'resources/js/app.js', 'resources/js/rich-content-editor.js', 'resources/js/enhanced-markdown.js', 'resources/js/unified-markdown-editor.js'])
+
+        <!-- User Format Preferences for JavaScript -->
+        @auth
+            <script>
+                window.userFormatOptions = @json(userFormatOptions());
+                window.currentLocale = '{{ app()->getLocale() }}';
+            </script>
+        @endauth
+
         <!-- Page Styles -->
         @stack('styles')
+
+        <!-- Prevent flash of unstyled content for Alpine.js components -->
+        <style>
+            [x-cloak] { display: none !important; }
+        </style>
     </head>
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100">
@@ -31,7 +44,7 @@
             @endisset
 
             <!-- Page Content -->
-            <main>
+            <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 @isset($slot)
                     {{ $slot }}
                 @else

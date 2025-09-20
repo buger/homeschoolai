@@ -1,0 +1,489 @@
+/**
+ * Kids Content CSS - Elementary (1st-5th Grade)
+ *
+ * Structured, educational design with clear visual hierarchy
+ * and age-appropriate interactive features for developing readers.
+ */
+
+@import url('./kids-content-base.css');
+
+/* Elementary-Specific Color Palette */
+:root {
+  --elementary-primary: #2563EB;
+  --elementary-secondary: #059669;
+  --elementary-accent: #DC2626;
+  --elementary-warning: #D97706;
+  --elementary-info: #0891B2;
+  --elementary-success: #16A34A;
+
+  --elementary-bg-light: #F8FAFC;
+  --elementary-bg-blue: #EFF6FF;
+  --elementary-bg-green: #F0FDF4;
+  --elementary-bg-yellow: #FFFBEB;
+  --elementary-bg-purple: #FAF5FF;
+
+  --elementary-gradient-learn: linear-gradient(135deg, #3B82F6, #10B981);
+  --elementary-gradient-progress: linear-gradient(90deg, #16A34A, #059669);
+  --elementary-gradient-achievement: linear-gradient(135deg, #F59E0B, #DC2626);
+}
+
+/* Container Styling */
+.kids-content-container[data-age-group="elementary"] {
+  background: var(--elementary-bg-light);
+  border: 2px solid var(--elementary-primary);
+  border-radius: var(--kids-radius-xl);
+  padding: var(--kids-space-xl);
+  font-size: 1.125rem;
+  line-height: 1.7;
+  position: relative;
+}
+
+/* Add educational header decoration */
+.kids-content-container[data-age-group="elementary"]::before {
+  content: '📚 🔍 💡 ⭐ 🎯';
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  padding: var(--kids-space-sm) var(--kids-space-lg);
+  border-radius: var(--kids-radius-full);
+  border: 2px solid var(--elementary-primary);
+  font-size: 1.2rem;
+  box-shadow: var(--kids-shadow-md);
+}
+
+/* Elementary Typography */
+.kids-content-container[data-age-group="elementary"] .kids-heading-xl {
+  font-size: 2.5rem;
+  color: var(--elementary-primary);
+  text-align: center;
+  margin-bottom: var(--kids-space-2xl);
+  position: relative;
+  background: linear-gradient(135deg, var(--elementary-primary), var(--elementary-secondary));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.kids-content-container[data-age-group="elementary"] .kids-heading-xl::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 4px;
+  background: var(--elementary-gradient-learn);
+  border-radius: var(--kids-radius-full);
+}
+
+.kids-content-container[data-age-group="elementary"] .kids-heading-lg {
+  font-size: 2rem;
+  color: var(--elementary-secondary);
+  border-left: 4px solid var(--elementary-secondary);
+  padding-left: var(--kids-space-lg);
+  margin-bottom: var(--kids-space-lg);
+}
+
+.kids-content-container[data-age-group="elementary"] .kids-heading-md {
+  font-size: 1.5rem;
+  color: var(--elementary-info);
+  display: flex;
+  align-items: center;
+  gap: var(--kids-space-sm);
+  margin-bottom: var(--kids-space-md);
+}
+
+/* Elementary Text Styling */
+.kids-content-container[data-age-group="elementary"] .kids-text {
+  font-size: 1.125rem;
+  line-height: 1.8;
+  background: white;
+  padding: var(--kids-space-lg);
+  border-radius: var(--kids-radius-lg);
+  border: 1px solid #E5E7EB;
+  margin-bottom: var(--kids-space-lg);
+  box-shadow: var(--kids-shadow-sm);
+  position: relative;
+}
+
+/* Add learning indicators */
+.kids-content-container[data-age-group="elementary"] .kids-text::before {
+  content: attr(data-reading-level, '📖');
+  position: absolute;
+  top: var(--kids-space-sm);
+  right: var(--kids-space-sm);
+  background: var(--elementary-bg-blue);
+  color: var(--elementary-primary);
+  padding: var(--kids-space-xs) var(--kids-space-sm);
+  border-radius: var(--kids-radius-sm);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* Educational List Items */
+.kids-content-container[data-age-group="elementary"] .kids-list-item {
+  background: var(--elementary-bg-green);
+  border: 2px solid var(--elementary-success);
+  border-radius: var(--kids-radius-md);
+  padding: var(--kids-space-md);
+  margin-bottom: var(--kids-space-md);
+  min-height: var(--kids-touch-md);
+  position: relative;
+  transition: all var(--kids-transition-normal);
+}
+
+.kids-content-container[data-age-group="elementary"] .kids-list-item::before {
+  content: counter(elementary-counter, decimal) '.';
+  counter-increment: elementary-counter;
+  position: absolute;
+  left: var(--kids-space-md);
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--elementary-success);
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.kids-content-container[data-age-group="elementary"] .kids-list {
+  counter-reset: elementary-counter;
+}
+
+.kids-content-container[data-age-group="elementary"] .kids-list-item:hover {
+  transform: translateX(8px);
+  background: var(--elementary-bg-blue);
+  border-color: var(--elementary-primary);
+}
+
+.kids-content-container[data-age-group="elementary"] .kids-list-item:hover::before {
+  background: var(--elementary-primary);
+}
+
+/* Interactive Checkboxes for Elementary */
+.kids-content-container[data-age-group="elementary"] .kids-checkbox {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--elementary-success);
+  border-radius: var(--kids-radius-sm);
+  position: relative;
+}
+
+.kids-content-container[data-age-group="elementary"] .kids-checkbox:checked {
+  background: var(--elementary-success);
+  animation: elementary-check-success 0.4s ease-out;
+}
+
+.kids-content-container[data-age-group="elementary"] .kids-checkbox:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-weight: 900;
+  font-size: 16px;
+}
+
+/* Elementary Progress Tracking */
+.kids-content-container[data-age-group="elementary"] .kids-progress-tracking {
+  background: var(--elementary-bg-yellow);
+  border: 2px solid var(--elementary-warning);
+  border-radius: var(--kids-radius-lg);
+  padding: var(--kids-space-xl);
+}
+
+.kids-content-container[data-age-group="elementary"] .kids-progress-bar {
+  height: 16px;
+  background: #E5E7EB;
+  border-radius: var(--kids-radius-full);
+  border: 2px solid var(--elementary-primary);
+  overflow: hidden;
+}
+
+.kids-content-container[data-age-group="elementary"] .kids-progress-fill {
+  background: var(--elementary-gradient-progress);
+  height: 100%;
+  border-radius: var(--kids-radius-full);
+  position: relative;
+  transition: width var(--kids-transition-slow);
+}
+
+.kids-content-container[data-age-group="elementary"] .kids-progress-fill::after {
+  content: '📈';
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.75rem;
+}
+
+/* Achievement System for Elementary */
+.kids-content-container[data-age-group="elementary"] .kids-achievement-badge {
+  background: var(--elementary-gradient-achievement);
+  color: white;
+  padding: var(--kids-space-sm) var(--kids-space-md);
+  border-radius: var(--kids-radius-lg);
+  font-weight: 600;
+  border: 2px solid white;
+  box-shadow: var(--kids-shadow-md);
+  position: relative;
+}
+
+.kids-content-container[data-age-group="elementary"] .kids-achievement-badge::before {
+  content: '🏆';
+  margin-right: var(--kids-space-xs);
+}
+
+/* Elementary Buttons */
+.kids-content-container[data-age-group="elementary"] .kids-btn {
+  min-height: var(--kids-touch-md);
+  padding: var(--kids-space-md) var(--kids-space-lg);
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: var(--kids-radius-lg);
+  background: var(--elementary-gradient-learn);
+  color: white;
+  border: 2px solid transparent;
+  box-shadow: var(--kids-shadow-md);
+  position: relative;
+  overflow: hidden;
+}
+
+.kids-content-container[data-age-group="elementary"] .kids-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--kids-shadow-lg);
+  border-color: white;
+}
+
+.kids-content-container[data-age-group="elementary"] .kids-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transition: left 0.3s;
+}
+
+.kids-content-container[data-age-group="elementary"] .kids-btn:hover::after {
+  left: 100%;
+}
+
+/* Reading Tools for Elementary */
+.kids-content-container[data-age-group="elementary"] .kids-read-aloud-btn {
+  width: var(--kids-touch-md);
+  height: var(--kids-touch-md);
+  background: var(--elementary-primary);
+  color: white;
+  border: 2px solid white;
+  font-size: 1.2rem;
+  box-shadow: var(--kids-shadow-md);
+}
+
+.kids-content-container[data-age-group="elementary"] .kids-bookmark-btn {
+  background: var(--elementary-info);
+  color: white;
+  border-color: var(--elementary-info);
+  width: var(--kids-touch-sm);
+  height: var(--kids-touch-sm);
+}
+
+.kids-content-container[data-age-group="elementary"] .kids-add-note-btn {
+  background: var(--elementary-warning);
+  color: white;
+  border-color: var(--elementary-warning);
+  width: var(--kids-touch-sm);
+  height: var(--kids-touch-sm);
+}
+
+/* Elementary Media Enhancements */
+.kids-content-container[data-age-group="elementary"] .kids-video-enhancements {
+  background: var(--elementary-bg-blue);
+  border: 2px solid var(--elementary-primary);
+  border-radius: var(--kids-radius-lg);
+  position: relative;
+}
+
+.kids-content-container[data-age-group="elementary"] .kids-video-enhancements::before {
+  content: '🎬 Educational Video';
+  position: absolute;
+  top: -12px;
+  left: var(--kids-space-lg);
+  background: white;
+  color: var(--elementary-primary);
+  padding: var(--kids-space-xs) var(--kids-space-md);
+  border-radius: var(--kids-radius-sm);
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 1px solid var(--elementary-primary);
+}
+
+.kids-content-container[data-age-group="elementary"] .kids-image-enhancements {
+  background: var(--elementary-bg-green);
+  border: 2px solid var(--elementary-success);
+  border-radius: var(--kids-radius-lg);
+}
+
+.kids-content-container[data-age-group="elementary"] .kids-file-enhancements {
+  background: var(--elementary-bg-purple);
+  border: 2px solid var(--elementary-accent);
+  border-radius: var(--kids-radius-lg);
+}
+
+/* Educational Time Tracking */
+.kids-content-container[data-age-group="elementary"] .kids-time-tracking {
+  background: var(--elementary-bg-blue);
+  border-radius: var(--kids-radius-md);
+  padding: var(--kids-space-lg);
+  text-align: center;
+}
+
+.kids-content-container[data-age-group="elementary"] .kids-time-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--kids-space-md);
+}
+
+.kids-content-container[data-age-group="elementary"] .kids-time-spent {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--elementary-primary);
+  background: white;
+  padding: var(--kids-space-sm) var(--kids-space-md);
+  border-radius: var(--kids-radius-md);
+  border: 2px solid var(--elementary-primary);
+}
+
+/* Highlighting System for Elementary */
+.kids-content-container[data-age-group="elementary"] .kids-highlightable {
+  padding: 2px 4px;
+  border-radius: var(--kids-radius-sm);
+  transition: all var(--kids-transition-fast);
+  cursor: pointer;
+}
+
+.kids-content-container[data-age-group="elementary"] .kids-highlightable:hover {
+  background: rgba(245, 158, 11, 0.2);
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.3);
+}
+
+.kids-content-container[data-age-group="elementary"] .kids-highlighted {
+  background: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 0 0 2px var(--elementary-warning);
+}
+
+/* Elementary Animations */
+@keyframes elementary-check-success {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+@keyframes elementary-progress-grow {
+  0% { width: 0%; }
+  100% { width: var(--progress-width, 50%); }
+}
+
+@keyframes elementary-achievement-earned {
+  0% { transform: scale(0.8) rotate(-10deg); opacity: 0; }
+  50% { transform: scale(1.1) rotate(5deg); opacity: 0.9; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* Educational Tooltips */
+.kids-content-container[data-age-group="elementary"] [data-tooltip] {
+  position: relative;
+  cursor: help;
+}
+
+.kids-content-container[data-age-group="elementary"] [data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--elementary-primary);
+  color: white;
+  padding: var(--kids-space-sm) var(--kids-space-md);
+  border-radius: var(--kids-radius-md);
+  font-size: 0.875rem;
+  white-space: nowrap;
+  z-index: 1000;
+  box-shadow: var(--kids-shadow-lg);
+}
+
+/* Elementary Mobile Optimizations */
+@media (max-width: 768px) {
+  .kids-content-container[data-age-group="elementary"] {
+    padding: var(--kids-space-lg);
+    font-size: 1rem;
+  }
+
+  .kids-content-container[data-age-group="elementary"] .kids-heading-xl {
+    font-size: 2rem;
+  }
+
+  .kids-content-container[data-age-group="elementary"] .kids-btn {
+    min-height: var(--kids-touch-lg);
+    font-size: 1.125rem;
+  }
+
+  .kids-content-container[data-age-group="elementary"] .kids-checkbox {
+    width: 32px;
+    height: 32px;
+  }
+
+  .kids-content-container[data-age-group="elementary"] .kids-list-item {
+    padding: var(--kids-space-lg);
+  }
+}
+
+/* Study Mode Enhancement */
+.kids-content-container[data-age-group="elementary"].study-mode {
+  background: var(--elementary-bg-light);
+  border: 3px solid var(--elementary-primary);
+}
+
+.kids-content-container[data-age-group="elementary"].study-mode::before {
+  content: '📚 Study Mode Active 🎯';
+  background: var(--elementary-primary);
+  color: white;
+}
+
+/* Focus Mode for Elementary */
+.kids-content-container[data-age-group="elementary"].focus-mode {
+  filter: contrast(1.1);
+}
+
+.kids-content-container[data-age-group="elementary"].focus-mode .kids-text {
+  background: white;
+  border: 2px solid var(--elementary-primary);
+  box-shadow: var(--kids-shadow-lg);
+}
+
+/* Print Styles for Elementary */
+@media print {
+  .kids-content-container[data-age-group="elementary"] {
+    background: white;
+    border: 2px solid #000;
+  }
+
+  .kids-content-container[data-age-group="elementary"] .kids-checkbox {
+    border: 2px solid #000;
+  }
+
+  .kids-content-container[data-age-group="elementary"] .kids-list-item::before {
+    background: #000;
+    color: white;
+  }
+}

@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class KidsModeEnterExitTest extends TestCase
@@ -38,7 +39,7 @@ class KidsModeEnterExitTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function parent_dashboard_shows_pin_status_and_enter_kids_mode_buttons(): void
     {
         // Set up PIN in the user preferences
@@ -55,7 +56,7 @@ class KidsModeEnterExitTest extends TestCase
         $response->assertSee('kids-mode-enter-btn');
     }
 
-    /** @test */
+    #[Test]
     public function parent_dashboard_shows_set_pin_first_when_pin_not_set(): void
     {
         // No PIN set - UserPreferences model will default to null
@@ -72,7 +73,7 @@ class KidsModeEnterExitTest extends TestCase
         $response->assertSee(route('kids-mode.settings'));
     }
 
-    /** @test */
+    #[Test]
     public function can_enter_kids_mode_when_pin_is_set(): void
     {
         // No SupabaseClient mocking needed - controller uses Eloquent directly
@@ -90,7 +91,7 @@ class KidsModeEnterExitTest extends TestCase
         $response->assertSessionHas('success');
     }
 
-    /** @test */
+    #[Test]
     public function cannot_enter_kids_mode_for_non_existent_child(): void
     {
         // Test with non-existent child ID (99999)
@@ -104,7 +105,7 @@ class KidsModeEnterExitTest extends TestCase
         $this->assertNull(Session::get('kids_mode_active'));
     }
 
-    /** @test */
+    #[Test]
     public function cannot_enter_kids_mode_for_other_users_child(): void
     {
         // Create a child for another user (unauthorized access test)
@@ -124,7 +125,7 @@ class KidsModeEnterExitTest extends TestCase
         $this->assertNull(Session::get('kids_mode_active'));
     }
 
-    /** @test */
+    #[Test]
     public function kids_mode_enter_returns_json_for_ajax_requests(): void
     {
         // Child will be found via database using real data
@@ -143,7 +144,7 @@ class KidsModeEnterExitTest extends TestCase
         $this->assertEquals($this->child->name, Session::get('kids_mode_child_name'));
     }
 
-    /** @test */
+    #[Test]
     public function kids_mode_indicator_shows_when_active(): void
     {
         // Set kids mode session
@@ -162,7 +163,7 @@ class KidsModeEnterExitTest extends TestCase
         $response->assertSee('Exit Kids Mode');
     }
 
-    /** @test */
+    #[Test]
     public function kids_mode_indicator_hidden_when_not_active(): void
     {
         $response = $this->get('/dashboard');
@@ -173,7 +174,7 @@ class KidsModeEnterExitTest extends TestCase
         $response->assertDontSee('Kids Mode Active');
     }
 
-    /** @test */
+    #[Test]
     public function navigation_is_restricted_in_kids_mode(): void
     {
         // Set kids mode session
@@ -188,7 +189,7 @@ class KidsModeEnterExitTest extends TestCase
         $response->assertSessionHas('error', 'Access denied in kids mode');
     }
 
-    /** @test */
+    #[Test]
     public function can_exit_kids_mode_with_valid_pin(): void
     {
         // Set up kids mode session
@@ -219,7 +220,7 @@ class KidsModeEnterExitTest extends TestCase
         $this->assertNull(Session::get('kids_mode_child_name'));
     }
 
-    /** @test */
+    #[Test]
     public function cannot_exit_kids_mode_with_invalid_pin(): void
     {
         // Set up kids mode session
@@ -244,7 +245,7 @@ class KidsModeEnterExitTest extends TestCase
         $this->assertTrue(Session::get('kids_mode_active'));
     }
 
-    /** @test */
+    #[Test]
     public function pin_exit_screen_shows_correct_content(): void
     {
         // Set up kids mode session
@@ -269,7 +270,7 @@ class KidsModeEnterExitTest extends TestCase
         $response->assertSee('Enter the 4-digit PIN');
     }
 
-    /** @test */
+    #[Test]
     public function cannot_access_parent_only_routes_in_kids_mode(): void
     {
         // Set up kids mode session
@@ -294,7 +295,7 @@ class KidsModeEnterExitTest extends TestCase
         }
     }
 
-    /** @test */
+    #[Test]
     public function can_access_allowed_routes_in_kids_mode(): void
     {
         // Set up kids mode session

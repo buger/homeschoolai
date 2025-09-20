@@ -10,7 +10,6 @@ use Illuminate\Http\UploadedFile;
 class IcsImportService
 {
     public function __construct(
-        /** @phpstan-ignore-next-line property.onlyWritten */
         private SupabaseClient $supabase
     ) {}
 

@@ -1,0 +1,32 @@
+name: Visor
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  issues:
+    types: [opened]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  checks: write
+
+jobs:
+  code-review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - uses: probelabs/visor@main
+        with:
+          app-id: ${{ secrets.VISOR_APP_ID }}
+          private-key: ${{ secrets.VISOR_APP_PRIVATE_KEY }}
+          installation-id: ${{ secrets.VISOR_APP_INSTALLATION_ID }}
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          

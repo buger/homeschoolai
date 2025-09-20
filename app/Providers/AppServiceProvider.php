@@ -27,6 +27,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(\App\Services\FlashcardSearchService::class);
         $this->app->singleton(\App\Services\FlashcardPerformanceService::class);
         $this->app->singleton(\App\Services\FlashcardErrorService::class);
+
+        // Register date/time formatting service
+        $this->app->singleton(\App\Services\DateTimeFormatterService::class);
     }
 
     /**

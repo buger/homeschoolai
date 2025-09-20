@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Preview Mode Header -->
     <div class="bg-purple-100 border-2 border-purple-300 rounded-lg p-6 mb-6">
         <div class="flex items-center justify-between">
@@ -106,7 +105,6 @@
             </div>
         </div>
     </div>
-</div>
 @endsection
 
 @push('scripts')

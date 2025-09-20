@@ -6,6 +6,7 @@ use App\Http\Middleware\KidsModeSecurityHeaders;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Session;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class KidsModeSecurityHeadersTest extends TestCase
@@ -18,7 +19,7 @@ class KidsModeSecurityHeadersTest extends TestCase
         $this->middleware = new KidsModeSecurityHeaders;
     }
 
-    /** @test */
+    #[Test]
     public function it_applies_security_headers_when_kids_mode_is_active()
     {
         Session::put('kids_mode_active', true);
@@ -40,7 +41,7 @@ class KidsModeSecurityHeadersTest extends TestCase
         $this->assertEquals('max-age=31536000; includeSubDomains', $response->headers->get('Strict-Transport-Security'));
     }
 
-    /** @test */
+    #[Test]
     public function it_does_not_apply_security_headers_when_kids_mode_is_inactive()
     {
         Session::forget('kids_mode_active');
@@ -57,7 +58,7 @@ class KidsModeSecurityHeadersTest extends TestCase
         $this->assertNull($response->headers->get('Permissions-Policy'));
     }
 
-    /** @test */
+    #[Test]
     public function it_applies_restrictive_csp_policy()
     {
         Session::put('kids_mode_active', true);
@@ -87,7 +88,7 @@ class KidsModeSecurityHeadersTest extends TestCase
         $this->assertStringContainsString("style-src 'self' 'unsafe-inline'", $csp);
     }
 
-    /** @test */
+    #[Test]
     public function it_applies_restrictive_permissions_policy()
     {
         Session::put('kids_mode_active', true);
@@ -119,7 +120,7 @@ class KidsModeSecurityHeadersTest extends TestCase
         $this->assertStringContainsString('fullscreen=(self)', $permissionsPolicy);
     }
 
-    /** @test */
+    #[Test]
     public function it_disables_caching_for_sensitive_pages()
     {
         Session::put('kids_mode_active', true);
@@ -147,7 +148,7 @@ class KidsModeSecurityHeadersTest extends TestCase
         $this->assertEquals('0', $response->headers->get('Expires'));
     }
 
-    /** @test */
+    #[Test]
     public function it_does_not_disable_caching_for_non_sensitive_pages()
     {
         Session::put('kids_mode_active', true);
@@ -175,7 +176,7 @@ class KidsModeSecurityHeadersTest extends TestCase
         $this->assertNull($response->headers->get('Expires'));
     }
 
-    /** @test */
+    #[Test]
     public function it_does_not_set_hsts_header_on_http()
     {
         Session::put('kids_mode_active', true);
@@ -195,7 +196,7 @@ class KidsModeSecurityHeadersTest extends TestCase
         $this->assertEquals('nosniff', $response->headers->get('X-Content-Type-Options'));
     }
 
-    /** @test */
+    #[Test]
     public function it_identifies_sensitive_kids_mode_pages_correctly()
     {
         $middleware = new KidsModeSecurityHeaders;
@@ -235,7 +236,7 @@ class KidsModeSecurityHeadersTest extends TestCase
         $this->assertFalse($method->invoke($middleware, $request), 'Non-sensitive route should not trigger cache headers');
     }
 
-    /** @test */
+    #[Test]
     public function it_builds_csp_with_proper_syntax()
     {
         Session::put('kids_mode_active', true);
@@ -258,7 +259,7 @@ class KidsModeSecurityHeadersTest extends TestCase
         }
     }
 
-    /** @test */
+    #[Test]
     public function it_builds_permissions_policy_with_proper_syntax()
     {
         Session::put('kids_mode_active', true);

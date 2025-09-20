@@ -39,6 +39,8 @@
         "vite": "^7.0.4"
     },
     "dependencies": {
-        "htmx.org": "^2.0.7"
+        "@tinymce/tinymce-vue": "^6.3.0",
+        "htmx.org": "^2.0.7",
+        "tinymce": "^8.0.2"
     }
 }

@@ -14,8 +14,20 @@
             </div>
         </div>
 
-        <form 
-            hx-{{ $isEdit ? 'put' : 'post' }}="{{ $isEdit ? route('units.flashcards.update', [$unit->id, $flashcard->id]) : route('units.flashcards.store', $unit->id) }}"
+        <form
+            @if($isEdit)
+                @if(isset($topic) && $flashcard && $flashcard->topic_id)
+                    hx-put="{{ route('topics.flashcards.update', [$flashcard->topic_id, $flashcard->id]) }}"
+                @else
+                    hx-put="{{ route('units.flashcards.update', [$unit->id, $flashcard->id]) }}"
+                @endif
+            @else
+                @if(isset($topic))
+                    hx-post="{{ route('topics.flashcards.store', $topic->id) }}"
+                @else
+                    hx-post="{{ route('units.flashcards.store', $unit->id) }}"
+                @endif
+            @endif
             hx-target="#flashcards-list"
             hx-swap="innerHTML"
             hx-on::before-request="console.log('HTMX: Flashcard form submission starting...', event.detail)"
@@ -29,11 +41,98 @@
                 @method('PUT')
             @endif
 
+            <!-- Topic Selection (when creating from unit level) -->
+            @if(!isset($topic) && !$isEdit)
+                <div class="space-y-2">
+                    <label for="topic_id" class="flex items-center text-sm font-medium text-gray-700">
+                        Topic (Optional)
+                        <x-help-tooltip
+                            title="Topic Assignment"
+                            content="Assign this flashcard to a specific topic within the unit. This helps organize flashcards by learning objectives. You can leave this blank to keep it as a unit-level flashcard."
+                            position="right"
+                            size="md"
+                            trigger="hover"
+                            theme="{{ session('kids_mode', false) ? 'kids' : 'light' }}"
+                        />
+                    </label>
+                    <select name="topic_id" id="topic_id"
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Unit-level flashcard (no specific topic)</option>
+                        @foreach($unit->topics as $unitTopic)
+                            <option value="{{ $unitTopic->id }}">
+                                {{ $unitTopic->title }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            @elseif($isEdit && !$flashcard->topic_id)
+                <!-- Allow moving unit-level flashcard to a topic -->
+                <div class="space-y-2">
+                    <label for="topic_id" class="flex items-center text-sm font-medium text-gray-700">
+                        Move to Topic (Optional)
+                        <x-help-tooltip
+                            title="Topic Assignment"
+                            content="Move this unit-level flashcard to a specific topic. This helps organize flashcards by learning objectives."
+                            position="right"
+                            size="md"
+                            trigger="hover"
+                            theme="{{ session('kids_mode', false) ? 'kids' : 'light' }}"
+                        />
+                    </label>
+                    <select name="topic_id" id="topic_id"
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Keep as unit-level flashcard</option>
+                        @foreach($unit->topics as $unitTopic)
+                            <option value="{{ $unitTopic->id }}">
+                                {{ $unitTopic->title }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            @elseif($isEdit && $flashcard->topic_id)
+                <!-- Show current topic and allow changing -->
+                <div class="space-y-2">
+                    <label for="topic_id" class="flex items-center text-sm font-medium text-gray-700">
+                        Topic
+                        <x-help-tooltip
+                            title="Topic Assignment"
+                            content="Change the topic assignment for this flashcard or remove it from the topic to make it a unit-level flashcard."
+                            position="right"
+                            size="md"
+                            trigger="hover"
+                            theme="{{ session('kids_mode', false) ? 'kids' : 'light' }}"
+                        />
+                    </label>
+                    <select name="topic_id" id="topic_id"
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Move to unit-level (no specific topic)</option>
+                        @foreach($unit->topics as $unitTopic)
+                            <option value="{{ $unitTopic->id }}" {{ $flashcard->topic_id == $unitTopic->id ? 'selected' : '' }}>
+                                {{ $unitTopic->title }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            @elseif(isset($topic))
+                <!-- Hidden field when creating for specific topic -->
+                <input type="hidden" name="topic_id" value="{{ $topic->id }}">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                    <div class="flex items-center">
+                        <svg class="w-4 h-4 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span class="text-sm text-blue-800">
+                            This flashcard will be assigned to: <strong>{{ $topic->title }}</strong>
+                        </span>
+                    </div>
+                </div>
+            @endif
+
             <!-- Card Type Selection -->
             <div class="space-y-2">
                 <label for="card_type" class="flex items-center text-sm font-medium text-gray-700">
                     Card Type
-                    <x-help-tooltip 
+                    <x-help-tooltip
                         title="Card Types Explained"
                         content="Basic: Traditional Q&A format&#10;Multiple Choice: Select from 2-6 options&#10;True/False: Quick T/F questions&#10;Cloze: Fill-in-the-blank with @{{syntax}}&#10;Typed Answer: Requires exact spelling&#10;Image Occlusion: Hide parts of images (coming soon)"
                         position="right"
@@ -42,7 +141,7 @@
                         theme="{{ session('kids_mode', false) ? 'kids' : 'light' }}"
                     />
                 </label>
-                <select name="card_type" id="card_type" 
+                <select name="card_type" id="card_type"
                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                         onchange="toggleCardTypeFields(this.value)">
                     <option value="basic" {{ ($flashcard?->card_type ?? 'basic') === 'basic' ? 'selected' : '' }}>Basic</option>

@@ -12,7 +12,7 @@
         </div>
 
         <!-- Form -->
-        <form hx-put="{{ route('units.update', [$subject->id, $unit->id]) }}" hx-target="#units-list">
+        <form hx-put="{{ route('units.update', $unit->id) }}" hx-target="#units-list">
             @csrf
             @method('PUT')
             
